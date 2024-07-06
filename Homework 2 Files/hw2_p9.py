@@ -103,8 +103,33 @@ def contagion_brd(G, S, t):
     - Infect the rest of the nodes with Y
     - Run BRD on the set of nodes not in S
     Return a list of all nodes infected with X after BRD converges."""
-    # TODO: Implement this method
-    pass
+    is_X = [False] * G.n
+    for idx in S:
+        is_X[idx] = True
+    needs_addressing = set(range(G.n))
+    for s in S:
+        needs_addressing.remove(s)
+
+    def brd_step(i):
+        neighbors = G.edges_from(i)
+        X_neighbors = [neighbor for neighbor in neighbors if is_X[neighbor]]
+        frac = len(X_neighbors) / len(neighbors)
+        if frac > t and not is_X[i]:
+            is_X[i] = True
+            for neighbor in neighbors:
+                if neighbor not in S:
+                    needs_addressing.add(neighbor)
+
+        if frac < t and is_X[i]:
+            is_X[i] = False
+            for neighbor in neighbors:
+                if neighbor not in S:
+                    needs_addressing.add(neighbor)
+
+    while needs_addressing:
+        brd_step(needs_addressing.pop())
+
+    return [i for i in range(G.n) if is_X[i]]
 
 
 def q_completecascade_graph_fig4_1_left():
