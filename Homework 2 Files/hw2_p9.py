@@ -12,6 +12,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from queue import Queue
+import random
 
 
 # Implement the methods in this class as appropriate. Feel free to add other methods
@@ -157,10 +158,42 @@ def q_incompletecascade_graph_fig4_1_right():
 
 
 def main():
+    fb_graph = create_fb_graph()
     # === Problem 9(b) === #
-    # TODO: Put analysis code here
+    threshold = 0.1
+    k = 10
+    T = 100
+    num_infected_total = 0
+    times_infected = 0
+    for i in range(T):
+        S = random.sample(range(fb_graph.n), k)
+        infected = contagion_brd(fb_graph, S, threshold)
+        num_infected = len(infected)
+        num_infected_total += num_infected
+        if num_infected == fb_graph.n:
+            times_infected += 1
+            print(f"graph was fully infected on iteration {i}")
+    avg_num_infected = num_infected_total / T
+    print(f"{avg_num_infected=}")
+    print(f"infected {times_infected}/{T} times.")
     # === Problem 9(c) === #
-    # TODO: Put analysis code here
+    ts = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
+    ks = list(range(0, 251, 10))
+    T = 10
+    for threshold in ts:
+        for k in ks:
+            num_infected_total = 0
+            times_infected = 0
+            for i in range(T):
+                S = random.sample(range(fb_graph.n), k)
+                infected = contagion_brd(fb_graph, S, threshold)
+                num_infected = len(infected)
+                num_infected_total += num_infected
+                times_infected += num_infected == fb_graph.n
+            avg_num_infected = num_infected_total / T
+            print(
+                f"{threshold=}, {k=}, {avg_num_infected=}, fully infected {times_infected}/{T} times."
+            )
     # === OPTIONAL: Bonus Question 2 === #
     # TODO: Put analysis code here
     pass
