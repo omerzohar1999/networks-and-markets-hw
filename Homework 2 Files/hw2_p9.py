@@ -35,9 +35,9 @@ class UndirectedGraph:
     def edges_from(self, nodeA):
         """This method shold return a list of all the nodes nodeB such that nodeA and nodeB are
         connected by an edge"""
-        # TODO: Need to verefy that copying the set each tyme does not come with a runtime panalty, since it is used in a loop!
-        # return self.edges[nodeA] # FIXME: should we do this instead
-        return list(self.edges[nodeA])
+        # TODO: Need to verefy that copying the set each tyme does not come with a runtime panalty, since it is used in a loop! Edit: no diffrence
+        # return self.edges[nodeA] # FIXME: should we do this instead # time=39.14
+        return list(self.edges[nodeA]) #time=39.09
 
     def check_edge(self, nodeA, nodeB):
         """This method should return true is there is an edge between nodeA and nodeB, and false otherwise"""
@@ -83,7 +83,6 @@ class UndirectedGraph:
         if 0 not in self.distances:
             self.single_source_bfs(0)
         return self.distances[0].count(-1) == 0
-
 
 def create_fb_graph(filename="facebook_combined.txt"):
     """This method should return a undirected version of the facebook graph as an instance of the UndirectedGraph class.
@@ -239,6 +238,7 @@ def main():
     avg_num_infected = num_infected_total / T
     print(f"{avg_num_infected=}")
     print(f"infected {times_infected}/{T} times.")
+
     # === Problem 9(c) === #
     ts = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
     ks = list(range(0, 251, 10))
@@ -257,12 +257,49 @@ def main():
             print(
                 f"{threshold=}, {k=}, {avg_num_infected=}, fully infected {times_infected}/{T} times."
             )
+
     # === OPTIONAL: Bonus Question 2 === #
     # TODO: Put analysis code here
     pass
 
 
+
 # === OPTIONAL: Bonus Question 2 === #
+
+def naive_weight_function(node, G, I):
+    # I from 'infected'
+    neighbors = G.edges_from(node)
+    if not neighbors: return np.inf
+    not_infected_neighbors = neighbors.difference(I)
+    return len(not_infected_neighbors)
+
+def _neighbor_t_difference(node, G, I, t):
+    # I from 'infected'
+    neighbors = G.edges_from(node)
+    if not neighbors: return 0
+    infected_neighbors = neighbors & I
+    frac1 = min(t, len(infected_neighbors) / len(neighbors))
+    frac2 = min(t, len(infected_neighbors) + 1 / len(neighbors))
+    return frac2 - frac1
+def difference_weight_function(node, G, I, t):
+    # I from 'infected'
+    neighbors = G.edges_from(node)
+    if not neighbors: return np.inf
+    return sum(_neighbor_t_difference(n, G, I, t)
+               for n in neighbors if n not in I)
+
+
+def weighted_sample(nodes, weights):
+    r = random.random() * sum(weights)
+
+    cumulative_weight = 0
+    for item, weight in zip(nodes, weights):
+        cumulative_weight += weight
+        if r <= cumulative_weight:
+            return item
+
+
+
 def min_early_adopters(G, q):
     """Given an undirected graph G, and float threshold t, approximate the
     smallest number of early adopters that will call a complete cascade.
