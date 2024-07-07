@@ -35,6 +35,8 @@ class UndirectedGraph:
     def edges_from(self, nodeA):
         """This method shold return a list of all the nodes nodeB such that nodeA and nodeB are
         connected by an edge"""
+        # TODO: Need to verefy that copying the set each tyme does not come with a runtime panalty, since it is used in a loop!
+        # return self.edges[nodeA] # FIXME: should we do this instead
         return list(self.edges[nodeA])
 
     def check_edge(self, nodeA, nodeB):
@@ -89,7 +91,8 @@ def create_fb_graph(filename="facebook_combined.txt"):
     num_nodes = 4039
     graph = UndirectedGraph(num_nodes)
     for line in open(filename):
-        i, j = list(map(int, line.strip().split(" ")))
+        i, j = map(int, line.strip().split(" "))
+        # i, j = list(map(int, line.strip().split(" ")))
         graph.add_edge(i, j)
     return graph
 
@@ -106,27 +109,40 @@ def contagion_brd(G, S, t):
     Return a list of all nodes infected with X after BRD converges."""
 
     adopters_set = set(S)
-    is_X = list(map(lambda idx: idx in adopters_set, range(G.n)))
+    is_X = [(i in adopters_set) for i in range(G.n)]
+    # is_X = list(map(lambda idx: idx in adopters_set, range(G.n)))
     needs_addressing = set(range(G.n)).difference(adopters_set)
 
     def brd_step(i):
         neighbors = G.edges_from(i)
-        X_neighbors = set(filter(lambda neighbor: is_X[neighbor], neighbors))
-        frac = len(X_neighbors) / len(neighbors)
+        frac = sum(is_X[n] for n in needs_addressing) / len(neighbors)
         if frac > t and not is_X[i]:
             is_X[i] = True
             needs_addressing.update(
-                set(neighbors).difference(X_neighbors).difference(adopters_set)
+                {n for n in neighbors if not is_X[n] and n not in adopters_set}
             )
-
         if frac < t and is_X[i]:
             is_X[i] = False
-            needs_addressing.update(set(X_neighbors).difference(adopters_set))
+            needs_addressing.update(
+                {n for n in neighbors if is_X[n] and n not in adopters_set}
+            )
+        # X_neighbors = set(filter(lambda neighbor: is_X[neighbor], neighbors))
+        # frac = len(X_neighbors) / len(neighbors)
+        # if frac > t and not is_X[i]:
+        #     is_X[i] = True
+        #     needs_addressing.update(
+        #         set(neighbors).difference(X_neighbors).difference(adopters_set)
+        #     )
+        #
+        # if frac < t and is_X[i]:
+        #     is_X[i] = False
+        #     needs_addressing.update(set(X_neighbors).difference(adopters_set))
 
     while needs_addressing:
         brd_step(needs_addressing.pop())
 
-    return list(filter(lambda i: is_X[i], range(G.n)))
+    return [i for i in range(G.n) if is_X[i]]
+    # return list(filter(lambda i: is_X[i], range(G.n)))
 
 
 fig4_1_left = UndirectedGraph(4)
