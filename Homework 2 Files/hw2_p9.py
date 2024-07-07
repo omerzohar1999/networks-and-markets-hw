@@ -104,33 +104,29 @@ def contagion_brd(G, S, t):
     - Infect the rest of the nodes with Y
     - Run BRD on the set of nodes not in S
     Return a list of all nodes infected with X after BRD converges."""
-    is_X = [False] * G.n
-    for idx in S:
-        is_X[idx] = True
-    needs_addressing = set(range(G.n))
-    for s in S:
-        needs_addressing.remove(s)
+
+    adopters_set = set(S)
+    is_X = list(map(lambda idx: idx in adopters_set, range(G.n)))
+    needs_addressing = set(range(G.n)).difference(adopters_set)
 
     def brd_step(i):
         neighbors = G.edges_from(i)
-        X_neighbors = [neighbor for neighbor in neighbors if is_X[neighbor]]
+        X_neighbors = set(filter(lambda neighbor: is_X[neighbor], neighbors))
         frac = len(X_neighbors) / len(neighbors)
         if frac > t and not is_X[i]:
             is_X[i] = True
-            for neighbor in neighbors:
-                if neighbor not in S:
-                    needs_addressing.add(neighbor)
+            needs_addressing.update(
+                set(neighbors).difference(X_neighbors).difference(adopters_set)
+            )
 
         if frac < t and is_X[i]:
             is_X[i] = False
-            for neighbor in neighbors:
-                if neighbor not in S:
-                    needs_addressing.add(neighbor)
+            needs_addressing.update(set(X_neighbors).difference(adopters_set))
 
     while needs_addressing:
         brd_step(needs_addressing.pop())
 
-    return [i for i in range(G.n) if is_X[i]]
+    return list(filter(lambda i: is_X[i], range(G.n)))
 
 
 fig4_1_left = UndirectedGraph(4)
