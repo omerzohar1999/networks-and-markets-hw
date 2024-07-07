@@ -133,31 +133,82 @@ def contagion_brd(G, S, t):
     return [i for i in range(G.n) if is_X[i]]
 
 
+fig4_1_left = UndirectedGraph(4)
+fig4_1_left.add_edge(0, 1)
+fig4_1_left.add_edge(1, 2)
+fig4_1_left.add_edge(2, 3)
+
+
+fig4_1_right = UndirectedGraph(7)
+fig4_1_right.add_edge(0, 1)
+fig4_1_right.add_edge(1, 2)
+fig4_1_right.add_edge(1, 3)
+fig4_1_right.add_edge(3, 4)
+fig4_1_right.add_edge(3, 5)
+fig4_1_right.add_edge(5, 6)
+
+
 def q_completecascade_graph_fig4_1_left():
     """Return a float t s.t. the left graph in Figure 4.1 cascades completely."""
-    # TODO: Implement this method
-    pass
+    S = [0, 1]
+    t = 0.49
+    infected = contagion_brd(fig4_1_left, S, t)
+    fully_infected = len(infected) == fig4_1_left.n
+    if fully_infected:
+        print(f"graph fig4_1_left was fully infected with {t=}")
+    else:
+        print(f"graph fig4_1_left was not fully infected with {t=}")
+    return t
 
 
 def q_incompletecascade_graph_fig4_1_left():
     """Return a float t s.t. the left graph in Figure 4.1 does not cascade completely."""
-    # TODO: Implement this method
-    pass
+    S = [0, 1]
+    t = 0.51
+    infected = contagion_brd(fig4_1_left, S, t)
+    fully_infected = len(infected) == fig4_1_left.n
+    if fully_infected:
+        print(f"graph fig4_1_left was fully infected with {t=}")
+    else:
+        print(f"graph fig4_1_left was not fully infected with {t=}")
+    return t
 
 
 def q_completecascade_graph_fig4_1_right():
     """Return a float t s.t. the right graph in Figure 4.1 cascades completely."""
-    # TODO: Implement this method
-    pass
+    S = [0, 1, 2]
+    t = 0.32
+    infected = contagion_brd(fig4_1_right, S, t)
+    fully_infected = len(infected) == fig4_1_right.n
+    if fully_infected:
+        print(f"graph fig4_1_right was fully infected with {t=}")
+    else:
+        print(f"graph fig4_1_right was not fully infected with {t=}")
+    return t
 
 
 def q_incompletecascade_graph_fig4_1_right():
     """Return a float t s.t. the right graph in Figure 4.1 does not cascade completely."""
-    # TODO: Implement this method
-    pass
+    S = [0, 1, 2]
+    t = 0.34
+    infected = contagion_brd(fig4_1_right, S, t)
+    fully_infected = len(infected) == fig4_1_right.n
+    if fully_infected:
+        print(f"graph fig4_1_right was fully infected with {t=}")
+    else:
+        print(f"graph fig4_1_right was not fully infected with {t=}")
+    return t
+
+
+def sanity_checks():
+    q_completecascade_graph_fig4_1_left()
+    q_incompletecascade_graph_fig4_1_left()
+    q_completecascade_graph_fig4_1_right()
+    q_incompletecascade_graph_fig4_1_right()
 
 
 def main():
+    sanity_checks()
     fb_graph = create_fb_graph()
     # === Problem 9(b) === #
     threshold = 0.1
