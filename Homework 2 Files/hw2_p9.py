@@ -115,7 +115,7 @@ def contagion_brd(G, S, t):
 
     def brd_step(i):
         neighbors = G.edges_from(i)
-        frac = sum(is_X[n] for n in needs_addressing) / len(neighbors)
+        frac = sum(is_X[n] for n in neighbors) / len(neighbors)
         if frac > t and not is_X[i]:
             is_X[i] = True
             needs_addressing.update(
