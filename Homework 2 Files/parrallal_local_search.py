@@ -22,5 +22,5 @@ def _process_thread_pool(G, t, duration: int,
                          add_func: callable = None,
                          remove_func: callable = None) -> State:
   return run_optimizer(
-    G, duration, add_func, remove_func
+    G, t, duration, add_func, remove_func
   )

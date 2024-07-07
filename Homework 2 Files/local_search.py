@@ -5,8 +5,8 @@ from hw2_p9 import contagion_brd
 def run_optimizer(G, t, duration, add_func=None, remove_func=None):
   shared_prev_states = set()
   update_function = _get_update_func(
-    add_func=add_func or _random_add,
-    remove_func=remove_func or _random_remove,
+    add_func=add_func or _random_add_node,
+    remove_func=remove_func or _random_remove_node,
   )
   run = lambda s: _simulated_annealing(
     Temp=100,
@@ -28,6 +28,7 @@ def run_optimizer(G, t, duration, add_func=None, remove_func=None):
 
   return best_state
 
+
 def loss_func(state):
   """
   adding one infected is better always better
@@ -37,6 +38,7 @@ def loss_func(state):
   number_of_non_infected = G.n - len(I)  # in N
   fraction_of_S = len(S) / (G.n + 1)  # in [0, 1)
   return number_of_non_infected + fraction_of_S
+
 
 class State:
   def __init__(self, G, t, shared_prev_states, S):
@@ -55,36 +57,44 @@ class State:
     return State(self.G, self.t, self.shared_prev_states, S)
 
 
-
-
-
-def _accept_func(delta_l: float, Temp: float):
+def _accept_func(delta_l: float, Temp: float) -> object:
   val = - delta_l / Temp
   return random.random() < math.exp(val)
 
 
-def _random_remove(state) -> State:
+def _random_remove_node(state) -> State:
   # TODO: completely naive implementation
-  node_to_remove = None
-  while not node_to_remove:
+  node_to_remove, n = None, 100
+  while n > 0 and not node_to_remove:
     node_to_remove = random.choice(state.S)
     if node_to_remove in state.shared_prev_states:
-      node_to_remove = None
+      node_to_remove, n = None, n - 1
   return state.new_state(state.S - {node_to_remove})
 
 
-def _random_add(state) -> State:
-  node_to_add = None
-  while not node_to_add:
+def _random_add_node(state) -> State:
+  node_to_add, n = None, 100
+  while n > 0 and not node_to_add:
     node_to_add = random.choice(state.I)
     if node_to_add in state.shared_prev_states:
-      node_to_add = None
+      node_to_add, n = None, n - 1
   return state.new_state(state.S | {node_to_add})
+
 
 def _get_update_func(add_func: callable, remove_func: callable):
   def inner(state):
-    return add_func(state) if state.is_cascading() else remove_func(state)
+    if not state.I:
+      remove_func(state)
+    if not state.S:
+      add_func(state)
+
+    # the random.random() < 0.5 is to make sure it doesn't get stuck in a loop
+    return add_func(state) \
+      if state.is_cascading() or random.random() < 0.5 \
+      else remove_func(state)
+
   return inner
+
 
 def _simulated_annealing(Temp: float, state: State, alpha: float,
                          duration: int, loss: callable, accept: callable,
