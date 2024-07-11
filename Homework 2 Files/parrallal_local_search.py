@@ -1,3 +1,5 @@
+import time
+
 from local_search import run_optimizer, State, loss_func
 import pathos.multiprocessing as mp
 
@@ -31,9 +33,11 @@ def _test():
   t = 0.4
   weight_function = get_out_degrees_weight_function(G, exp=True)
   s = run_annealing_parallel(G, t,
-                             duration=60,
+                             duration=80,
                              weight_function=weight_function,
                              num_processes=8)
+  # with(60): 866
+  # with(80): 810, 852
   print(s)
 
 

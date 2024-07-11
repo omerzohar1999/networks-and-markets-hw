@@ -6,9 +6,9 @@ from hw2_p9 import contagion_brd
 
 def run_optimizer(G, t, duration, weight_function=None):
   shared_prev_states = set()
-  run = lambda dur, st: _simulated_annealing(
-    Temp=100,
-    state=st,
+  run = lambda tmp, dur, st: _simulated_annealing(
+    Temp=tmp,
+    initial_state=st,
     alpha=0.99,
     duration=dur,
     loss=loss_func,
@@ -16,19 +16,23 @@ def run_optimizer(G, t, duration, weight_function=None):
     update=_update_func,
   )
 
-  calc_range = 80 * t
-  half = lambda x: int(np.ceil(duration) / 2)
-  duration = half(duration)
+  butch_size = 100 * t  # number of nodes to add / remove each time
+  third = lambda x: (duration * 2) // 3
+  duration = third(1 + duration / 2)
 
   state = State(G, t, shared_prev_states, weight_function,
-                calc_range=calc_range)
-  state = run(duration, state)
-  # print(state, duration)
+                butch_size=butch_size)
 
-  while duration > 1:
-    duration = half(duration)
-    state = run(duration, state)
-    # print(state, duration)
+  state, temp = run(100, duration, state)
+
+  while duration >= 1:
+    duration, batch_size = third(duration), butch_size  #  half(butch_size)
+    state, temp = run(temp, duration,
+                      State(G, t, shared_prev_states,
+                            weight_function,
+                            S=state.S,
+                            butch_size=butch_size),
+                      )
   return state
 
 
@@ -67,10 +71,10 @@ class MySet(set):
 class Data:
   a: int
   b: int
-  calc_range: int
+  butch_size: int
 
   def calc(self, s_size):
-    if not self.bootstrap(): return np.random.randint(1, self.calc_range)
+    if not self.bootstrap(): return np.random.randint(1, self.butch_size)
     middle = (self.a + self.b) // 2
     return max(1, np.abs(s_size - middle))
 
@@ -81,7 +85,7 @@ class Data:
 class State:
   def __init__(self, G, t, shared_prev_states,
                weight_func=None, S=None,
-               _data=None, calc_range=1):
+               _data=None, butch_size=1):
     self.G, self.t = G, t
     self.weight_func = weight_func
     self.shared_prev_states = shared_prev_states
@@ -91,22 +95,22 @@ class State:
 
     self.I = contagion_brd(self.G, self.S, self.t)
     self.I_comp = [i for i in range(self.G.n) if i not in self.I]
-    self.data = self._calc_data(_data, calc_range)
+    self.data = self._calc_data(_data, butch_size)
 
   def is_cascading(self):
     return len(self.I_comp) == 0
 
-  def _calc_data(self, data, calc_range: int):
+  def _calc_data(self, data, butch_size: int):
     if data is None:
-      return Data(0, self.G.n, calc_range)
+      return Data(0, self.G.n, butch_size)
 
     if not data.bootstrap():
       return data
 
     if self.is_cascading():
-      return Data(data.a, len(self.S), data.calc_range)
+      return Data(data.a, len(self.S), data.butch_size)
     else:
-      return Data(len(self.S), data.b, data.calc_range)
+      return Data(len(self.S), data.b, data.butch_size)
 
   def new_state(self, S=None, _new_game=True):
     return State(self.G, self.t, self.shared_prev_states, self.weight_func,
@@ -173,30 +177,31 @@ def _update_func(state):
     else _random_add_node(state)
 
 
-def _simulated_annealing(Temp: float, state: State, alpha: float,
+def _simulated_annealing(Temp: float, initial_state: State, alpha: float,
                          duration: int, loss: callable, accept: callable,
-                         update: callable) -> State:
+                         update: callable) -> tuple[State, float]:
   assert 0 < alpha < 1
 
-  s_best = s_curr = state
+  s_best = s_curr = initial_state
   l_best = l_curr = loss(s_curr)
 
   time_to_end = time.time() + duration
 
-  while l_best > 0 and Temp >= 0.0001 and time.time() < time_to_end:
-    Temp *= alpha
+  while l_best > 0 and time.time() < time_to_end:
+    Temp = max(0.001, Temp * alpha)
 
     s_new = update(s_curr)
     l_new = loss(s_new)
 
-    if l_new >= l_curr and not accept(state, l_new - l_curr, Temp):
+    if l_new >= l_curr and not accept(s_curr, l_new - l_curr, Temp):
       continue
+
     s_curr, l_curr = s_new, l_new
 
     if l_curr < l_best:
       s_best, l_best = s_curr, l_curr
 
-  return s_best
+  return s_best, Temp
 
 
 def _test():
@@ -205,7 +210,9 @@ def _test():
   G = create_fb_graph()
   t = 0.4
   weight_function = get_out_degrees_weight_function(G, exp=True)
-  s = run_optimizer(G, t, duration=60, weight_function=weight_function)
+  s = run_optimizer(G, t, duration=80, weight_function=weight_function)
+  # None(80): 844
+  # With(80): 814
   print(s)
 
 
