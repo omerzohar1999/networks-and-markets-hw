@@ -37,7 +37,8 @@ class UndirectedGraph:
         connected by an edge"""
         # TODO: Need to verefy that copying the set each tyme does not come with a runtime panalty, since it is used in a loop! Edit: no diffrence
         # return self.edges[nodeA] # FIXME: should we do this instead # time=39.14
-        return list(self.edges[nodeA]) #time=39.09
+        # return list(self.edges[nodeA]) #time=39.09
+        return self.edges[nodeA]  # changed
 
     def check_edge(self, nodeA, nodeB):
         """This method should return true is there is an edge between nodeA and nodeB, and false otherwise"""
@@ -265,38 +266,6 @@ def main():
 
 
 # === OPTIONAL: Bonus Question 2 === #
-
-def naive_weight_function(node, G, I):
-    # I from 'infected'
-    neighbors = G.edges_from(node)
-    if not neighbors: return np.inf
-    not_infected_neighbors = neighbors.difference(I)
-    return len(not_infected_neighbors)
-
-def _neighbor_t_difference(node, G, I, t):
-    # I from 'infected'
-    neighbors = G.edges_from(node)
-    if not neighbors: return 0
-    infected_neighbors = neighbors & I
-    frac1 = min(t, len(infected_neighbors) / len(neighbors))
-    frac2 = min(t, len(infected_neighbors) + 1 / len(neighbors))
-    return frac2 - frac1
-def difference_weight_function(node, G, I, t):
-    # I from 'infected'
-    neighbors = G.edges_from(node)
-    if not neighbors: return np.inf
-    return sum(_neighbor_t_difference(n, G, I, t)
-               for n in neighbors if n not in I)
-
-
-def weighted_sample(nodes, weights):
-    r = random.random() * sum(weights)
-
-    cumulative_weight = 0
-    for item, weight in zip(nodes, weights):
-        cumulative_weight += weight
-        if r <= cumulative_weight:
-            return item
 
 
 

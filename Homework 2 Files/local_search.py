@@ -1,32 +1,35 @@
-import time, random, math
+import time, math, numpy as np
+from dataclasses import dataclass, field
+
 from hw2_p9 import contagion_brd
 
 
-def run_optimizer(G, t, duration, add_func=None, remove_func=None):
+def run_optimizer(G, t, duration, weight_function=None):
   shared_prev_states = set()
-  update_function = _get_update_func(
-    add_func=add_func or _random_add_node,
-    remove_func=remove_func or _random_remove_node,
-  )
-  run = lambda s: _simulated_annealing(
+  run = lambda dur, st: _simulated_annealing(
     Temp=100,
-    state=s,
+    state=st,
     alpha=0.99,
-    duration=duration,
+    duration=dur,
     loss=loss_func,
     accept=_accept_func,
-    update=update_function,
+    update=_update_func,
   )
 
-  time_to_end = time.time() + duration
-  best_state = run(State(G, t, shared_prev_states, set()))
-  while loss_func(best_state) > 0 and time.time() < time_to_end:
-    new_state = run(best_state.new_state(set()))
+  calc_range = 80 * t
+  half = lambda x: int(np.ceil(duration) / 2)
+  duration = half(duration)
 
-    if loss_func(new_state) < loss_func(best_state):
-      best_state = new_state
+  state = State(G, t, shared_prev_states, weight_function,
+                calc_range=calc_range)
+  state = run(duration, state)
+  # print(state, duration)
 
-  return best_state
+  while duration > 1:
+    duration = half(duration)
+    state = run(duration, state)
+    # print(state, duration)
+  return state
 
 
 def loss_func(state):
@@ -34,66 +37,140 @@ def loss_func(state):
   adding one infected is better always better
   given the same amount of infected, the smaller S is, the better
   """
-  G, S, I = state.G, state.S, state.I
-  number_of_non_infected = G.n - len(I)  # in N
-  fraction_of_S = len(S) / (G.n + 1)  # in [0, 1)
+  G, S, I_comp = state.G, state.S, state.I_comp
+  number_of_non_infected = len(I_comp)  # in N
+  fraction_of_S = max(0, len(S) - 1) / G.n  # in [0, 1)
   return number_of_non_infected + fraction_of_S
 
 
-class State:
-  def __init__(self, G, t, shared_prev_states, S):
-    self.G = G
-    self.t = t
-    self.shared_prev_states = shared_prev_states
-    self.S = S
-    self.I = contagion_brd(G, S, t)
+@dataclass(frozen=True, repr=False)
+class MySet(set):
+  _hash: int = field(init=False)
+  _list: list = field(init=False)
 
-    shared_prev_states.add(S)
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    object.__setattr__(self, '_hash', hash(frozenset(self)))
+    object.__setattr__(self, '_list', list(self))
+
+  def __hash__(self):
+    return self._hash
+
+  def as_list(self):
+    return self._list
+
+  def __repr__(self):
+    return '{' + ', '.join(map(str, self)) + '}'
+
+
+@dataclass
+class Data:
+  a: int
+  b: int
+  calc_range: int
+
+  def calc(self, s_size):
+    if not self.bootstrap(): return np.random.randint(1, self.calc_range)
+    middle = (self.a + self.b) // 2
+    return max(1, np.abs(s_size - middle))
+
+  def bootstrap(self):
+    return self.b != self.a
+
+
+class State:
+  def __init__(self, G, t, shared_prev_states,
+               weight_func=None, S=None,
+               _data=None, calc_range=1):
+    self.G, self.t = G, t
+    self.weight_func = weight_func
+    self.shared_prev_states = shared_prev_states
+
+    self.S = MySet(S) if S is not None else MySet()
+    shared_prev_states.add(self.S)
+
+    self.I = contagion_brd(self.G, self.S, self.t)
+    self.I_comp = [i for i in range(self.G.n) if i not in self.I]
+    self.data = self._calc_data(_data, calc_range)
 
   def is_cascading(self):
-    return len(self.S) + len(self.I) == self.G.n
+    return len(self.I_comp) == 0
 
-  def new_state(self, S):
-    return State(self.G, self.t, self.shared_prev_states, S)
+  def _calc_data(self, data, calc_range: int):
+    if data is None:
+      return Data(0, self.G.n, calc_range)
+
+    if not data.bootstrap():
+      return data
+
+    if self.is_cascading():
+      return Data(data.a, len(self.S), data.calc_range)
+    else:
+      return Data(len(self.S), data.b, data.calc_range)
+
+  def new_state(self, S=None, _new_game=True):
+    return State(self.G, self.t, self.shared_prev_states, self.weight_func,
+                 S, _data=None if _new_game else self.data)
+
+  @property
+  def S_weights(self):
+    if self.weight_func is None: return None
+    comp = self.I_comp if self.I_comp else self.S_comp
+    return self.weight_func(self.S, comp, add=False)
+
+  @property
+  def C_weights(self):
+    if self.weight_func is None: return None
+    return self.weight_func(self.I_comp, self.I_comp, add=True)
+
+  @property
+  def S_comp(self):
+    return [i for i in range(self.G.n) if i not in self.S]
+
+  def __repr__(self):
+    return f'Cascading={self.is_cascading()}_sLen={len(self.S)}'
 
 
-def _accept_func(delta_l: float, Temp: float) -> object:
+def _accept_func(state, delta_l: float, Temp: float) -> object:
+  if state.data.bootstrap():
+    return True
+
   val = - delta_l / Temp
-  return random.random() < math.exp(val)
-
-
-def _random_remove_node(state) -> State:
-  # TODO: completely naive implementation
-  node_to_remove, n = None, 100
-  while n > 0 and not node_to_remove:
-    node_to_remove = random.choice(state.S)
-    if node_to_remove in state.shared_prev_states:
-      node_to_remove, n = None, n - 1
-  return state.new_state(state.S - {node_to_remove})
+  return np.random.random() < math.exp(val)
 
 
 def _random_add_node(state) -> State:
-  node_to_add, n = None, 100
-  while n > 0 and not node_to_add:
-    node_to_add = random.choice(state.I)
-    if node_to_add in state.shared_prev_states:
-      node_to_add, n = None, n - 1
-  return state.new_state(state.S | {node_to_add})
+  size = max(1, min(state.data.calc(len(state.S)),
+                    len(state.I_comp) // 2,
+                    max(8, int(np.ceil(len(state.S) / 2)))))
+  new_s = state.S
+  for _ in range(100):
+    nodes_to_add = np.random.choice(state.I_comp, size, False,
+                                    p=state.C_weights)
+    new_s = frozenset(set(nodes_to_add) | state.S)
+    if hash(new_s) not in state.shared_prev_states:
+      break
+
+  return state.new_state(new_s, _new_game=False)
 
 
-def _get_update_func(add_func: callable, remove_func: callable):
-  def inner(state):
-    if not state.I:
-      remove_func(state)
-    if not state.S:
-      add_func(state)
+def _random_remove_node(state) -> State:
+  size = max(1, min(state.data.calc(len(state.S)), len(state.S) // 2))
+  new_s = state.S
+  for _ in range(100):
+    node_to_remove = np.random.choice(state.S.as_list(), size, False,
+                                      p=state.S_weights)
+    new_s = frozenset(state.S - set(node_to_remove))
+    if hash(new_s) not in state.shared_prev_states:
+      break
 
-    # the random.random() < 0.5 is to make sure it doesn't get stuck in a loop
-    return add_func(state) \
-      if state.is_cascading() or random.random() < 0.5 \
-      else remove_func(state)
+  return state.new_state(new_s, _new_game=False)
 
-  return inner
+
+def _update_func(state):
+  return _random_remove_node(state) \
+    if state.is_cascading() \
+    else _random_add_node(state)
 
 
 def _simulated_annealing(Temp: float, state: State, alpha: float,
@@ -101,19 +178,36 @@ def _simulated_annealing(Temp: float, state: State, alpha: float,
                          update: callable) -> State:
   assert 0 < alpha < 1
 
-  s_best = s_curr = update(state, Temp)
-  l_best = l_curr = loss(state)
+  s_best = s_curr = state
+  l_best = l_curr = loss(s_curr)
 
   time_to_end = time.time() + duration
 
-  while l_curr > 0 and Temp <= 0.0001 and time.time() < time_to_end:
-    s_new = update(s_curr, Temp)
+  while l_best > 0 and Temp >= 0.0001 and time.time() < time_to_end:
+    Temp *= alpha
+
+    s_new = update(s_curr)
     l_new = loss(s_new)
-    delta_loss = l_new - l_curr
-    if delta_loss >= 0 and not accept(delta_loss, Temp):
+
+    if l_new >= l_curr and not accept(state, l_new - l_curr, Temp):
       continue
     s_curr, l_curr = s_new, l_new
+
     if l_curr < l_best:
       s_best, l_best = s_curr, l_curr
-    Temp *= alpha
+
   return s_best
+
+
+def _test():
+  from hw2_p9 import create_fb_graph
+  from helper_functions import get_out_degrees_weight_function
+  G = create_fb_graph()
+  t = 0.4
+  weight_function = get_out_degrees_weight_function(G, exp=True)
+  s = run_optimizer(G, t, duration=60, weight_function=weight_function)
+  print(s)
+
+
+if __name__ == '__main__':
+  _test()
