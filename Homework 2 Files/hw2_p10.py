@@ -226,10 +226,22 @@ def max_matching(n, m, C):
     M = [None] * n
     for i in range(n):
         for j in range(m):
-            if match_graph.get_edge(i + 1, n + j + 1) > 0:
+            if F.get_edge(i + 1, n + j + 1) > 0:
                 M[i] = j
                 break
     return M
+
+
+def max_matching_sanity_checks():
+    C1 = [[0, 0], [1, 0], [0, 1]]
+    result = max_matching(3, 2, C1)
+    assert len(result) == 3
+    assert result == [None, 0, 1]
+
+    C2 = [[1, 0, 1], [0, 1, 0], [1, 0, 1]]
+    result = max_matching(3, 3, C2)
+    assert len(result) == 3
+    assert result == [0, 1, 2] or result == [2, 1, 0]
 
 
 # === Problem 10(d) ===
@@ -246,6 +258,7 @@ def random_driver_rider_bipartite_graph(n, p):
 
 def main():
     max_flow_sanity_checks()
+    max_matching_sanity_checks()
     # TODO: Put your analysis and plotting code here for 10(d)
 
 

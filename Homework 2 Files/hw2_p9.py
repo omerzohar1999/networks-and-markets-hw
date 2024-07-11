@@ -85,6 +85,7 @@ class UndirectedGraph:
             self.single_source_bfs(0)
         return self.distances[0].count(-1) == 0
 
+
 def create_fb_graph(filename="facebook_combined.txt"):
     """This method should return a undirected version of the facebook graph as an instance of the UndirectedGraph class.
     You may assume that the input graph has 4039 nodes."""
@@ -220,9 +221,9 @@ def sanity_checks():
 
 
 def main():
-    sanity_checks()
     fb_graph = create_fb_graph()
     # === Problem 9(b) === #
+    print("\nQ9b\n")
     threshold = 0.1
     k = 10
     T = 100
@@ -235,12 +236,14 @@ def main():
         num_infected_total += num_infected
         if num_infected == fb_graph.n:
             times_infected += 1
-            print(f"graph was fully infected on iteration {i}")
+            # print(f"graph was fully infected on iteration {i}")
     avg_num_infected = num_infected_total / T
     print(f"{avg_num_infected=}")
     print(f"infected {times_infected}/{T} times.")
 
     # === Problem 9(c) === #
+
+    print("\nQ9c\n")
     ts = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
     ks = list(range(0, 251, 10))
     T = 10
@@ -264,9 +267,7 @@ def main():
     pass
 
 
-
 # === OPTIONAL: Bonus Question 2 === #
-
 
 
 def min_early_adopters(G, q):
