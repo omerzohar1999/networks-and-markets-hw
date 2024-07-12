@@ -146,14 +146,16 @@ def max_flow(G, s, t):
             F.set_edge(origin, destination, 0)
 
     # find augmenting paths, update F
-    path = residual_graph(G, F).get_path(s, t)
+    residual = residual_graph(G, F)
+    path = residual.get_path(s, t)
     while path is not None:
-        flow = path_flow(G, path)
+        flow = path_flow(residual, path)
         for i in range(len(path) - 1):
             origin = path[i]
             destination = path[i + 1]
             F.set_edge(origin, destination, F.get_edge(origin, destination) + flow)
-        path = residual_graph(G, F).get_path(s, t)
+        residual = residual_graph(G, F)
+        path = residual.get_path(s, t)
 
     # calculate v
     v = 0
@@ -233,15 +235,56 @@ def max_matching(n, m, C):
 
 
 def max_matching_sanity_checks():
-    C1 = [[0, 0], [1, 0], [0, 1]]
-    result = max_matching(3, 2, C1)
-    assert len(result) == 3
-    assert result == [None, 0, 1]
+    C1 = [
+        [1, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0],
+    ]
+    result = max_matching(5, 5, C1)
+    assert len(result) == 5
+    assert result == [0, None, None, None, None]
 
-    C2 = [[1, 0, 1], [0, 1, 0], [1, 0, 1]]
-    result = max_matching(3, 3, C2)
-    assert len(result) == 3
-    assert result == [0, 1, 2] or result == [2, 1, 0]
+    C2 = [
+        [1, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 1],
+    ]
+    result = max_matching(5, 5, C2)
+    assert len(result) == 5
+    assert result == [0, 1, 2, 3, 4]
+
+    C3 = [
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+    ]
+    result = max_matching(5, 5, C3)
+    assert len(result) == 5
+    assert None not in result
+    assert len(set(result)) == 5
+
+    C4 = [
+        [1, 1, 0, 0, 0],
+        [0, 1, 1, 0, 0],
+        [0, 0, 1, 1, 0],
+        [0, 0, 0, 1, 1],
+        [1, 0, 0, 0, 1],
+    ]
+    result = max_matching(5, 5, C4)
+    assert len(result) == 5
+    assert None not in result
+    assert len(set(result)) == 5
+    assert result[0] in {0, 1}
+    assert result[1] in {1, 2}
+    assert result[2] in {2, 3}
+    assert result[3] in {3, 4}
+    assert result[4] in {4, 0}
 
 
 # === Problem 10(d) ===
@@ -259,7 +302,26 @@ def random_driver_rider_bipartite_graph(n, p):
 def main():
     max_flow_sanity_checks()
     max_matching_sanity_checks()
-    # TODO: Put your analysis and plotting code here for 10(d)
+    # === Problem 10(d) === #
+    print("\nQ10d\n")
+    n = 100
+    num_iters = 100
+    ps = [0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
+    results = []
+    for p in ps:
+        times_was_fully_matched = 0
+        for _ in range(num_iters):
+            C = random_driver_rider_bipartite_graph(n, p)
+            result = max_matching(n, n, C)
+            times_was_fully_matched += None not in result
+        avg_fully_matched = times_was_fully_matched / num_iters
+        print(f"p={p}, estimated fully matched p={avg_fully_matched}.")
+        results.append(avg_fully_matched)
+    plt.plot(ps, results)
+    plt.xlabel("p")
+    plt.ylabel("Estimated probability of full matching")
+    plt.title("Estimated probability of full matching vs. p")
+    plt.show()
 
 
 if __name__ == "__main__":
