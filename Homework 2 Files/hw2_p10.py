@@ -40,17 +40,21 @@ class WeightedDirectedGraph:
         """This method shold return a list of all the nodes destination_node such that there is
         a directed edge (origin_node, destination_node) in the graph (i.e. with weight > 0).
         """
-        if origin_node not in self.edges:
-            return []
-        return list(self.edges[origin_node].keys())
+        return list(self.edges[origin_node].keys()) \
+            if origin_node in self.edges else []
+        # if origin_node not in self.edges:
+        #     return []
+        # return list(self.edges[origin_node].keys())
 
     def get_edge(self, origin_node, destination_node):
         """This method should return the weight (an integer > 0)
         if there is an edge between origin_node and
         destination_node, and 0 otherwise."""
-        if origin_node not in self.edges:
-            return 0
-        return self.edges[origin_node].get(destination_node, 0)
+        return self.edges[origin_node].get(destination_node, 0) \
+            if origin_node in self.edges else 0
+        # if origin_node not in self.edges:
+        #     return 0
+        # return self.edges[origin_node].get(destination_node, 0)
 
     def number_of_nodes(self):
         """This method should return the number of nodes in the graph"""
@@ -134,10 +138,12 @@ def max_flow(G, s, t):
         return R
 
     def path_flow(G, path):
-        flow = float("inf")
-        for i in range(len(path) - 1):
-            flow = min(flow, G.get_edge(path[i], path[i + 1]))
-        return flow
+        return min(G.get_edge(path[i], path[i + 1])
+                   for i in range(len(path) - 1))
+        # flow = float("inf")
+        # for i in range(len(path) - 1):
+        #     flow = min(flow, G.get_edge(path[i], path[i + 1]))
+        # return flow
 
     # init F
     F = WeightedDirectedGraph(G.number_of_nodes())
@@ -219,19 +225,27 @@ def max_matching(n, m, C):
     sink = n + m + 1
     for i in range(n):
         match_graph.set_edge(source, i + 1, 1)
-        for j in range(m):
-            if C[i][j]:
-                match_graph.set_edge(i + 1, n + j + 1, 1)
+        for j in filter(lambda j: C[i][j], range(m)):
+            match_graph.set_edge(i + 1, n + j + 1, 1)
+        # for j in range(m):
+        #     if C[i][j]:
+        #         match_graph.set_edge(i + 1, n + j + 1, 1)
     for j in range(m):
         match_graph.set_edge(n + j + 1, sink, 1)
     _, F = max_flow(match_graph, source, sink)
-    M = [None] * n
-    for i in range(n):
-        for j in range(m):
-            if F.get_edge(i + 1, n + j + 1) > 0:
-                M[i] = j
-                break
-    return M
+
+    is_positive = lambda i, j: F.get_edge(i + 1, n + j + 1) > 0
+    return [next(filter(lambda j: is_positive(i, j), range(m)), None)
+            for i in range(n)]
+    # M = [None] * n
+    # for i in range(n):
+    #     edge_weight = lambda j: F.get_edge(i + 1, n + j + 1) > 0
+    #     M[i] = next(filter(edge_weight, range(m)), None)
+    #     # for j in range(m):
+    #     #     if F.get_edge(i + 1, n + j + 1) > 0:
+    #     #         M[i] = j
+    #     #         break
+    # # return M
 
 
 def max_matching_sanity_checks():
@@ -292,11 +306,18 @@ def random_driver_rider_bipartite_graph(n, p):
     """Returns an n x n constraints array C as defined for max_matching, representing a bipartite
     graph with 2n nodes, where each vertex in the left half is connected to any given vertex in the
     right half with probability p."""
-    C = [[0] * n for _ in range(n)]
-    for i in range(n):
-        for j in range(n):
-            C[i][j] = int(np.random.rand() < p)
-    return C
+    return (np.random.rand(n, n) < p).astype(int)
+
+    # from itertools import product
+    # C = [[0] * n for _ in range(n)]
+
+    # for i, j in product(range(n), repeat=2):
+    #     C[i][j] = int(np.random.rand() < p)
+
+    # for i in range(n):
+    #     for j in range(n):
+    #         C[i][j] = int(np.random.rand() < p)
+    # return C
 
 
 def main():
@@ -304,23 +325,24 @@ def main():
     max_matching_sanity_checks()
     # === Problem 10(d) === #
     print("\nQ10d\n")
-    n = 100
+    n = 450
     num_iters = 100
     ps = [0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
     results = []
     for p in ps:
         times_was_fully_matched = 0
-        for _ in range(num_iters):
+        for j in range(num_iters):
+            print(f"\riter={j+1} out of {num_iters}", end="")
             C = random_driver_rider_bipartite_graph(n, p)
             result = max_matching(n, n, C)
             times_was_fully_matched += None not in result
         avg_fully_matched = times_was_fully_matched / num_iters
-        print(f"p={p}, estimated fully matched p={avg_fully_matched}.")
+        print(f"\rp={p}, estimated fully matched p={avg_fully_matched}.")
         results.append(avg_fully_matched)
     plt.plot(ps, results)
     plt.xlabel("p")
     plt.ylabel("Estimated probability of full matching")
-    plt.title("Estimated probability of full matching vs. p")
+    plt.title(f"Estimated probability of full matching vs. p ({n=})")
     plt.show()
 
 
