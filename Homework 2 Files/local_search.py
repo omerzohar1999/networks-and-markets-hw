@@ -55,7 +55,7 @@ def run_optimizer(G, t, duration, exp_or_None_weight_function=None):
     update=_update_func,
   )
 
-  butch_size = 100 * t  # number of nodes to add / remove each time
+  butch_size = 30 * t  # number of nodes to add / remove each time
   third = lambda x: (duration * 2) // 3
   duration = third(1 + duration / 2)
 
@@ -66,10 +66,7 @@ def run_optimizer(G, t, duration, exp_or_None_weight_function=None):
   state, temp = run(100, duration, state)
 
   while duration >= 1:
-    if not state.is_cascading():
-      exp_or_None_weight_function = None
-
-    duration, batch_size = third(duration), butch_size
+    duration, batch_size = third(duration), butch_size // 2
     state, temp = run(temp, duration,
                       State(G, t, shared_prev_states,
                             exp_or_None_weight_function,
@@ -242,10 +239,11 @@ def _out_degrees_weight_function(G, exp=False):
   # return len(not_infected_neighbors)
 
   def inner(A, out, add):
+    out_as_set = set(out)
     p = np.zeros(len(A))
     for i, a in enumerate(A):
       neighbors = G.edges_from(a)
-      out_neighbors = filter(lambda x: x in out, neighbors)
+      out_neighbors = filter(lambda x: x in out_as_set, neighbors)
       num_out_neighbors = sum(1 for _ in out_neighbors)
       p[i] = num_out_neighbors
     return _normalized_p(p, add, exp)
