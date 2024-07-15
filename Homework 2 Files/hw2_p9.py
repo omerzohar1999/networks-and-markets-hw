@@ -261,15 +261,32 @@ def main():
             avg_num_infected = num_infected_total / T
             infected_by_k.append(avg_num_infected)
             print(
-                f"{threshold=}, {k=}, {avg_num_infected=}, fully infected {times_infected}/{T} times."
+                f"\r{threshold=}, {k=}, {avg_num_infected=}, fully infected {times_infected}/{T} times.",
+                end="",
             )
+        print()
         plt.plot(ks, infected_by_k, label=f"t={threshold}")
     plt.legend()
     plt.show()
 
     # === OPTIONAL: Bonus Question 2 === #
     # TODO: Put analysis code here
-    pass
+    from local_search import run_optimizer_par
+    min_s_size = []
+    for t in np.linspace(0.1, 0.5, 10):
+        print(f'\r running optimizer for t = {t:.2f}..', end='')
+        len_s = len(run_optimizer_par(fb_graph, t, duration=10))
+        print(f'\r running optimizer for t = {t:.2f}.. size of S = {len_s}')
+
+        min_s_size.append(len_s)
+
+    plt.plot(ts, min_s_size)
+    plt.xlabel('Threshold (t)')
+    plt.ylabel('Minimal size of S')
+    plt.title('Approximating minimal S size per threshold')
+    plt.grid(False)
+    plt.show()
+
 
 
 # === OPTIONAL: Bonus Question 2 === #
