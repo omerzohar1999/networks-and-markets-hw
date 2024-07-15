@@ -16,20 +16,18 @@ def run_optimizer_par(G, t, duration=80,
     None - runs without any weight function
     True - runs with the exponential weight function (large weight are exponantialy more likely)
     False - runs with the linear weight function (large weight are linearly more likely)
-
-  running the weight function is extremely slow.  you should give at least a minute to run it
   """
   if num_processes == 1:
     return run_optimizer(G, t, duration, exp_or_None_weight_function)
 
   with mp.Pool(processes=num_processes) as pool:
-    process_results = pool.starmap(
+    s_es = pool.starmap(
       run_optimizer,
       [(G, t, duration, exp_or_None_weight_function) for _ in
        range(num_processes)]
     )
 
-  return min(process_results, key=lambda x: loss_func(x))
+  return min(s_es, key=lambda s: loss_func(State(G, t, set(), S=s)))
 
 
 def run_optimizer(G, t, duration, exp_or_None_weight_function=None):
@@ -41,8 +39,6 @@ def run_optimizer(G, t, duration, exp_or_None_weight_function=None):
     None - runs without any weight function
     True - runs with the exponential weight function (large weight are exponantialy more likely)
     False - runs with the linear weight function (large weight are linearly more likely)
-
-  running the weight function is extremely slow.  you should give at least a minuet to run it
   """
   shared_prev_states = set()
   run = lambda tmp, dur, st: _simulated_annealing(
@@ -55,9 +51,10 @@ def run_optimizer(G, t, duration, exp_or_None_weight_function=None):
     update=_update_func,
   )
 
-  butch_size = 30 * t  # number of nodes to add / remove each time
-  third = lambda x: (duration * 2) // 3
-  duration = third(1 + duration / 2)
+  butch_size = max(1, 100 * t)  # number of nodes to add / remove each time
+  # third = lambda x: (duration * 2) // 3
+  # duration = third(1 + duration / 2)
+  duration = 1 + duration // 2
 
   state = State(G, t, shared_prev_states,
                 exp_or_None_weight_function,
@@ -66,7 +63,7 @@ def run_optimizer(G, t, duration, exp_or_None_weight_function=None):
   state, temp = run(100, duration, state)
 
   while duration >= 1:
-    duration, batch_size = third(duration), butch_size // 2
+    duration, batch_size = duration // 2, max(1, butch_size // 3)
     state, temp = run(temp, duration,
                       State(G, t, shared_prev_states,
                             exp_or_None_weight_function,
@@ -114,7 +111,7 @@ class Data:
   butch_size: int
 
   def calc(self, s_size):
-    if not self.bootstrap(): return np.random.randint(1, self.butch_size)
+    if not self.bootstrap(): return np.random.randint(1, max(self.butch_size, 2))
     middle = (self.a + self.b) // 2
     return max(1, np.abs(s_size - middle))
 
@@ -123,7 +120,8 @@ class Data:
 
 
 class State:
-  def __init__(self, G, t, shared_prev_states,
+  def __init__(self, G, t,
+               shared_prev_states,
                exp_or_None=None, S=None,
                _data=None, butch_size=1):
     self.G, self.t = G, t
@@ -191,7 +189,10 @@ def _random_add_node(state) -> State:
                     max(8, int(np.ceil(len(state.S) / 2)))))
   new_s = state.S
   for _ in range(100):
-    nodes_to_add = np.random.choice(state.I_comp, size, False,
+    if sum(x != 0 for x in state.C_weights) < size:
+      nodes_to_add = np.array(state.I_comp)[np.array(state.C_weights) != 0]
+    else:
+      nodes_to_add = np.random.choice(state.I_comp, size, False,
                                     p=state.C_weights)
     new_s = frozenset(set(nodes_to_add) | state.S)
     if hash(new_s) not in state.shared_prev_states:
@@ -222,12 +223,14 @@ def _update_func(state):
 def _normalized_p(p, add: bool, exp):
   resize = (lambda x: np.exp(x) - 1) if exp else (lambda x: x)
 
-  normalize = lambda x: x / sum(x)
+  normalize = lambda x: x / sum(x) if sum(x) != 0 else x
   p = normalize(p)
   p = resize(p)
   p = normalize(p)
   if not add:
     p = normalize(1 - p)
+  if np.all(p == 0):
+    p = np.array([1/len(p) for _ in p])
   return p
 
 
@@ -294,9 +297,9 @@ def _test():
 def _test_par():
   from hw2_p9 import create_fb_graph
   G = create_fb_graph()
-  t = 0.4
+  t = 4
   s = run_optimizer_par(G, t,
-                        duration=40,
+                        duration=10,
                         exp_or_None_weight_function=True,
                         num_processes=8)
   # with(60): 866
@@ -306,5 +309,5 @@ def _test_par():
 
 
 if __name__ == '__main__':
-  _test()
+  # _test()
   _test_par()
