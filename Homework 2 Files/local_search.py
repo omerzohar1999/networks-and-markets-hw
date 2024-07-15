@@ -1,10 +1,44 @@
 import time, math, numpy as np
 from dataclasses import dataclass, field
+import multiprocessing as mp
 
 from hw2_p9 import contagion_brd
 
 
-def run_optimizer(G, t, duration, weight_function=None):
+def run_optimizer_par(G, t=0.5, duration=80,
+                      exp_or_None_weight_function=None,
+                      num_processes=4):
+  """
+  Run the optimizer in parallel
+  G - the graph
+  t - 100 * t is the batch size
+  exp_or_None_weight_function
+    None - runs without any weight function
+    True - runs with the exponential weight function (large weight are exponantialy more likely)
+    False - runs with the linear weight function (large weight are linearly more likely)
+  """
+  if num_processes == 1:
+    return run_optimizer(G, t, duration, exp_or_None_weight_function)
+
+  with mp.Pool(processes=num_processes) as pool:
+    process_results = pool.starmap(
+      run_optimizer,
+      [(G, t, duration, exp_or_None_weight_function) for _ in range(num_processes)]
+    )
+
+  return min(process_results, key=lambda x: loss_func(x))
+
+
+def run_optimizer(G, t, duration, exp_or_None_weight_function=None):
+  """
+  Run the optimizer sequentially
+  G - the graph
+  t - 100 * t is the batch size
+  exp_or_None_weight_function
+    None - runs without any weight function
+    True - runs with the exponential weight function (large weight are exponantialy more likely)
+    False - runs with the linear weight function (large weight are linearly more likely)
+  """
   shared_prev_states = set()
   run = lambda tmp, dur, st: _simulated_annealing(
     Temp=tmp,
@@ -20,16 +54,16 @@ def run_optimizer(G, t, duration, weight_function=None):
   third = lambda x: (duration * 2) // 3
   duration = third(1 + duration / 2)
 
-  state = State(G, t, shared_prev_states, weight_function,
+  state = State(G, t, shared_prev_states, exp_or_None_weight_function,
                 butch_size=butch_size)
 
   state, temp = run(100, duration, state)
 
   while duration >= 1:
-    duration, batch_size = third(duration), butch_size  #  half(butch_size)
+    duration, batch_size = third(duration), butch_size
     state, temp = run(temp, duration,
                       State(G, t, shared_prev_states,
-                            weight_function,
+                            exp_or_None_weight_function,
                             S=state.S,
                             butch_size=butch_size),
                       )
@@ -84,10 +118,10 @@ class Data:
 
 class State:
   def __init__(self, G, t, shared_prev_states,
-               weight_func=None, S=None,
+               exp_or_None=None, S=None,
                _data=None, butch_size=1):
     self.G, self.t = G, t
-    self.weight_func = weight_func
+    self.exp_or_None = exp_or_None
     self.shared_prev_states = shared_prev_states
 
     self.S = MySet(S) if S is not None else MySet()
@@ -100,7 +134,7 @@ class State:
   def is_cascading(self):
     return len(self.I_comp) == 0
 
-  def _calc_data(self, data, butch_size: int):
+  def _calc_data(self, data, butch_size):
     if data is None:
       return Data(0, self.G.n, butch_size)
 
@@ -113,19 +147,21 @@ class State:
       return Data(len(self.S), data.b, data.butch_size)
 
   def new_state(self, S=None, _new_game=True):
-    return State(self.G, self.t, self.shared_prev_states, self.weight_func,
+    return State(self.G, self.t, self.shared_prev_states, self.exp_or_None,
                  S, _data=None if _new_game else self.data)
 
   @property
   def S_weights(self):
-    if self.weight_func is None: return None
+    if self.exp_or_None is None: return None
     comp = self.I_comp if self.I_comp else self.S_comp
-    return self.weight_func(self.S, comp, add=False)
+    weight_func = _out_degrees_weight_function(self.G, exp=self.exp_or_None)
+    return weight_func(self.S, comp, add=False)
 
   @property
   def C_weights(self):
-    if self.weight_func is None: return None
-    return self.weight_func(self.I_comp, self.I_comp, add=True)
+    if self.exp_or_None is None: return None
+    weight_func = _out_degrees_weight_function(self.G, exp=self.exp_or_None)
+    return weight_func(self.I_comp, self.I_comp, add=True)
 
   @property
   def S_comp(self):
@@ -135,7 +171,7 @@ class State:
     return f'Cascading={self.is_cascading()}_sLen={len(self.S)}'
 
 
-def _accept_func(state, delta_l: float, Temp: float) -> object:
+def _accept_func(state, delta_l, Temp) -> object:
   if state.data.bootstrap():
     return True
 
@@ -177,9 +213,40 @@ def _update_func(state):
     else _random_add_node(state)
 
 
-def _simulated_annealing(Temp: float, initial_state: State, alpha: float,
-                         duration: int, loss: callable, accept: callable,
-                         update: callable) -> tuple[State, float]:
+def _normalized_p(p, add: bool, exp):
+  resize = (lambda x: np.exp(x) - 1) if exp else (lambda x: x)
+
+  normalize = lambda x: x / sum(x)
+  p = normalize(p)
+  p = resize(p)
+  p = normalize(p)
+  if not add:
+    p = normalize(1 - p)
+  return p
+
+
+def _out_degrees_weight_function(G, exp=False):
+  # # I from 'infected'
+  # neighbors = G.edges_from(node)
+  # if not neighbors: return np.inf
+  # not_infected_neighbors = neighbors.difference(I)
+  # return len(not_infected_neighbors)
+
+  def inner(A, out, add):
+    p = np.zeros(len(A))
+    for i, a in enumerate(A):
+      neighbors = G.edges_from(a)
+      out_neighbors = filter(lambda x: x in out, neighbors)
+      num_out_neighbors = sum(1 for _ in out_neighbors)
+      p[i] = num_out_neighbors
+    return _normalized_p(p, add, exp)
+
+  return inner
+
+
+def _simulated_annealing(Temp, initial_state, alpha,
+                         duration, loss, accept,
+                         update):
   assert 0 < alpha < 1
 
   s_best = s_curr = initial_state
@@ -206,15 +273,29 @@ def _simulated_annealing(Temp: float, initial_state: State, alpha: float,
 
 def _test():
   from hw2_p9 import create_fb_graph
-  from helper_functions import get_out_degrees_weight_function
   G = create_fb_graph()
   t = 0.4
-  weight_function = get_out_degrees_weight_function(G, exp=True)
-  s = run_optimizer(G, t, duration=80, weight_function=weight_function)
+  exp_or_None = True
+  s = run_optimizer(G, t, duration=20, exp_or_None_weight_function=exp_or_None)
   # None(80): 844
   # With(80): 814
   print(s)
 
 
+def _test_par():
+  from hw2_p9 import create_fb_graph
+  G = create_fb_graph()
+  t = 0.4
+  exp_or_None = True
+  s = run_optimizer_par(G, t,
+                        duration=10,
+                        exp_or_None_weight_function=exp_or_None,
+                        num_processes=8)
+  # with(60): 866
+  # with(80): 810, 852
+  print(s)
+
+
 if __name__ == '__main__':
   _test()
+  _test_par()
