@@ -248,6 +248,7 @@ def main():
     ks = list(range(0, 251, 10))
     T = 10
     for threshold in ts:
+        infected_by_k = []
         for k in ks:
             num_infected_total = 0
             times_infected = 0
@@ -258,9 +259,13 @@ def main():
                 num_infected_total += num_infected
                 times_infected += num_infected == fb_graph.n
             avg_num_infected = num_infected_total / T
+            infected_by_k.append(avg_num_infected)
             print(
                 f"{threshold=}, {k=}, {avg_num_infected=}, fully infected {times_infected}/{T} times."
             )
+        plt.plot(ks, infected_by_k, label=f"t={threshold}")
+    plt.legend()
+    plt.show()
 
     # === OPTIONAL: Bonus Question 2 === #
     # TODO: Put analysis code here
