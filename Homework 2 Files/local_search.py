@@ -297,7 +297,7 @@ def _test():
 def _test_par():
   from hw2_p9 import create_fb_graph
   G = create_fb_graph()
-  t = 4
+  t = 0.4
   s = run_optimizer_par(G, t,
                         duration=10,
                         exp_or_None_weight_function=True,
