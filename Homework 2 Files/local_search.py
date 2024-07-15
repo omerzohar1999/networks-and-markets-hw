@@ -16,6 +16,8 @@ def run_optimizer_par(G, t=0.5, duration=80,
     None - runs without any weight function
     True - runs with the exponential weight function (large weight are exponantialy more likely)
     False - runs with the linear weight function (large weight are linearly more likely)
+
+  running the weight function is extremely slow.  you should give at least a minuet to run it
   """
   if num_processes == 1:
     return run_optimizer(G, t, duration, exp_or_None_weight_function)
@@ -38,6 +40,8 @@ def run_optimizer(G, t, duration, exp_or_None_weight_function=None):
     None - runs without any weight function
     True - runs with the exponential weight function (large weight are exponantialy more likely)
     False - runs with the linear weight function (large weight are linearly more likely)
+
+  running the weight function is extremely slow.  you should give at least a minuet to run it
   """
   shared_prev_states = set()
   run = lambda tmp, dur, st: _simulated_annealing(
@@ -49,6 +53,8 @@ def run_optimizer(G, t, duration, exp_or_None_weight_function=None):
     accept=_accept_func,
     update=_update_func,
   )
+  exp_or_None_weight_function = None if duration < 40 \
+    else exp_or_None_weight_function
 
   butch_size = 100 * t  # number of nodes to add / remove each time
   third = lambda x: (duration * 2) // 3
