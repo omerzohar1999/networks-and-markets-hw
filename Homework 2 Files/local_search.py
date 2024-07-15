@@ -11,7 +11,7 @@ def run_optimizer_par(G, t=0.5, duration=80,
   """
   Run the optimizer in parallel
   G - the graph
-  t - 100 * t is the batch size
+  t - the t-fraction
   exp_or_None_weight_function
     None - runs without any weight function
     True - runs with the exponential weight function (large weight are exponantialy more likely)
@@ -25,7 +25,8 @@ def run_optimizer_par(G, t=0.5, duration=80,
   with mp.Pool(processes=num_processes) as pool:
     process_results = pool.starmap(
       run_optimizer,
-      [(G, t, duration, exp_or_None_weight_function) for _ in range(num_processes)]
+      [(G, t, duration, exp_or_None_weight_function) for _ in
+       range(num_processes)]
     )
 
   return min(process_results, key=lambda x: loss_func(x))
@@ -53,21 +54,21 @@ def run_optimizer(G, t, duration, exp_or_None_weight_function=None):
     accept=_accept_func,
     update=_update_func,
   )
-  if duration < 40 and exp_or_None_weight_function is not None:
-    print('Not enough time to run the heavy weight function, changing to default')
-    exp_or_None_weight_function = None
-
 
   butch_size = 100 * t  # number of nodes to add / remove each time
   third = lambda x: (duration * 2) // 3
   duration = third(1 + duration / 2)
 
-  state = State(G, t, shared_prev_states, exp_or_None_weight_function,
+  state = State(G, t, shared_prev_states,
+                exp_or_None_weight_function,
                 butch_size=butch_size)
 
   state, temp = run(100, duration, state)
 
   while duration >= 1:
+    if not state.is_cascading():
+      exp_or_None_weight_function = None
+
     duration, batch_size = third(duration), butch_size
     state, temp = run(temp, duration,
                       State(G, t, shared_prev_states,
@@ -75,7 +76,7 @@ def run_optimizer(G, t, duration, exp_or_None_weight_function=None):
                             S=state.S,
                             butch_size=butch_size),
                       )
-  return state
+  return state.S
 
 
 def loss_func(state):
@@ -288,7 +289,8 @@ def _test():
                     exp_or_None_weight_function=True)
   # None(80): 844
   # With(80): 814
-  print(s)
+  i = contagion_brd(G, s, t)
+  print(len(i) == G.n, len(s), s)
 
 
 def _test_par():
@@ -301,7 +303,8 @@ def _test_par():
                         num_processes=8)
   # with(60): 866
   # with(80): 810, 852
-  print(s)
+  i = contagion_brd(G, s, t)
+  print(len(i) == G.n, len(s), s)
 
 
 if __name__ == '__main__':
