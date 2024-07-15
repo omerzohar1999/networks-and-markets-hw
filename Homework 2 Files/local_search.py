@@ -17,7 +17,7 @@ def run_optimizer_par(G, t=0.5, duration=80,
     True - runs with the exponential weight function (large weight are exponantialy more likely)
     False - runs with the linear weight function (large weight are linearly more likely)
 
-  running the weight function is extremely slow.  you should give at least a minuet to run it
+  running the weight function is extremely slow.  you should give at least a minute to run it
   """
   if num_processes == 1:
     return run_optimizer(G, t, duration, exp_or_None_weight_function)
