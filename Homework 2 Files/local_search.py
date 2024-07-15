@@ -5,7 +5,7 @@ import multiprocessing as mp
 from hw2_p9 import contagion_brd
 
 
-def run_optimizer_par(G, t=0.5, duration=80,
+def run_optimizer_par(G, t, duration=80,
                       exp_or_None_weight_function=True,
                       num_processes=4):
   """
