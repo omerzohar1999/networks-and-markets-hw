@@ -6,7 +6,7 @@ from hw2_p9 import contagion_brd
 
 
 def run_optimizer_par(G, t=0.5, duration=80,
-                      exp_or_None_weight_function=None,
+                      exp_or_None_weight_function=True,
                       num_processes=4):
   """
   Run the optimizer in parallel
@@ -53,8 +53,10 @@ def run_optimizer(G, t, duration, exp_or_None_weight_function=None):
     accept=_accept_func,
     update=_update_func,
   )
-  exp_or_None_weight_function = None if duration < 40 \
-    else exp_or_None_weight_function
+  if duration < 40 and exp_or_None_weight_function is not None:
+    print('Not enough time to run the heavy weight function, changing to default')
+    exp_or_None_weight_function = None
+
 
   butch_size = 100 * t  # number of nodes to add / remove each time
   third = lambda x: (duration * 2) // 3
@@ -281,8 +283,9 @@ def _test():
   from hw2_p9 import create_fb_graph
   G = create_fb_graph()
   t = 0.4
-  exp_or_None = True
-  s = run_optimizer(G, t, duration=20, exp_or_None_weight_function=exp_or_None)
+  s = run_optimizer(G, t,
+                    duration=10,
+                    exp_or_None_weight_function=True)
   # None(80): 844
   # With(80): 814
   print(s)
@@ -292,10 +295,9 @@ def _test_par():
   from hw2_p9 import create_fb_graph
   G = create_fb_graph()
   t = 0.4
-  exp_or_None = True
   s = run_optimizer_par(G, t,
-                        duration=10,
-                        exp_or_None_weight_function=exp_or_None,
+                        duration=40,
+                        exp_or_None_weight_function=True,
                         num_processes=8)
   # with(60): 866
   # with(80): 810, 852
