@@ -1,0 +1,130 @@
+\documentclass{article}
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{pgf} % Required for drawing plots
+\usepackage{caption} % Required for the caption of the figure
+\usepackage{amsfonts}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    citecolor=blue
+}
+\usepackage{cleveref}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{diagbox}
+\usepackage{caption}
+\usepackage{tikz}
+\usepackage{pgf}
+\usepackage{pgfplots}
+\usetikzlibrary{arrows.meta, positioning}
+
+\newtheorem{theorem}{Theorem}[section]  % Theorems numbered within sections
+\newtheorem{lemma}[theorem]{Lemma}      % Lemma numbering follows theorem
+
+% Define argmax
+\DeclareMathOperator*{\argmax}{arg\,max}  % The asterisk is used to allow limits to go underneath in displaystyle
+
+% Apply color to cref and Cref
+\crefformat{figure}{#2figure\color{blue}~#1#3}
+\Crefformat{figure}{#2Figure\color{blue}~#1#3}
+\crefformat{section}{#2section\color{blue}~#1#3}
+\Crefformat{section}{#2Section\color{blue}~#1#3}
+\crefformat{table}{#2table\color{blue}~#1#3}
+\Crefformat{table}{#2Table\color{blue}~#1#3}
+
+% start
+\title{
+    Homework Assignment 2\\
+    Networks and Markets
+}
+\author{
+    Omer Zohar\\XXXXXXXXX
+    \and
+    Gil Aharoni\\XXXXXXXXX
+    \and
+    Adam Tuby\\215334822
+}
+
+\bibliographystyle{plain}
+
+\begin{document}
+\maketitle
+
+\section*{Part 5: Experimental Evaluations}
+\setcounter{section}{0}
+
+\section{Question 9}
+
+\begin{enumerate}[label=(\alph*)]
+    \item It is evident that upon $t = 0.49$, the left example of Figure 4 would end up in a complete cascade, as $T \subseteq V \setminus S$ would simply be a set of either two connected nodes, or a single node, neither of which have a density of $1 - 0.49 = 0.51$. Conversely, upon $t = 0.51$, $T = V \setminus S$ has a density of $0.5 > 0.49 = 1 - 0.51$, and thus the cascade would never be complete per the theorem we've seen in class regarding cascades in the threshold model. We indeed see that our code always returns a complete cascade for $t = 0.49$ and never for $t = 0.51$.
+    
+    For the right example of Figure 4, we can see that the cascade would be complete for $t = 0.32$, but not for $t = 0.34$, by similar means to the above. The maximum density of some set $T \subseteq V \setminus S$ is $\frac{2}{3}$, for $T' = V \setminus S$. Thus, for $t = 0.32$, for each $T \subseteq V \setminus S$, the density of $T$ is less than $1 - t$, as $\frac{2}{3} = 1 - \frac{1}{3} < 1 - 0.32$, but for $t = 0.34$, the density of $T'$ is greater than $1 - t$ as $\frac{2}{3} > 1 - 0.34$. Consequently, per the theorem we've seen in class, the cascade would be complete for $t = 0.32$ and not for $t = 0.34$. We indeed see that our code always returns a complete cascade for $t = 0.32$ and never for $t = 0.34$.
+    
+    \item \Cref{fig:q9b} Details the frequency histogram for the average amount of infected nodes (with $X$), for running our contagion BRD algorithm over small random sets ($k = 10$) with a low threshold ($t = 0.1$), for 100 times on the Facebook dataset.
+    
+    \begin{figure*}[h]
+        \centering
+        \resizebox{0.8\textwidth}{!}{
+            \input{q9b.pgf}
+        }
+        \caption{Frequency histogram for the average amount of infected nodes (with $X$), for running our contagion BRD algorithm over small random sets ($k = 10$) with a low threshold ($t = 0.1$), for 100 times on the Facebook dataset.}
+        \label{fig:q9b}
+    \end{figure*}
+
+    We observe $13/100$ times that the graph has completely cascaded. Additionally, we observe an average of $3129.69$ infected nodes. We observe that $\approx 10\%$ of runs had almost no infected nodes, and $\approx 10\%$ of runs had a complete cascade (the $13/100$ runs). The rest of the runs had a pretty fixed range for the amount of infected nodes - between $3200$ and $3350$ infected nodes. 
+
+    \item \Cref{fig:9cb} details the average rate of infected nodes (with $X$) for running our contagion BRD algorithm over varying $k$ (increments of $10$ from $0$ to $250$), with varying thresholds (increments of $0.05$ from $0.05$ to $0.5$), for 10 times each on the Facebook dataset.
+    
+    \begin{figure*}[h]
+        \centering
+        \resizebox{0.8\textwidth}{!}{
+            \input{q9c.pgf}
+        }
+        \caption{Average rate of infected nodes (with $X$) for running our contagion BRD algorithm over varying $k$ (increments of $10$ from $0$ to $250$), with varying thresholds (increments of $0.05$ from $0.05$ to $0.5$), for 10 times each on the Facebook dataset.}
+        \label{fig:9cb}
+    \end{figure*}
+    
+    We observe a clear trend, that as $k$ increases, and as $t$ decreases, the average rate of infected nodes increases. This is intuitive, as the lower the threshold, the more likely a node is to be infected by its neighbors, and the larger the set of initial adopters, the better the chances an adjacent node to an initial adopter will surpass its threshold. As so, the lower $t$ is, the lower $k$ can be for a complete cascade to occur. \Cref{tab:q9c-tab} details the configuration and their conditions in order to consistently observe a complete cascade.
+
+    \begin{table}
+        \centering
+        \begin{tabular}{|c|c|}
+            \hline
+            $t$ & $k$'s conditions\\
+            \hline
+            0.05 & $k \geq 10$\\
+            0.1 & $k \geq 90$\\
+            0.15 & $k \geq 220$\\
+            \hline
+        \end{tabular}
+        \caption{Configurations with high amount of complete cascades.}
+        \label{tab:q9c-tab}
+    \end{table}
+
+\end{enumerate}
+
+\section{Bonus Question 2}
+
+\section{Question 10}
+
+\begin{enumerate}[label=(\alph*)]
+    \item
+    
+    \item
+    
+    \item
+    
+    \item
+
+\end{enumerate}
+
+\section{Bonus Question 3}
+
+\end{document}

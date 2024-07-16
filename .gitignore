@@ -1,0 +1,11 @@
+**/.DS_Store
+**/*.synctex.gz
+**/*.aux
+**/*.bbl
+**/*.blg
+**/*.fdb_latexmk
+**/*.fls
+**/*.log
+**/*.out
+**/__pycache__/
+.vscode

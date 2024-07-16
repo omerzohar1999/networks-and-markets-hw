@@ -35,9 +35,9 @@ class UndirectedGraph:
     def edges_from(self, nodeA):
         """This method shold return a list of all the nodes nodeB such that nodeA and nodeB are
         connected by an edge"""
-        # TODO: Need to verefy that copying the set each tyme does not come with a runtime panalty, since it is used in a loop! Edit: no diffrence
+        # TODO: Need to verify that copying the set each time does not come with a runtime panalty, since it is used in a loop! Edit: no diffrence
         # return self.edges[nodeA] # FIXME: should we do this instead # time=39.14
-        # return list(self.edges[nodeA]) #time=39.09
+        # return list(self.edges[nodeA]) # time=39.09
         return self.edges[nodeA]  # changed
 
     def check_edge(self, nodeA, nodeB):
@@ -108,6 +108,8 @@ def contagion_brd(G, S, t):
     - Infect the rest of the nodes with Y
     - Run BRD on the set of nodes not in S
     Return a list of all nodes infected with X after BRD converges."""
+    assert 0 <= t <= 1, "t must be in [0, 1]"
+    assert all(0 <= i < G.n for i in S), "S must be a list of integers in [0, G.number_of_nodes - 1]"
 
     adopters_set = set(S)
     is_X = [(i in adopters_set) for i in range(G.n)]
@@ -116,6 +118,10 @@ def contagion_brd(G, S, t):
 
     def brd_step(i):
         neighbors = G.edges_from(i)
+
+        if not neighbors:
+            return
+
         frac = sum(is_X[n] for n in neighbors) / len(neighbors)
         if frac > t and not is_X[i]:
             is_X[i] = True
@@ -168,9 +174,9 @@ def q_completecascade_graph_fig4_1_left():
     infected = contagion_brd(fig4_1_left, S, t)
     fully_infected = len(infected) == fig4_1_left.n
     if fully_infected:
-        print(f"graph fig4_1_left was fully infected with {t=}")
+        print(f"Success: graph fig4_1_left was fully infected with {t=}")
     else:
-        print(f"graph fig4_1_left was not fully infected with {t=}")
+        print(f"Failure: graph fig4_1_left was not fully infected with {t=}")
     return t
 
 
@@ -181,9 +187,9 @@ def q_incompletecascade_graph_fig4_1_left():
     infected = contagion_brd(fig4_1_left, S, t)
     fully_infected = len(infected) == fig4_1_left.n
     if fully_infected:
-        print(f"graph fig4_1_left was fully infected with {t=}")
+        print(f"Failure: graph fig4_1_left was fully infected with {t=}")
     else:
-        print(f"graph fig4_1_left was not fully infected with {t=}")
+        print(f"Success: graph fig4_1_left was not fully infected with {t=}")
     return t
 
 
@@ -194,9 +200,9 @@ def q_completecascade_graph_fig4_1_right():
     infected = contagion_brd(fig4_1_right, S, t)
     fully_infected = len(infected) == fig4_1_right.n
     if fully_infected:
-        print(f"graph fig4_1_right was fully infected with {t=}")
+        print(f"Success: graph fig4_1_right was fully infected with {t=}")
     else:
-        print(f"graph fig4_1_right was not fully infected with {t=}")
+        print(f"Failure: graph fig4_1_right was not fully infected with {t=}")
     return t
 
 
@@ -207,9 +213,9 @@ def q_incompletecascade_graph_fig4_1_right():
     infected = contagion_brd(fig4_1_right, S, t)
     fully_infected = len(infected) == fig4_1_right.n
     if fully_infected:
-        print(f"graph fig4_1_right was fully infected with {t=}")
+        print(f"Failure: graph fig4_1_right was fully infected with {t=}")
     else:
-        print(f"graph fig4_1_right was not fully infected with {t=}")
+        print(f"Success: graph fig4_1_right was not fully infected with {t=}")
     return t
 
 
@@ -229,6 +235,7 @@ def main():
     T = 100
     num_infected_total = 0
     times_infected = 0
+    measurements = []
     for i in range(T):
         S = random.sample(range(fb_graph.n), k)
         infected = contagion_brd(fb_graph, S, threshold)
@@ -237,9 +244,16 @@ def main():
         if num_infected == fb_graph.n:
             times_infected += 1
             # print(f"graph was fully infected on iteration {i}")
+        measurements.append(num_infected)
     avg_num_infected = num_infected_total / T
     print(f"{avg_num_infected=}")
     print(f"infected {times_infected}/{T} times.")
+
+    plt.hist(measurements, bins=50)
+    plt.xlabel("Number of infected nodes")
+    plt.ylabel("Frequency")
+    plt.title(f"Histogram of number of infected nodes for k={k} and t={threshold}")
+    plt.show()
 
     # === Problem 9(c) === #
 
@@ -268,6 +282,7 @@ def main():
         plt.plot(ks, infected_by_k, label=f"t={threshold}")
     plt.legend()
     plt.show()
+
 
     # === OPTIONAL: Bonus Question 2 === #
     # TODO: Put analysis code here
