@@ -227,6 +227,7 @@ def sanity_checks():
 
 
 def main():
+    sanity_checks()
     fb_graph = create_fb_graph()
     # === Problem 9(b) === #
     print("\nQ9b\n")

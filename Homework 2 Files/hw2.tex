@@ -23,6 +23,7 @@
 \usepackage{tikz}
 \usepackage{pgf}
 \usepackage{pgfplots}
+\usepackage{placeins} % To use \FloatBarrier
 \usetikzlibrary{arrows.meta, positioning}
 
 \newtheorem{theorem}{Theorem}[section]  % Theorems numbered within sections
@@ -41,7 +42,7 @@
 
 % start
 \title{
-    Homework Assignment 2\\
+    Homework Assignment 2 - Coding Part Writeup\\
     Networks and Markets
 }
 \author{
@@ -71,29 +72,37 @@
     
     \begin{figure*}[h]
         \centering
-        \resizebox{0.8\textwidth}{!}{
-            \input{q9b.pgf}
+        \resizebox{0.6\textwidth}{!}{
+            \input{figures/q9b.pgf}
         }
         \caption{Frequency histogram for the average amount of infected nodes (with $X$), for running our contagion BRD algorithm over small random sets ($k = 10$) with a low threshold ($t = 0.1$), for 100 times on the Facebook dataset.}
         \label{fig:q9b}
     \end{figure*}
 
+    \FloatBarrier
+
     We observe $13/100$ times that the graph has completely cascaded. Additionally, we observe an average of $3129.69$ infected nodes. We observe that $\approx 10\%$ of runs had almost no infected nodes, and $\approx 10\%$ of runs had a complete cascade (the $13/100$ runs). The rest of the runs had a pretty fixed range for the amount of infected nodes - between $3200$ and $3350$ infected nodes. 
 
-    \item \Cref{fig:9cb} details the average rate of infected nodes (with $X$) for running our contagion BRD algorithm over varying $k$ (increments of $10$ from $0$ to $250$), with varying thresholds (increments of $0.05$ from $0.05$ to $0.5$), for 10 times each on the Facebook dataset.
+    \item \Cref{fig:q9c} details the average rate of infected nodes (with $X$) for running our contagion BRD algorithm over varying $k$ (increments of $10$ from $0$ to $250$), with varying thresholds (increments of $0.05$ from $0.05$ to $0.5$), for 10 times each on the Facebook dataset.
     
     \begin{figure*}[h]
         \centering
-        \resizebox{0.8\textwidth}{!}{
-            \input{q9c.pgf}
+        \resizebox{0.6\textwidth}{!}{
+            \input{figures/q9c.pgf}
         }
         \caption{Average rate of infected nodes (with $X$) for running our contagion BRD algorithm over varying $k$ (increments of $10$ from $0$ to $250$), with varying thresholds (increments of $0.05$ from $0.05$ to $0.5$), for 10 times each on the Facebook dataset.}
-        \label{fig:9cb}
+        \label{fig:q9c}
     \end{figure*}
-    
-    We observe a clear trend, that as $k$ increases, and as $t$ decreases, the average rate of infected nodes increases. This is intuitive, as the lower the threshold, the more likely a node is to be infected by its neighbors, and the larger the set of initial adopters, the better the chances an adjacent node to an initial adopter will surpass its threshold. As so, the lower $t$ is, the lower $k$ can be for a complete cascade to occur. \Cref{tab:q9c-tab} details the configuration and their conditions in order to consistently observe a complete cascade.
 
-    \begin{table}
+    \FloatBarrier
+    
+    It seems the graph does not cascade at all with $t>0.15$, which means there are probably multiple sets with density of $>0.8$. \\\\
+    It also seems that for every t there's a different k which might not adhere to some exact formula, but rather would depend on the number or mass of sets with density of $>0.8$. \\
+    For example, for t=0.1 we found a cascading set first with $k=10$, but for $t=0.15$ it was with $k=100$, and for $t=0.2$, not even $k=250$ sufficed for finding a cascading set.
+
+    Nevertheless, we observe a clear trend, that as $k$ increases, and as $t$ decreases, the average rate of infected nodes increases. This is intuitive, as the lower the threshold, the more likely a node is to be infected by its neighbors, and the larger the set of initial adopters, the better the chances an adjacent node to an initial adopter will surpass its threshold. As so, the lower $t$ is, the lower $k$ can be for a complete cascade to occur. \Cref{tab:q9c-tab} details the configuration and their conditions in order to consistently observe a complete cascade.
+
+    \begin{table}[h]
         \centering
         \begin{tabular}{|c|c|}
             \hline
@@ -112,17 +121,331 @@
 
 \section{Bonus Question 2}
 
+For this exercise we implemented the search algorithm "simulated annealing". Since it is a known algorithm we won't expand on it here, though the implementation was heavily modified to fit our use-case. Our loss function was (number of non-infected) + (fraction size of S out of n). The nice thing about this loss function is that we always prioritize reducing the amount of non-infected at any cost for S, but when the number of non-infected is zero, we then focus on reducing the size of S. Another thing that we implemented is a weight function which gives each node a weight. For example, when S is not cascading and we want to expand it, we might use a weight function based on each non-infected node's connections to other non-infected nodes. Instead of just taking the best node each time, we sample from the non-infected nodes using a probability distribution exponential in their weight. Another technique we employed is "doubling" - we start by adding a single node to S, then exponentially increase the number of nodes added (e.g., 1, 2, 4, 8, ...) until we hit a cascading set. This approach helps find an initial cascading set faster. Below is the resulting graph.
+
+\begin{figure}[h]
+    \centering
+    \resizebox{0.6\textwidth}{!}{
+        \input{figures/min_s_size.pgf}
+    }
+    \caption{Finding minimal sized S per threshold}
+    \label{fig:enter-label}
+\end{figure}
+
+\FloatBarrier
+
 \section{Question 10}
 
 \begin{enumerate}[label=(\alph*)]
-    \item
-    
-    \item
-    
-    \item
-    
-    \item
+    \setcounter{enumi}{1}
 
+    \item Given a set of $n$ drivers, $m$ riders, and sets of possible riders that each driver can pick up:
+    
+    \begin{enumerate}[label=(\roman*)]
+        \item We can use the maximum-flow algorithm to determine the maximum \textit{number} of matches that can be made. Given some $G = (V, E)$, where $V = D \cup R$, $D$ is the set of drivers, $R$ is the set of riders, and $E$ is the set of edges, where $(d, r) \in E$ if and only if driver $d$ can pick up rider $r$, we can construct a flow network $G' = (V', E', c)$, as illustrated in \Cref{fig:q10a}, where $V' = V \cup \{s, t\}$---we add artificial sink and source nodes $s$ and $t$ respectively, such that $E' = E \cup \{(s, d) \mid d \in D\} \cup \{(r, t) \mid r \in R\}$, and $c \equiv 1$ (but 0 for non-existent edges). That is, we add an edge with capacity $1$ from $s$ to each driver, and from each rider to $t$. We then add an edge with capacity $1$ from each driver to each rider in its list of compatible riders. The maximum flow value in network $G'$ would be the maximum number of matches possible.
+        
+        \begin{figure*}[h]
+            \centering
+            \begin{tikzpicture}
+                \node[draw, circle] (s) at (0, 0) {$s$};
+                \node[draw, circle] (d1) at (2, 2) {$d_1$};
+                \node[draw, circle] (d2) at (2, 0) {$d_2$};
+                \node[draw, circle] (d3) at (2, -2) {$d_3$};
+                \node[draw, circle] (dn) at (2, -4) {$d_n$};
+                \node[draw, circle] (r1) at (6, 2) {$r_1$};
+                \node[draw, circle] (r2) at (6, 0) {$r_2$};
+                \node[draw, circle] (r3) at (6, -2) {$r_3$};
+                \node[draw, circle] (rn) at (6, -4) {$r_m$};
+                \node[draw, circle] (t) at (8, 0) {$t$};
+                
+                \draw[-{Latex[length=2mm]}] (s) -- node[above] {$1$} (d1);
+                \draw[-{Latex[length=2mm]}] (s) -- node[above] {$1$} (d2);
+                \draw[-{Latex[length=2mm]}] (s) -- node[above] {$1$} (d3);
+                \draw[-{Latex[length=2mm]}] (s) -- node[above] {$1$} (dn);
+                \draw[-{Latex[length=2mm]}] (d1) -- node[above] {$1$} (r1);
+                \draw[-{Latex[length=2mm]}] (d1) -- node[above] {$1$} (r2);
+                \draw[-{Latex[length=2mm]}] (d2) -- node[above] {$1$} (r1);
+                \draw[-{Latex[length=2mm]}] (d3) -- node[above] {$1$} (r2);
+                \draw[-{Latex[length=2mm]}] (d3) -- node[above] {$1$} (r3);
+                \draw[-{Latex[length=2mm]}] (dn) -- node[above] {$1$} (rn);
+                \draw[-{Latex[length=2mm]}] (dn) -- node[above] {$1$} (r3);
+
+                % draw dots from d3 to dn
+                \draw[dotted] (2, -2.5) -- (2, -3.5);
+
+                % draw dots from r3 to rn
+                \draw[dotted] (6, -2.5) -- (6, -3.5);
+
+                \draw[-{Latex[length=2mm]}] (r1) -- node[above] {$1$} (t);
+                \draw[-{Latex[length=2mm]}] (r2) -- node[above] {$1$} (t);
+                \draw[-{Latex[length=2mm]}] (r3) -- node[above] {$1$} (t);
+                \draw[-{Latex[length=2mm]}] (rn) -- node[above] {$1$} (t);
+            \end{tikzpicture}
+            \caption{Flow network for the maximum number of matches that can be made. In this network, the list of compatible riders for $d_1$ is $\{r_1, r_2\}$, for $d_2$ is $\{r_1\}$, for $d_3$ is $\{r_2, r_3\}$, $\ldots$ ,and for $d_n$ is $\{r_3, r_m\}$.}
+            \label{fig:q10a}
+        \end{figure*}
+
+        With similar arguments to the ones we've seen in class, this indeed gives us the maximum number of matches that can be made. We prove that 
+        
+        \begin{equation*}
+            \max-flow = \max\limits_{f \text{ is a flow in $G'$}} \left|f\right| = \max\limits_{M \subseteq E \text{ is a matching}} \left|M\right| = max-matching
+        \end{equation*}
+
+        % They would both have flow $1$ (as $f: E' \rightarrow \mathbb{N}$ and $\forall e \in E', f(e) \leq c(e) = 1$), and 
+
+        \begin{itemize}
+            \item $\mathbf{max-flow \leq max-matching}$: Let $F$ be the maximum flow in $G'$. We can construct a matching $M$ from $F$ by taking the set of edges 
+            
+            \begin{center}
+            $M_F = \{(d, r) \in E \mid F(d, r) > 0 \} \overset{(1)}{=} \{(d, r) \in E \mid F(d, r) = 1 \}$
+            \end{center}
+            
+            where (1) is derived from the fact that $F(d, r) \in \mathbb{N}$ and as $F(d, r) \leq c(d, r) = 1$. Now, suppose two edges $(d, r), (d, r')$ in $M_F$ share the same source node $d$. As 
+            
+            \begin{center}
+            $\sum_{v \in V'}{F(v, d)} = F(s, d) \leq 1$
+            \end{center}
+            and due to conservation of flow, we get that 
+            
+            \begin{center}
+            $1 \geq \sum_{v \in V'}{F(v, d)} = \sum_{v \in V'}{F(d, v)} \geq F(d, r) + F(d, r') = 2$
+            \end{center}
+            which is a contradiction. Thus, no two edges in $M_F$ share the same source node. Symmetrically, no two edges in $M_F$ share the same target node. Thus, $M_F$ is a matching. Moreover, 
+            
+            \begin{center}
+            $|F| = \sum_{v \in V'}{F(s, v)} = \sum_{d \in D}{F(s, d)} \overset{\text{conservation of flow}}{=} \sum_{d \in D}{\sum_{r \in R}{F(d, r)}} = \sum_{\substack{(d, r) \in D \times R \\ F(d, r) > 0}}{F(d, r)} = \sum_{(d, r) \in M_F}{F(d, r)} = \sum_{(d, r) \in M_F}{1} = |M_F|$
+            \end{center}
+            Thus, $|M_F| = |F| = max-flow$, and therefore $max-flow \leq max-matching$.
+
+            \item $\mathbf{max-matching \leq max-flow}$: Let $M$ be some maximum matching in $G$. We can construct a flow $F_M$ from $M$ as follows:
+        
+            \begin{center}
+                $F_M(e) = \begin{cases}
+                    1 & \text{if $e = (s, d)$ where $d$ is matched in $M$}\\
+                    1 & \text{if $e = (r, t)$ where $r$ is matched in $M$}\\
+                    1 & \text{if $e = (d, r)$ where $(d, r) \in M$}\\
+                    0 & \text{otherwise}
+                \end{cases}$
+            \end{center}
+            
+            It is clear that $\forall v, u \in V', F_M(v, u) \leq c(v, u)$, additionally, as $M$ is a matching, conversation of flow is maintained: let $d \in D$, then
+            
+            \begin{center}
+            $\sum_{v \in V'}{F_M(v, d)} = F_M(s, d) = 1 = \left| \{r \in R \mid (d, r) \in M \} \right| = \sum_{v \in V'}{F_M(d, v)}$
+            \end{center}
+            
+            Thus $F_M$ conserves flow for nodes in $D$, and symmetrically so for nodes in $R$. Thus, $F_M$ is a flow. Moreover, as $M$ is a matching and matches each node at most once, we get that
+
+            \begin{center}
+                $|F_M| = \sum_{v \in V'}{F_M(s, v)} = \sum_{d \in D}{F_M(s, d)} = \sum_{d \text{ is matched in $M$}}{F_M(s, d)} = \sum_{d \text{ is matched in $M$}}{1} = \left| \{d \in D \mid d \text{ is matched in $M$} \} \right| = |M|$
+            \end{center}
+            Therefore, $|F_M| = |M| = max-matching$, and thus $max-matching \leq max-flow$.
+        \end{itemize}
+
+        Thus, $max-flow = max-matching$, and the maximum flow algorithm can be used to determine the maximum number of matches that can be made.
+    
+        \item To find the actual maximum number of matches, we can use the \textbf{Augmenting Path Algorithm} we've seen in class to find the maximum-flow in the network $G'$, and then extract a matching from the flow which would have the same cardinality (and thus be the maximum matching per (i)). The extraction is detailed in the proof of $max-flow \leq max-matching$ above.
+    \end{enumerate}
+    
+    \item The following are the examples we tested our maximal matching algorithm for Uber drivers and riders, which are runnable through \texttt{max\_matching\_sanity\_checks()} in our code. They all detail a bipartite graph between $5$ drivers and $5$ riders, and the compatibility between them represented as edges.
+    
+    \begin{enumerate}[label=(\arabic*)]
+        \item All drivers can only pick the first rider:
+        
+        % C1 = [
+        %     [1, 0, 0, 0, 0],
+        %     [1, 0, 0, 0, 0],
+        %     [1, 0, 0, 0, 0],
+        %     [1, 0, 0, 0, 0],
+        %     [1, 0, 0, 0, 0],
+        % ]
+        % result = max_matching(5, 5, C1)
+        % assert len(result) == 5
+        % assert result == [0, None, None, None, None]
+
+        \begin{center}
+            \begin{tikzpicture}
+                \node[draw, circle] (d1) at (0, 2) {$d_1$};
+                \node[draw, circle] (d2) at (0, 1) {$d_2$};
+                \node[draw, circle] (d3) at (0, 0) {$d_3$};
+                \node[draw, circle] (d4) at (0, -1) {$d_4$};
+                \node[draw, circle] (d5) at (0, -2) {$d_5$};
+                \node[draw, circle] (r1) at (2, 2) {$r_1$};
+                \node[draw, circle] (r2) at (2, 1) {$r_2$};
+                \node[draw, circle] (r3) at (2, 0) {$r_3$};
+                \node[draw, circle] (r4) at (2, -1) {$r_4$};
+                \node[draw, circle] (r5) at (2, -2) {$r_5$};
+                
+                \draw[-{Latex[length=2mm]}] (d1) -- (r1);
+                \draw[-{Latex[length=2mm]}] (d2) -- (r1);
+                \draw[-{Latex[length=2mm]}] (d3) -- (r1);
+                \draw[-{Latex[length=2mm]}] (d4) -- (r1);
+                \draw[-{Latex[length=2mm]}] (d5) -- (r1);
+            \end{tikzpicture}
+        \end{center}
+
+        The maximum matching is clearly 1, as only one rider can be matched with a driver. Indeed, the maximal matching algorithm returns $[0, None, None, None, None]$---which in our code it stands for the first driver being matched with the first rider, and the rest of the drivers being unmatched.
+
+        \item For every $i$, driver $i$ can pick rider $i$:
+        
+        % C2 = [
+        %     [1, 0, 0, 0, 0],
+        %     [0, 1, 0, 0, 0],
+        %     [0, 0, 1, 0, 0],
+        %     [0, 0, 0, 1, 0],
+        %     [0, 0, 0, 0, 1],
+        % ]
+        % result = max_matching(5, 5, C2)
+        % assert len(result) == 5
+        % assert result == [0, 1, 2, 3, 4]
+
+        \begin{center}
+            \begin{tikzpicture}
+                \node[draw, circle] (d1) at (0, 2) {$d_1$};
+                \node[draw, circle] (d2) at (0, 1) {$d_2$};
+                \node[draw, circle] (d3) at (0, 0) {$d_3$};
+                \node[draw, circle] (d4) at (0, -1) {$d_4$};
+                \node[draw, circle] (d5) at (0, -2) {$d_5$};
+                \node[draw, circle] (r1) at (2, 2) {$r_1$};
+                \node[draw, circle] (r2) at (2, 1) {$r_2$};
+                \node[draw, circle] (r3) at (2, 0) {$r_3$};
+                \node[draw, circle] (r4) at (2, -1) {$r_4$};
+                \node[draw, circle] (r5) at (2, -2) {$r_5$};
+
+                \draw[-{Latex[length=2mm]}] (d1) -- (r1);
+                \draw[-{Latex[length=2mm]}] (d2) -- (r2);
+                \draw[-{Latex[length=2mm]}] (d3) -- (r3);
+                \draw[-{Latex[length=2mm]}] (d4) -- (r4);
+                \draw[-{Latex[length=2mm]}] (d5) -- (r5);
+            \end{tikzpicture}
+        \end{center}
+
+        The maximum matching is clearly 5, as each driver can be matched with a rider. Indeed, the maximal matching algorithm returns $[0, 1, 2, 3, 4]$---which in our code it stands for each driver being matched with the corresponding rider.
+        
+        \item All drivers can pick all riders:
+        
+        % C3 = [
+        %     [1, 1, 1, 1, 1],
+        %     [1, 1, 1, 1, 1],
+        %     [1, 1, 1, 1, 1],
+        %     [1, 1, 1, 1, 1],
+        %     [1, 1, 1, 1, 1],
+        % ]
+        % result = max_matching(5, 5, C3)
+        % assert len(result) == 5
+        % assert None not in result
+        % assert len(set(result)) == 5
+
+        \begin{center}
+            \begin{tikzpicture}
+                \node[draw, circle] (d1) at (0, 2) {$d_1$};
+                \node[draw, circle] (d2) at (0, 1) {$d_2$};
+                \node[draw, circle] (d3) at (0, 0) {$d_3$};
+                \node[draw, circle] (d4) at (0, -1) {$d_4$};
+                \node[draw, circle] (d5) at (0, -2) {$d_5$};
+                \node[draw, circle] (r1) at (2, 2) {$r_1$};
+                \node[draw, circle] (r2) at (2, 1) {$r_2$};
+                \node[draw, circle] (r3) at (2, 0) {$r_3$};
+                \node[draw, circle] (r4) at (2, -1) {$r_4$};
+                \node[draw, circle] (r5) at (2, -2) {$r_5$};
+
+                \draw[-{Latex[length=2mm]}] (d1) -- (r1);
+                \draw[-{Latex[length=2mm]}] (d1) -- (r2);
+                \draw[-{Latex[length=2mm]}] (d1) -- (r3);
+                \draw[-{Latex[length=2mm]}] (d1) -- (r4);
+                \draw[-{Latex[length=2mm]}] (d1) -- (r5);
+                \draw[-{Latex[length=2mm]}] (d2) -- (r1);
+                \draw[-{Latex[length=2mm]}] (d2) -- (r2);
+                \draw[-{Latex[length=2mm]}] (d2) -- (r3);
+                \draw[-{Latex[length=2mm]}] (d2) -- (r4);
+                \draw[-{Latex[length=2mm]}] (d2) -- (r5);
+                \draw[-{Latex[length=2mm]}] (d3) -- (r1);
+                \draw[-{Latex[length=2mm]}] (d3) -- (r2);
+                \draw[-{Latex[length=2mm]}] (d3) -- (r3);
+                \draw[-{Latex[length=2mm]}] (d3) -- (r4);
+                \draw[-{Latex[length=2mm]}] (d3) -- (r5);
+                \draw[-{Latex[length=2mm]}] (d4) -- (r1);
+                \draw[-{Latex[length=2mm]}] (d4) -- (r2);
+                \draw[-{Latex[length=2mm]}] (d4) -- (r3);
+                \draw[-{Latex[length=2mm]}] (d4) -- (r4);
+                \draw[-{Latex[length=2mm]}] (d4) -- (r5);
+                \draw[-{Latex[length=2mm]}] (d5) -- (r1);
+                \draw[-{Latex[length=2mm]}] (d5) -- (r2);
+                \draw[-{Latex[length=2mm]}] (d5) -- (r3);
+                \draw[-{Latex[length=2mm]}] (d5) -- (r4);
+                \draw[-{Latex[length=2mm]}] (d5) -- (r5);
+            \end{tikzpicture}
+        \end{center}
+
+        The maximum matching is clearly 5, as each driver can be matched with any rider, which in particular means that each driver can be matched with a different rider. Indeed, the maximal matching algorithm returns a list full of non-None values, implying that each driver is matched with a rider, and that each driver is matched with a different rider.
+        
+        \item For every $i$, driver $i$ can pick riders $i, (i+1) \mod 5$:
+    
+        % C4 = [
+        %     [1, 1, 0, 0, 0],
+        %     [0, 1, 1, 0, 0],
+        %     [0, 0, 1, 1, 0],
+        %     [0, 0, 0, 1, 1],
+        %     [1, 0, 0, 0, 1],
+        % ]
+        % result = max_matching(5, 5, C4)
+        % assert len(result) == 5
+        % assert None not in result
+        % assert len(set(result)) == 5
+        % assert result[0] in {0, 1}
+        % assert result[1] in {1, 2}
+        % assert result[2] in {2, 3}
+        % assert result[3] in {3, 4}
+        % assert result[4] in {4, 0}
+
+        \begin{center}
+            \begin{tikzpicture}
+                \node[draw, circle] (d1) at (0, 2) {$d_1$};
+                \node[draw, circle] (d2) at (0, 1) {$d_2$};
+                \node[draw, circle] (d3) at (0, 0) {$d_3$};
+                \node[draw, circle] (d4) at (0, -1) {$d_4$};
+                \node[draw, circle] (d5) at (0, -2) {$d_5$};
+                \node[draw, circle] (r1) at (2, 2) {$r_1$};
+                \node[draw, circle] (r2) at (2, 1) {$r_2$};
+                \node[draw, circle] (r3) at (2, 0) {$r_3$};
+                \node[draw, circle] (r4) at (2, -1) {$r_4$};
+                \node[draw, circle] (r5) at (2, -2) {$r_5$};
+
+                \draw[-{Latex[length=2mm]}] (d1) -- (r1);
+                \draw[-{Latex[length=2mm]}] (d1) -- (r2);
+                \draw[-{Latex[length=2mm]}] (d2) -- (r2);
+                \draw[-{Latex[length=2mm]}] (d2) -- (r3);
+                \draw[-{Latex[length=2mm]}] (d3) -- (r3);
+                \draw[-{Latex[length=2mm]}] (d3) -- (r4);
+                \draw[-{Latex[length=2mm]}] (d4) -- (r4);
+                \draw[-{Latex[length=2mm]}] (d4) -- (r5);
+                \draw[-{Latex[length=2mm]}] (d5) -- (r5);
+                \draw[-{Latex[length=2mm]}] (d5) -- (r1);
+            \end{tikzpicture}
+        \end{center}
+
+        The maximum matching is clearly 5, as we can observe easily that driver $d_i$ can be matched with rider $r_i$ such that each driver is matched with a different rider. Indeed, the maximal matching algorithm returns a list full of non-None distinct values, where each driver is matched with a rider in its list of compatible riders.
+
+    \end{enumerate}
+    
+    \item We consider the case where there are $n$ drivers and $n$ riders, where each driver is connected to each rider with probability $p$. Fixing $n = 450$, we run the maximal matching algorithm for $100$ times for each varying values of $p$---increments of $0.01$ from $0.03$ to $0.1$, and use those measurements of the size of the found maximal matching, to estimate the probability that all $n$ riders will get matched (by computing the sample mean of the measurements being a maximal matching of size $n$).
+    
+    At first we tried estimating using ps from $\{0.1, 0.2, 0.3, 0.4, 0.5\}$, but we found out that even for $p=0.1$ there's a very high probability of getting a full match.\\
+    That's when we started using $\{0.03, 0.04, 0.05, 0.06, 0.06, 0.07, 0.08, 0.09, 0.1\}$, where the differences were noticable.\\
+    
+    \Cref{fig:q10d} details the results of this experiment---as a plot of the estimated probability that all $n$ riders will get matched as a function of $p$.
+    
+    \begin{figure*}[h]
+        \centering
+        \resizebox{0.8\textwidth}{!}{
+            \input{figures/q10d.pgf}
+        }
+        \caption{Estimated probability that all $n$ riders will get matched as a function of $p$.}
+        \label{fig:q10d}
+    \end{figure*}
+
+    % FILL IN EXPLANATION
+    
 \end{enumerate}
 
 \section{Bonus Question 3}

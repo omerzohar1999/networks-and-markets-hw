@@ -206,10 +206,10 @@ def q_matching_fig_6_3():
 
 def max_flow_sanity_checks():
     max_flow_fig_6_1 = q_matching_fig_6_1()
-    assert max_flow_fig_6_1[0] == 2
+    assert max_flow_fig_6_1[0] == 2, "Failure: Expected 2, got " + str(max_flow_fig_6_1[0])
 
     max_flow_fig_6_3 = q_matching_fig_6_3()
-    assert max_flow_fig_6_3[0] == 4
+    assert max_flow_fig_6_3[0] == 4, "Failure: Expected 4, got " + str(max_flow_fig_6_3[0])
 
 
 # === Problem 10(c) ===
@@ -306,7 +306,7 @@ def random_driver_rider_bipartite_graph(n, p):
     """Returns an n x n constraints array C as defined for max_matching, representing a bipartite
     graph with 2n nodes, where each vertex in the left half is connected to any given vertex in the
     right half with probability p."""
-    return (np.random.rand(n, n) < p).astype(int)
+    return list(map(list, (np.random.rand(n, n) < p).astype(int)))
 
     # from itertools import product
     # C = [[0] * n for _ in range(n)]
@@ -325,7 +325,7 @@ def main():
     max_matching_sanity_checks()
     # === Problem 10(d) === #
     print("\nQ10d\n")
-    n = 450
+    n = 100
     num_iters = 100
     ps = [0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
     results = []
