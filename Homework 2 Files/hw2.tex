@@ -433,11 +433,11 @@ For this exercise we implemented the search algorithm "simulated annealing". Sin
     At first we tried estimating using ps from $\{0.1, 0.2, 0.3, 0.4, 0.5\}$, but we found out that even for $p=0.1$ there's a very high probability of getting a full match.\\
     That's when we started using $\{0.03, 0.04, 0.05, 0.06, 0.06, 0.07, 0.08, 0.09, 0.1\}$, where the differences were noticable.\\
     
-    \Cref{fig:q10d} details the results of this experiment---as a plot of the estimated probability that all $n$ riders will get matched as a function of $p$.
+    \Cref{fig:q10d} details the results of this experiment---as a plot of the estimated probability that all $n$ riders will get matched as a function of $p$. We observe the intuitive trend of the probability increasing as $p$ increases, as the higher the probability of a driver being connected to a rider, the more riders each driver will likely be connected to, and thus the more likely it is that all riders will get matched. We also observe that the probability is very low for $p = 0.03$, and increases rapidly as $p$ increases, and then starts to plateau around $p = 0.08$.
     
     \begin{figure*}[h]
         \centering
-        \resizebox{0.8\textwidth}{!}{
+        \resizebox{0.6\textwidth}{!}{
             \input{figures/q10d.pgf}
         }
         \caption{Estimated probability that all $n$ riders will get matched as a function of $p$.}
