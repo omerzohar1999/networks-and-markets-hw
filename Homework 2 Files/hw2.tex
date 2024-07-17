@@ -428,7 +428,7 @@ For this exercise we implemented the search algorithm "simulated annealing". Sin
 
     \end{enumerate}
     
-    \item We consider the case where there are $n$ drivers and $n$ riders, where each driver is connected to each rider with probability $p$. Fixing $n = 450$, we run the maximal matching algorithm for $100$ times for each varying values of $p$---increments of $0.01$ from $0.03$ to $0.1$, and use those measurements of the size of the found maximal matching, to estimate the probability that all $n$ riders will get matched (by computing the sample mean of the measurements being a maximal matching of size $n$).
+    \item We consider the case where there are $n$ drivers and $n$ riders, where each driver is connected to each rider with probability $p$. Fixing $n = 100$, we run the maximal matching algorithm for $100$ times for each varying values of $p$---increments of $0.01$ from $0.03$ to $0.1$, and use those measurements of the size of the found maximal matching, to estimate the probability that all $n$ riders will get matched (by computing the sample mean of the measurements being a maximal matching of size $n$).
     
     At first we tried estimating using ps from $\{0.1, 0.2, 0.3, 0.4, 0.5\}$, but we found out that even for $p=0.1$ there's a very high probability of getting a full match.\\
     That's when we started using $\{0.03, 0.04, 0.05, 0.06, 0.06, 0.07, 0.08, 0.09, 0.1\}$, where the differences were noticable.\\
