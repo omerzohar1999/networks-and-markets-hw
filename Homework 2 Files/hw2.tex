@@ -42,7 +42,7 @@
 
 % start
 \title{
-    Homework Assignment 2 - Coding Part Writeup\\
+    Homework Assignment 2 - Coding Part Write-up\\
     Networks and Markets
 }
 \author{
@@ -194,7 +194,7 @@ For this exercise we implemented the search algorithm "simulated annealing". Sin
         % They would both have flow $1$ (as $f: E' \rightarrow \mathbb{N}$ and $\forall e \in E', f(e) \leq c(e) = 1$), and 
 
         \begin{itemize}
-            \item $\mathbf{max-flow \leq max-matching}$: Let $F$ be the maximum flow in $G'$. We can construct a matching $M$ from $F$ by taking the set of edges 
+            \item $\mathbf{max-flow \leq max-matching}$: Let $F$ be the maximum flow in $G'$. We can construct a matching $M$ from $F$ for $G$ by taking the set of edges 
             
             \begin{center}
             $M_F = \{(d, r) \in E \mid F(d, r) > 0 \} \overset{(1)}{=} \{(d, r) \in E \mid F(d, r) = 1 \}$
@@ -217,7 +217,7 @@ For this exercise we implemented the search algorithm "simulated annealing". Sin
             \end{center}
             Thus, $|M_F| = |F| = max-flow$, and therefore $max-flow \leq max-matching$.
 
-            \item $\mathbf{max-matching \leq max-flow}$: Let $M$ be some maximum matching in $G$. We can construct a flow $F_M$ from $M$ as follows:
+            \item $\mathbf{max-matching \leq max-flow}$: Let $M$ be some maximum matching in $G$. We can construct a flow $F_M$ from $M$ for $G'$ as follows:
         
             \begin{center}
                 $F_M(e) = \begin{cases}
@@ -247,7 +247,7 @@ For this exercise we implemented the search algorithm "simulated annealing". Sin
         \item To find the actual maximum number of matches, we can use the \textbf{Augmenting Path Algorithm} we've seen in class to find the maximum-flow in the network $G'$, and then extract a matching from the flow which would have the same cardinality (and thus be the maximum matching per (i)). The extraction is detailed in the proof of $max-flow \leq max-matching$ above.
     \end{enumerate}
     
-    \item The following are the examples we tested our maximal matching algorithm for Uber drivers and riders, which are runnable through \texttt{max\_matching\_sanity\_checks()} in our code. They all detail a bipartite graph between $5$ drivers and $5$ riders, and the compatibility between them represented as edges.
+    \item The following are the examples we tested our maximal matching algorithm for Uber drivers and riders, which can be run through \texttt{max\_matching\_sanity\_checks()} in our code. They all detail a bipartite graph between $5$ drivers and $5$ riders, and the compatibility between them represented as edges.
     
     \begin{enumerate}[label=(\arabic*)]
         \item All drivers can only pick the first rider:
@@ -431,7 +431,7 @@ For this exercise we implemented the search algorithm "simulated annealing". Sin
     \item We consider the case where there are $n$ drivers and $n$ riders, where each driver is connected to each rider with probability $p$. Fixing $n = 100$, we run the maximal matching algorithm for $100$ times for each varying values of $p$---increments of $0.01$ from $0.03$ to $0.1$, and use those measurements of the size of the found maximal matching, to estimate the probability that all $n$ riders will get matched (by computing the sample mean of the measurements being a maximal matching of size $n$).
     
     At first we tried estimating using ps from $\{0.1, 0.2, 0.3, 0.4, 0.5\}$, but we found out that even for $p=0.1$ there's a very high probability of getting a full match.\\
-    That's when we started using $\{0.03, 0.04, 0.05, 0.06, 0.06, 0.07, 0.08, 0.09, 0.1\}$, where the differences were noticable.\\
+    That's when we started using $\{0.03, 0.04, 0.05, 0.06, 0.06, 0.07, 0.08, 0.09, 0.1\}$, where the differences were noticeable.\\
     
     \Cref{fig:q10d} details the results of this experiment---as a plot of the estimated probability that all $n$ riders will get matched as a function of $p$. We observe the intuitive trend of the probability increasing as $p$ increases, as the higher the probability of a driver being connected to a rider, the more riders each driver will likely be connected to, and thus the more likely it is that all riders will get matched. We also observe that the probability is very low for $p = 0.03$, and increases rapidly as $p$ increases, and then starts to plateau around $p = 0.08$.
     
