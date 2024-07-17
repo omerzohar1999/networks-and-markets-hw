@@ -320,6 +320,59 @@ def random_driver_rider_bipartite_graph(n, p):
     # return C
 
 
+# === Bonus Question 3 ===
+def get_min_p_for_full_matching(n, num_iters=30):
+    """Given n drivers and n riders, estimate the minimum value of p such that the probability
+    of a full matching is at least 0.99. Perform num_iters trials to estimate this probability.
+    We do so by exponentially increasing p until the estimated probability of full matching is, and then binary searching for the exact value in the range [p / 2, p]."""
+    p = 1
+    while True:
+        print(f"p={p}")
+        times_was_fully_matched = 0
+        for j in range(num_iters):
+            C = random_driver_rider_bipartite_graph(n, p)
+            result = max_matching(n, n, C)
+            times_was_fully_matched += None not in result
+        avg_fully_matched = times_was_fully_matched / num_iters
+        if avg_fully_matched < 0.99:
+            break
+        p /= 2
+    lower, upper = p, 2 * p
+    while upper - lower > 1e-3:
+        print(f"lower={lower}, upper={upper}")
+        p = (lower + upper) / 2
+        times_was_fully_matched = 0
+        for j in range(num_iters):
+            C = random_driver_rider_bipartite_graph(n, p)
+            result = max_matching(n, n, C)
+            times_was_fully_matched += None not in result
+        avg_fully_matched = times_was_fully_matched / num_iters
+        if avg_fully_matched >= 0.99:
+            upper = p
+        else:
+            lower = p
+    return p
+
+def plot_min_p_for_full_matching():
+    ns = range(10, 100, 5)
+    min_ps = []
+    for n in ns:
+        min_ps.append(get_min_p_for_full_matching(n, num_iters=int(1000 / n)))
+        print(f"n={n}, p={min_ps[-1]}")
+    plt.plot(ns, min_ps, label="Estimated minimum p for full matching")
+    plt.xlabel("n")
+    plt.ylabel("Minimum p for full matching")
+    plt.title("Minimum p for full matching vs. n")
+
+    # add plot of approximation function
+    x = np.linspace(min(ns), max(ns), 100)
+    y = 1 / np.sqrt(x)
+    plt.plot(x, y, label="1 / sqrt(n)")
+    plt.legend()
+    # plt.savefig("bonus3.png", format="png")
+    # plt.savefig("bonus3.pgf", format="pgf")
+    plt.show()
+
 def main():
     max_flow_sanity_checks()
     max_matching_sanity_checks()
