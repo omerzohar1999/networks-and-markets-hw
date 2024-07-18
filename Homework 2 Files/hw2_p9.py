@@ -9,10 +9,12 @@
 # Do not include any other files or an external package, unless it is one of
 # [numpy, pandas, scipy, matplotlib, random]
 # please contact us before sumission if you want another package approved.
-import numpy as np
+import time, math, numpy as np
 import matplotlib.pyplot as plt
 from queue import Queue
 import random
+from dataclasses import dataclass, field
+import multiprocessing as mp
 
 
 # Implement the methods in this class as appropriate. Feel free to add other methods
@@ -226,6 +228,318 @@ def sanity_checks():
     q_incompletecascade_graph_fig4_1_right()
 
 
+##### BONUS 2 - SIMULATED ANNEALING ######
+def run_optimizer_par(G, t, duration=80,
+                      exp_or_None_weight_function=True,
+                      num_processes=4):
+  """
+  Run the optimizer in parallel
+  G - the graph
+  t - the t-fraction
+  exp_or_None_weight_function
+    None - runs without any weight function
+    True - runs with the exponential weight function (large weight are exponantialy more likely)
+    False - runs with the linear weight function (large weight are linearly more likely)
+  """
+  if num_processes == 1:
+    return run_optimizer(G, t, duration, exp_or_None_weight_function)
+
+  with mp.Pool(processes=num_processes) as pool:
+    s_es = pool.starmap(
+      run_optimizer,
+      [(G, t, duration, exp_or_None_weight_function) for _ in
+       range(num_processes)]
+    )
+
+  return min(s_es, key=lambda s: loss_func(State(G, t, set(), S=s)))
+
+
+def run_optimizer(G, t, duration, exp_or_None_weight_function=None):
+  """
+  Run the optimizer sequentially
+  G - the graph
+  t - 100 * t is the batch size
+  exp_or_None_weight_function
+    None - runs without any weight function
+    True - runs with the exponential weight function (large weight are exponantialy more likely)
+    False - runs with the linear weight function (large weight are linearly more likely)
+  """
+  shared_prev_states = set()
+  run = lambda tmp, dur, st: _simulated_annealing(
+    Temp=tmp,
+    initial_state=st,
+    alpha=0.99,
+    duration=dur,
+    loss=loss_func,
+    accept=_accept_func,
+    update=_update_func,
+  )
+
+  butch_size = max(1, 100 * t)  # number of nodes to add / remove each time
+  # third = lambda x: (duration * 2) // 3
+  # duration = third(1 + duration / 2)
+  duration = 1 + duration // 2
+
+  state = State(G, t, shared_prev_states,
+                exp_or_None_weight_function,
+                butch_size=butch_size)
+
+  state, temp = run(100, duration, state)
+
+  while duration >= 1:
+    duration, batch_size = duration // 2, max(1, butch_size // 3)
+    state, temp = run(temp, duration,
+                      State(G, t, shared_prev_states,
+                            exp_or_None_weight_function,
+                            S=state.S,
+                            butch_size=butch_size),
+                      )
+  return state.S
+
+
+def loss_func(state):
+  """
+  adding one infected is better always better
+  given the same amount of infected, the smaller S is, the better
+  """
+  G, S, I_comp = state.G, state.S, state.I_comp
+  number_of_non_infected = len(I_comp)  # in N
+  fraction_of_S = max(0, len(S) - 1) / G.n  # in [0, 1)
+  return number_of_non_infected + fraction_of_S
+
+
+@dataclass(frozen=True, repr=False)
+class MySet(set):
+  _hash: int = field(init=False)
+  _list: list = field(init=False)
+
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    object.__setattr__(self, '_hash', hash(frozenset(self)))
+    object.__setattr__(self, '_list', list(self))
+
+  def __hash__(self):
+    return self._hash
+
+  def as_list(self):
+    return self._list
+
+  def __repr__(self):
+    return '{' + ', '.join(map(str, self)) + '}'
+
+
+@dataclass
+class Data:
+  a: int
+  b: int
+  butch_size: int
+
+  def calc(self, s_size):
+    if not self.bootstrap(): return np.random.randint(1, max(self.butch_size, 2))
+    middle = (self.a + self.b) // 2
+    return max(1, np.abs(s_size - middle))
+
+  def bootstrap(self):
+    return self.b != self.a
+
+
+class State:
+  def __init__(self, G, t,
+               shared_prev_states,
+               exp_or_None=None, S=None,
+               _data=None, butch_size=1):
+    self.G, self.t = G, t
+    self.exp_or_None = exp_or_None
+    self.shared_prev_states = shared_prev_states
+
+    self.S = MySet(S) if S is not None else MySet()
+    shared_prev_states.add(self.S)
+
+    self.I = contagion_brd(self.G, self.S, self.t)
+    self.I_comp = [i for i in range(self.G.n) if i not in self.I]
+    self.data = self._calc_data(_data, butch_size)
+
+  def is_cascading(self):
+    return len(self.I_comp) == 0
+
+  def _calc_data(self, data, butch_size):
+    if data is None:
+      return Data(0, self.G.n, butch_size)
+
+    if not data.bootstrap():
+      return data
+
+    if self.is_cascading():
+      return Data(data.a, len(self.S), data.butch_size)
+    else:
+      return Data(len(self.S), data.b, data.butch_size)
+
+  def new_state(self, S=None, _new_game=True):
+    return State(self.G, self.t, self.shared_prev_states, self.exp_or_None,
+                 S, _data=None if _new_game else self.data)
+
+  @property
+  def S_weights(self):
+    if self.exp_or_None is None: return None
+    comp = self.I_comp if self.I_comp else self.S_comp
+    weight_func = _out_degrees_weight_function(self.G, exp=self.exp_or_None)
+    return weight_func(self.S, comp, add=False)
+
+  @property
+  def C_weights(self):
+    if self.exp_or_None is None: return None
+    weight_func = _out_degrees_weight_function(self.G, exp=self.exp_or_None)
+    return weight_func(self.I_comp, self.I_comp, add=True)
+
+  @property
+  def S_comp(self):
+    return [i for i in range(self.G.n) if i not in self.S]
+
+  def __repr__(self):
+    return f'Cascading={self.is_cascading()}_sLen={len(self.S)}'
+
+
+def _accept_func(state, delta_l, Temp) -> object:
+  if state.data.bootstrap():
+    return True
+
+  val = - delta_l / Temp
+  return np.random.random() < math.exp(val)
+
+
+def _random_add_node(state) -> State:
+  size = max(1, min(state.data.calc(len(state.S)),
+                    len(state.I_comp) // 2,
+                    max(8, int(np.ceil(len(state.S) / 2)))))
+  new_s = state.S
+  for _ in range(100):
+    if sum(x != 0 for x in state.C_weights) < size:
+      nodes_to_add = np.array(state.I_comp)[np.array(state.C_weights) != 0]
+    else:
+      nodes_to_add = np.random.choice(state.I_comp, size, False,
+                                    p=state.C_weights)
+    new_s = frozenset(set(nodes_to_add) | state.S)
+    if hash(new_s) not in state.shared_prev_states:
+      break
+
+  return state.new_state(new_s, _new_game=False)
+
+
+def _random_remove_node(state) -> State:
+  size = max(1, min(state.data.calc(len(state.S)), len(state.S) // 2))
+  new_s = state.S
+  for _ in range(100):
+    node_to_remove = np.random.choice(state.S.as_list(), size, False,
+                                      p=state.S_weights)
+    new_s = frozenset(state.S - set(node_to_remove))
+    if hash(new_s) not in state.shared_prev_states:
+      break
+
+  return state.new_state(new_s, _new_game=False)
+
+
+def _update_func(state):
+  return _random_remove_node(state) \
+    if state.is_cascading() \
+    else _random_add_node(state)
+
+
+def _normalized_p(p, add: bool, exp):
+  resize = (lambda x: np.exp(x) - 1) if exp else (lambda x: x)
+
+  normalize = lambda x: x / sum(x) if sum(x) != 0 else x
+  p = normalize(p)
+  p = resize(p)
+  p = normalize(p)
+  if not add:
+    p = normalize(1 - p)
+  if np.all(p == 0):
+    p = np.array([1/len(p) for _ in p])
+  return p
+
+
+def _out_degrees_weight_function(G, exp=False):
+  # # I from 'infected'
+  # neighbors = G.edges_from(node)
+  # if not neighbors: return np.inf
+  # not_infected_neighbors = neighbors.difference(I)
+  # return len(not_infected_neighbors)
+
+  def inner(A, out, add):
+    out_as_set = set(out)
+    p = np.zeros(len(A))
+    for i, a in enumerate(A):
+      neighbors = G.edges_from(a)
+      out_neighbors = filter(lambda x: x in out_as_set, neighbors)
+      num_out_neighbors = sum(1 for _ in out_neighbors)
+      p[i] = num_out_neighbors
+    return _normalized_p(p, add, exp)
+
+  return inner
+
+
+def _simulated_annealing(Temp, initial_state, alpha,
+                         duration, loss, accept,
+                         update):
+  assert 0 < alpha < 1
+
+  s_best = s_curr = initial_state
+  l_best = l_curr = loss(s_curr)
+
+  time_to_end = time.time() + duration
+
+  while l_best > 0 and time.time() < time_to_end:
+    Temp = max(0.001, Temp * alpha)
+
+    s_new = update(s_curr)
+    l_new = loss(s_new)
+
+    if l_new >= l_curr and not accept(s_curr, l_new - l_curr, Temp):
+      continue
+
+    s_curr, l_curr = s_new, l_new
+
+    if l_curr < l_best:
+      s_best, l_best = s_curr, l_curr
+
+  return s_best, Temp
+
+
+def _test():
+  from hw2_p9 import create_fb_graph
+  G = create_fb_graph()
+  t = 0.4
+  s = run_optimizer(G, t,
+                    duration=10,
+                    exp_or_None_weight_function=True)
+  # None(80): 844
+  # With(80): 814
+  i = contagion_brd(G, s, t)
+  print(len(i) == G.n, len(s), s)
+
+
+def _test_par():
+  from hw2_p9 import create_fb_graph
+  G = create_fb_graph()
+  t = 0.4
+  s = run_optimizer_par(G, t,
+                        duration=10,
+                        exp_or_None_weight_function=True,
+                        num_processes=8)
+  # with(60): 866
+  # with(80): 810, 852
+  i = contagion_brd(G, s, t)
+  print(len(i) == G.n, len(s), s)
+############################################
+
+# === OPTIONAL: Bonus Question 2 === #
+def min_early_adopters(G, q):
+    """Given an undirected graph G, and float threshold t, approximate the
+    smallest number of early adopters that will call a complete cascade.
+    Return an integer between [0, G.number_of_nodes()]"""
+    return len(run_optimizer_par(G, q, duration=10))
+############################################
+
 def main():
     sanity_checks()
     fb_graph = create_fb_graph()
@@ -286,12 +600,12 @@ def main():
 
 
     # === OPTIONAL: Bonus Question 2 === # FIXME: uncomment to run bonus 2
-    from local_search import run_optimizer_par
     min_s_size = []
     thresholds = np.linspace(0.1, 0.9, 10)
     for t in thresholds:
         print(f'\r running optimizer for t = {t:.2f}..', end='')
-        len_s = len(run_optimizer_par(fb_graph, t, duration=10))
+        len_s = min_early_adopters(fb_graph, t)
+        # len(run_optimizer_par(fb_graph, t, duration=10))
         print(f'\r running optimizer for t = {t:.2f}.. size of S = {len_s}')
 
         min_s_size.append(len_s)
@@ -302,16 +616,6 @@ def main():
     plt.title('Approximating minimal S size per threshold')
     plt.grid(False)
     plt.show()
-
-# === OPTIONAL: Bonus Question 2 === #
-
-
-def min_early_adopters(G, q):
-    """Given an undirected graph G, and float threshold t, approximate the
-    smallest number of early adopters that will call a complete cascade.
-    Return an integer between [0, G.number_of_nodes()]"""
-    pass
-
 
 if __name__ == "__main__":
     main()
