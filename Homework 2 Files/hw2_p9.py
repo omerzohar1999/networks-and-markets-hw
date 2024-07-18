@@ -285,8 +285,7 @@ def main():
     plt.show()
 
 
-    # === OPTIONAL: Bonus Question 2 === #
-    # TODO: Put analysis code here
+    # === OPTIONAL: Bonus Question 2 === # FIXME: uncomment to run bonus 2
     from local_search import run_optimizer_par
     min_s_size = []
     thresholds = np.linspace(0.1, 0.9, 10)
@@ -303,8 +302,6 @@ def main():
     plt.title('Approximating minimal S size per threshold')
     plt.grid(False)
     plt.show()
-
-
 
 # === OPTIONAL: Bonus Question 2 === #
 
