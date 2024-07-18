@@ -231,7 +231,7 @@ def sanity_checks():
 ##### BONUS 2 - SIMULATED ANNEALING ######
 def run_optimizer_par(G, t, duration=80,
                       exp_or_None_weight_function=True,
-                      num_processes=4):
+                      num_processes=1):
   """
   Run the optimizer in parallel
   G - the graph
