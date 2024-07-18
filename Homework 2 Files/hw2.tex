@@ -448,4 +448,47 @@ For this exercise we implemented the search algorithm "simulated annealing". Sin
 
 \section{Bonus Question 3}
 
+\subsection{Asymptotic Solution - a Sketch}\label{sec:bonus3}
+
+From the paper of Erdős and Rényi, (\cite{frieze2004perfect})  let $m(n) = n(\log n + c_n)$. Then $P[B_{n,m(n)} \text{ has a P.M.}] \to 1$ if and only if $c_n \to \infty$ when $n\to \infty$.
+
+We know that given a probability $p(n)$, we have $E[m(n)] = n^2p(n)$. This means that $P[m(n) > \frac{1}{2}n^2p(n)] \to 1$. Actually, $P[m(n) > (1 - \epsilon)n^2p(n)] \to 1$ for every $\epsilon > 0$.
+
+Now, we need to choose $p(n)$ such that $E[m(n)] = n(\log n + c_n)$ for a series $c_n$ s.t $c_n \to \infty$.  We take $\frac{1}{2}n^2p(n) = n(\log n + c_n)$.
+
+Solving for $p(n)$: $p(n) = \frac{2}{n}(\log n + c_n)$
+
+Note that we can use $c_n = \log n$, which approaches infinity, and we get: $p(n) = 4\frac{\log n}{n}$
+
+We can even choose a slower-growing function for $c_n$, but it won't change much. As discussed, we can change $\frac{1}{2}$ to $1 - \epsilon$ , then we get: 
+
+$p(n) = \frac{2}{1-\epsilon}\frac{\log n}{n}$ for $\epsilon > 0$
+
+A little more rigorously, we found that for $\epsilon > 0$, we get:
+\\$P[m(n) = n(\log n + c_n) \text{ such that } c_n \to \infty] \to 1$
+
+and thus: $P(P(B_{n, m(n)} \text{ has a P.M.}) \to 1) \to 1$
+\\This way of writing things might look unusual but is very common in probabilistic analysis.
+
+\subsubsection{Asymptotic Solution's Case Study: $c_n = \sqrt{n}$}
+
+Considering the asymptotic solution of \Cref{sec:bonus3}, we choose $c_n = \sqrt{n} \overset{n \to \infty}{\longrightarrow} \infty$, leading to $p(n) \approx \frac{1}{\sqrt{n}}$.
+
+\Cref{fig:bonus3} details a plot of the minimum $p$ required for the probability of having a perfect matching to rise above $0.99$, as a function of $n$, using binary search to find the minimum $p$ for varying values of $n$ (increments of $5$ from $10$ to $100$). We observe fast convergence to the asymptotic bound, as expected.
+
+\begin{figure*}[h]
+    \centering
+    \resizebox{0.6\textwidth}{!}{
+        \input{figures/bonus3.pgf}
+    }
+    \caption{Minimum $p$ required for the probability of having a perfect matching to rise above $0.99$, as a function of $n$, for $c_n = \sqrt{n}$.}
+    \label{fig:bonus3}
+\end{figure*}
+
+\subsection{Numeric Solution - a Sketch}
+For every subset S let $N(S)$ be its set of neighbors. A set \textit{fails} if $|S|>|N(S)|$. Let $S$ be some set of size $k$ let $v$ be a potential neighbors, what is the probability that $v\notin N(S)$? This is exactly $(1-p)^k$. This means that $p(v\in N(S))=1-(1-p)^k$. Consequently, this means size of $N(S)$ is a distributed as Bin(q, n) where q is the probability of each node. Now as we saw, since $S$ \textit{fails} if $N(S)$ is smaller than $N(S)$, the probability that that will happen is exactly $\sum_{i=0}^{k-1}(n \text{ choose } i) (1-(1-p)^k)^i)(1-p)^{k(n-i)}$.  From union bound we have $\sum_{k=1}^n(n\text{ choose } k)\sum_{i=0}^{k-1}(n \text{ choose } i) (1-(1-p)^k)^i)(1-p)^{k(n-i)}$. 
+For any given probability, in our case for $99$ percent, for any $n$ we can plug it in and approximate $p$ numerically.
+
+\bibliography{bibliography}
+
 \end{document}
