@@ -450,17 +450,17 @@ For this exercise we implemented the search algorithm "simulated annealing". Sin
 
 \subsection{Asymptotic Solution - a Sketch}\label{sec:bonus3}
 
-From the paper of Erdős and Rényi, (\cite{frieze2004perfect})  let $m(n) = n(\log n + c_n)$. Then $P[B_{n,m(n)} \text{ has a P.M.}] \to 1$ if and only if $c_n \to \infty$ when $n\to \infty$.
+From the paper of Erdős and Rényi \cite{frieze2004perfect}, let $m(n) = n(\log n + c_n)$. Then $P[B_{n,m(n)} \text{ has a P.M.}] \to 1$ \textit{if and only if} $c_n \to \infty$ when $n\to \infty$.
 
 We know that given a probability $p(n)$, we have $E[m(n)] = n^2p(n)$. This means that $P[m(n) > \frac{1}{2}n^2p(n)] \to 1$. Actually, $P[m(n) > (1 - \epsilon)n^2p(n)] \to 1$ for every $\epsilon > 0$.
 
-Now, we need to choose $p(n)$ such that $E[m(n)] = n(\log n + c_n)$ for a series $c_n$ s.t $c_n \to \infty$.  We take $\frac{1}{2}n^2p(n) = n(\log n + c_n)$.
+Now, we need to choose $p(n)$ such that $E[m(n)] = n(\log n + c_n)$ for a series $c_n$ s.t. $c_n \to \infty$.  We take $\frac{1}{2}n^2p(n) = n(\log n + c_n)$.
 
 Solving for $p(n)$: $p(n) = \frac{2}{n}(\log n + c_n)$
 
 Note that we can use $c_n = \log n$, which approaches infinity, and we get: $p(n) = 4\frac{\log n}{n}$
 
-We can even choose a slower-growing function for $c_n$, but it won't change much. As discussed, we can change $\frac{1}{2}$ to $1 - \epsilon$ , then we get: 
+We can even choose a slower-growing function for $c_n$, but it won't change much. As discussed, we can change $\frac{1}{2}$ to $1 - \epsilon$, then we get: 
 
 $p(n) = \frac{2}{1-\epsilon}\frac{\log n}{n}$ for $\epsilon > 0$
 
