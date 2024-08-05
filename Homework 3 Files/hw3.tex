@@ -1,0 +1,400 @@
+\documentclass{article}
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{pgf}
+\usepackage{pgfkeys}
+\usepackage{caption}
+\usepackage{amsfonts}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{diagbox}
+\usepackage{tikz}
+\usepackage{adjustbox}
+\usepackage{pgfplots}
+\usepackage{placeins} % To use \FloatBarrier
+\usetikzlibrary{arrows.meta, positioning}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    citecolor=blue
+}
+
+\newtheorem{theorem}{Theorem}[section]  % Theorems numbered within sections
+\newtheorem{lemma}[theorem]{Lemma}      % Lemma numbering follows theorem
+
+% Define argmax
+\DeclareMathOperator*{\argmax}{arg\,max}  % The asterisk is used to allow limits to go underneath in displaystyle
+
+% Apply color to cref and Cref
+\crefformat{figure}{#2figure\color{blue}~#1#3}
+\Crefformat{figure}{#2Figure\color{blue}~#1#3}
+\crefformat{section}{#2section\color{blue}~#1#3}
+\Crefformat{section}{#2Section\color{blue}~#1#3}
+\crefformat{table}{#2table\color{blue}~#1#3}
+\Crefformat{table}{#2Table\color{blue}~#1#3}
+
+% color definitions
+\definecolor{darkgreen}{rgb}{0.0, 0.7, 0.0} % A darker green
+
+% Define the keys used in the graph
+\pgfkeys{
+    /graph/.is family, /graph,
+    default/.style={
+        buyers={}, 
+        items={}, 
+        buyerValues={}, 
+        prices={},
+        priceVectorName=p % Default name
+    },
+    buyers/.estore in=\GraphBuyers,
+    items/.estore in=\GraphItems,
+    buyerValues/.estore in=\GraphBuyerValues,
+    prices/.estore in=\GraphPrices,
+    priceVectorName/.estore in=\GraphPriceVectorName % Store the custom price vector name
+}
+
+% Helper macro to extract prices by index
+\newcommand{\getPrice}[1]{
+    \foreach \price [count=\i] in \GraphPrices {
+        \ifnum\i=#1
+            \xdef\selectedPrice{\price}
+            \breakforeach % Stop the loop once the correct item is found
+        \fi
+    }
+}
+
+% Helper macro to extract values by index
+\newcommand{\getValue}[2]{
+    \foreach \value [count=\i] in \GraphBuyerValues{
+        \ifnum\i=#1
+            \foreach \val [count=\j] in \value {
+                \ifnum\j=#2
+                    \xdef\selectedValue{\val}
+                    \breakforeach % Stop the loop once the correct item is found
+                \fi
+            }
+        \fi
+    }
+}
+
+% Helper macro to extract utilities by index
+\newcommand{\getUtility}[2]{
+    \getPrice{#2}  % Retrieve the price by index
+    \getValue{#1}{#2}  % Retrieve the values by index
+    \pgfmathsetmacro\utility{int(\selectedValue - \selectedPrice)} % Ensure result is an integer
+}
+
+% Helper macro to extract the indices of the maximum non-negative utilities for a buyer
+\newcommand{\getPreferredUtilityIndices}[1]{
+    \global\def\maxUtility{0} % Initialize maxUtility globally
+    \def\preferredItems{-1} % List to store all best items
+    \foreach \item [count=\ii] in \GraphItems {
+        \typeout{currindices={\bi, \ii}}
+        % Compute utility
+        \getUtility{#1}{\ii} % Retrieve the utility by indices
+        \typeout{utility={\utility}}
+
+        % Check if this utility is the maximum for this buyer
+        \ifnum\utility>\maxUtility
+            \xdef\maxUtility{\utility}
+            \xdef\preferredItems{\ii} % Reset with the new best item
+        \else
+            \ifnum\utility=\maxUtility
+                \xdef\preferredItems{\preferredItems, \ii} % Append this item to the list
+            \fi
+        \fi
+    }
+    \typeout{Max Utility for \buyer: \maxUtility, Best Items: \preferredItems}
+}
+
+% Helper macro to extract the indices of non-negative utilities for a buyer
+\newcommand{\getAcceptableUtilityIndices}[1]{
+    \def\acceptableItems{-1} % List to store all acceptable items
+    \foreach \item [count=\ii] in \GraphItems {
+        \typeout{currindices={\bi, \ii}}
+        % Compute utility
+        \getUtility{#1}{\ii} % Retrieve the utility by indices
+        \typeout{utility={\utility}}
+
+        % Check if this utility is non-negative
+        \ifnum\utility<0
+        \else
+            \xdef\acceptableItems{\acceptableItems, \ii} % Append this item to the list
+        \fi
+    }
+    \typeout{Acceptable Items for \buyer: \acceptableItems}
+}
+
+% New macro to construct "\item : \value" list
+\newcommand{\getValueDict}[1]{
+    \def\valueList{}% Global definition to ensure it is accessible outside the scope of this macro
+    \foreach \item [count=\ii] in \GraphItems {
+        \getValue{#1}{\ii}% This should set \selectedValue appropriately
+        \typeout{value={\selectedValue}}
+        \ifnum\ii=1
+            \xdef\valueList{\item: \selectedValue}
+        \else
+            \xdef\valueList{\valueList, \item: \selectedValue}
+        \fi
+    }
+}
+
+% New macro to construct "\item : \utility" acceptability list
+\newcommand{\getAcceptableUtilityDict}[1]{
+    \def\utilityList{}% Global definition to ensure it is accessible outside the scope of this macro
+    \foreach \item [count=\ii] in \GraphItems {
+        \getUtility{#1}{\ii}% This should set \utility appropriately
+        \xdef\utilityString{\item: \utility} % Use \edef for expanded definition
+        \ifnum\utility < 0
+        \else
+            \xdef\utilityString{\item: \textcolor{darkgreen}{\utility}} % Color non-negative utilities
+        \fi
+        \ifnum\ii=1
+            \xdef\utilityList{\utilityString} % Initialize utilityList with the first item
+        \else
+            \xdef\utilityList{\utilityList, \utilityString} % Append subsequent items
+        \fi
+    }
+}
+
+% New macro to get max non-negative utility
+\newcommand{\getMaxUtility}[1]{
+    \def\maxUtility{-1} % Initialize maxUtility
+    \foreach \item [count=\ii] in \GraphItems {
+        \getUtility{#1}{\ii} % Retrieve the utility by index
+        \ifnum\utility<0
+        \else
+            \ifnum\utility>\maxUtility
+                \xdef\maxUtility{\utility}
+            \fi
+        \fi
+    }
+}
+
+% New macro to construct "\item : \utility" preferred list
+\newcommand{\getPreferredUtilityDict}[1]{
+    \def\utilityList{}% Global definition to ensure it is accessible outside the scope of this macro
+    \getMaxUtility{#1} % Retrieve the maximum non-negative utility
+    \foreach \item [count=\ii] in \GraphItems {
+        \getUtility{#1}{\ii}% This should set \utility appropriately
+        \xdef\utilityString{\item: \utility} % Use \edef for expanded definition
+        \ifnum\utility < 0 % only non-negative utilities can be preferred
+        \else
+            \ifnum\utility = \maxUtility
+
+                \xdef\utilityString{\item: \textcolor{darkgreen}{\utility}} % Color non-negative utilities
+            \fi
+        \fi
+        \ifnum\ii=1
+            \xdef\utilityList{\utilityString} % Initialize utilityList with the first item
+        \else
+            \xdef\utilityList{\utilityList, \utilityString} % Append subsequent items
+        \fi
+    }
+}
+
+% Define the command to create the graph
+\newcommand{\createPreferredGraph}[1]{
+    \pgfkeys{/graph/.cd,#1}  % Apply settings within the /graph family
+    \expandafter\parsePreferredGraphData\expandafter{\GraphBuyers}{\GraphItems}{\GraphBuyerValues}{\GraphPrices}{\GraphPriceVectorName}
+}
+
+% Helper macro to process the graph data and render the tikzpicture
+\newcommand{\parsePreferredGraphData}[5]{
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[every node/.style={align=center}]
+            % Define nodes for buyers
+            \typeout{msg={#1}}
+            \foreach \buyer [count=\bi] in {#1} {
+                \node[draw, circle] (buyer-\bi) at (0, {-2*\bi}) {\buyer};
+            }
+            % Define nodes for items
+            \typeout{msg={#2}}
+            \typeout{msg={#4}}
+            \foreach \item [count=\ii] in #2 {
+                \typeout{msg={\ii}}
+                \getPrice{\ii}  % Retrieve the price by index
+                \node[draw, circle] (item-\ii) at (4, {-2*\ii}) {\item \\ $#5_{\item} = \selectedPrice$};
+            }
+            % Calculate utilities and draw preferred choices
+            \foreach \buyer [count=\bi] in {#1} {
+
+                % Get indices of preferred items
+                \getPreferredUtilityIndices{\bi}
+
+                % Draw edges to preferred items
+                \typeout{preferred={Preferred Items: \preferredItems}}
+                \foreach \ii in \preferredItems {
+                    \ifnum\ii > 0
+                        \draw (buyer-\bi) -- (item-\ii);
+                    \fi
+                }
+
+                % List values and utilities
+                \getValueDict{\bi}
+                \getPreferredUtilityDict{\bi}
+
+                \node[anchor=east] at (-1, {-2*\bi + 0.3}) {Values for $\buyer$: $\{\valueList\}$};
+                \node[anchor=east] at (-1, {-2*\bi - 0.3}) {Utility for $\buyer$: $\{\utilityList\}$};
+            }
+        \end{tikzpicture}
+    \end{figure}
+}
+
+% Define the command to create the graph
+\newcommand{\createAcceptabilityGraph}[1]{
+    \pgfkeys{/graph/.cd,#1}  % Apply settings within the /graph family
+    \expandafter\parseAcceptabilityGraphData\expandafter{\GraphBuyers}{\GraphItems}{\GraphBuyerValues}{\GraphPrices}{\GraphPriceVectorName}
+}
+
+% Helper macro to process the graph data and render the tikzpicture
+\newcommand{\parseAcceptabilityGraphData}[5]{
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[every node/.style={align=center}]
+            % Define nodes for buyers
+            \typeout{msg={#1}}
+            \foreach \buyer [count=\bi] in {#1} {
+                \node[draw, circle] (buyer-\bi) at (0, {-2*\bi}) {\buyer};
+            }
+            % Define nodes for items
+            \typeout{msg={#2}}
+            \typeout{msg={#4}}
+            \foreach \item [count=\ii] in #2 {
+                \typeout{msg={\ii}}
+                \getPrice{\ii}  % Retrieve the price by index
+                \node[draw, circle] (item-\ii) at (4, {-2*\ii}) {\item \\ $#5_{\item} = \selectedPrice$};
+            }
+            % Calculate utilities and draw acceptable choices
+            \foreach \buyer [count=\bi] in {#1} {
+
+                % Get indices of acceptable items
+                \getAcceptableUtilityIndices{\bi}
+
+                % Draw edges to acceptable items
+                \typeout{acceptable={Acceptable Items: \acceptableItems}}
+                \foreach \ii in \acceptableItems {
+                    \ifnum\ii > 0
+                        \draw (buyer-\bi) -- (item-\ii);
+                    \fi
+                }
+
+                % List values and utilities
+                \getValueDict{\bi}
+                \getAcceptableUtilityDict{\bi}
+
+                \node[anchor=east] at (-1, {-2*\bi + 0.3}) {Values for $\buyer$: $\{\valueList\}$};
+                \node[anchor=east] at (-1, {-2*\bi - 0.3}) {Utility for $\buyer$: $\{\utilityList\}$};
+            }
+        \end{tikzpicture}
+    \end{figure}
+}
+
+% start
+\title{
+    Homework Assignment 3 - Coding Part Write-up\\
+    Networks and Markets
+}
+\author{
+    Omer Zohar
+    \and
+    Gil Aharoni
+    \and
+    Adam Tuby
+}
+
+\bibliographystyle{plain}
+
+\begin{document}
+\maketitle
+
+\section*{Part 4: Implementing Matching Market Pricing}
+\setcounter{section}{0}
+
+
+\section{Question 7}
+
+\begin{enumerate}[label=(\alph*)]
+
+    \item 
+
+    
+    \item 
+
+
+\end{enumerate}
+
+\section{Question 8}
+
+\begin{enumerate}[label=(\alph*)]
+
+    \item 
+
+    
+    \item 
+
+
+\end{enumerate}
+
+\section{Bonus Question 2}
+
+\begin{enumerate}[label=(\alph*)]
+
+    \item 
+
+    
+    \item 
+
+
+    \item 
+
+    
+    \item 
+
+
+\end{enumerate}
+
+\section*{Part 5: Exchange Networks for Uber}
+\setcounter{section}{0}
+
+
+\section{Question 9}
+
+\section{Question 10}
+
+\begin{enumerate}[label=(\alph*)]
+
+    \item 
+
+    
+    \item 
+
+
+\end{enumerate}
+
+
+\section{Question 11}
+
+\section{Bonus Question 3}
+
+\begin{enumerate}[label=(\alph*)]
+
+    \item 
+
+    
+    \item 
+
+\end{enumerate}
+
+\bibliography{bibliography}
+
+\end{document}
