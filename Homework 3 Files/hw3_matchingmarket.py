@@ -236,12 +236,15 @@ def create_constraints(P, V):
     C = [[0] * m for _ in range(n)]
     for i in range(n):
         maximal = max(V[i][k] - P[k] for k in range(m))
+        # NOTE: if there are no non-negative edges, they are all not acceptable and by definition also not preferred. Claim 9.3 in the notes is incorrect, so we need to beware if this check is desired.
+        if maximal < 0: 
+            continue
         for j in range(m):
             C[i][j] = 1 if V[i][j] - P[j] == maximal else 0
     return C
 
 
-def make_square_prices(V):
+def make_square_values(V):
     """Given a list of valuations V of size n x m,
     output an equivalent list of valuations of size max(n,m) x max(n,m).
     -   Specifically, V[i][j] is the value of item j for buyer i.
@@ -270,7 +273,7 @@ def market_eq(n, m, V):
     P = [0] * max(n, m)
     M = [None] * max(n, m)
     # Gil: consider using rectangular_valuations func instead?
-    V_square = make_square_prices(V)
+    V_square = make_square_values(V)
     while True:
         C = create_constraints(P, V_square)
         isPerfect, M = matching_or_cset(max(n, m), C)
@@ -285,6 +288,10 @@ def market_eq(n, m, V):
                     neighbors.add(j)
         for j in neighbors:
             P[j] += 1
+
+        # if all prices are positive, decrease all prices by 1
+        if all(P[j] > 0 for j in range(max(n, m))):
+            P = [P[j] - 1 for j in range(max(n, m))]
     return P[:m], M[:n]
 
 
@@ -302,6 +309,12 @@ def rectangular_valuations(V: "n * m") -> "max(n, m) * max(n, m)":
     rec_V[:n, :m] = V
     return rec_V
 
+def lec5_page7_example():
+    n = 3
+    m = 3
+    V = [[4, 12, 5], [7, 10, 9], [7, 7, 10]]
+    P, M = market_eq(n, m, V)
+    print(P, M)
 
 # === Problem 8(a) ===
 def vcg(n: 'players', m: 'items', V: 'valuations'):
@@ -431,7 +444,7 @@ def brd_on_gsp(n, m, V) -> 'V_':
 
 def main():
     # TODO: Put your analysis and plotting code here, if any
-    print("hello world")
+    lec5_page7_example()
 
 
 if __name__ == "__main__":

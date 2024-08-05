@@ -325,11 +325,90 @@
 
 \begin{enumerate}[label=(\alph*)]
 
-    \item 
-
+    \item[(b)] Consider the matching market example in Lecture 5 Page 7:
     
-    \item 
+    \begin{figure}[h]
+        \centering
+        \begin{tikzpicture}
+            % Define nodes for buyers
+            \node[draw, circle] (buyer-1) at (0, 0) {Person A};
+            \node[draw, circle] (buyer-2) at (0, -2) {Person B};
+            \node[draw, circle] (buyer-3) at (0, -4) {Person C};
+            % Define nodes for items
+            \node[draw, circle, align=center] (item-1) at (4, 0) {House 1};
+            \node[draw, circle, align=center] (item-2) at (4, -2) {House 2};
+            \node[draw, circle, align=center] (item-3) at (4, -4) {House 3};
+            % Output values
+            \node[anchor=east] at (-1, 0) {Values for Person A: $\{4, 12, 5\}$};
+            \node[anchor=east] at (-1, -2) {Values for Person B: $\{7, 10, 9\}$};
+            \node[anchor=east] at (-1, -4) {Values for Person C: $\{7, 7, 10\}$};
+        \end{tikzpicture}
+    \end{figure}
 
+    Formally, the matching market context is $\Gamma = (\{A, B, C\}, \{1, 2, 3\}, v)$, where $v$ is the valuation function defined as follows:
+
+    \begin{align*}
+        v_A(1) &= 4, v_A(2) = 12, v_A(3) = 5 \\
+        v_B(1) &= 7, v_B(2) = 10, v_B(3) = 9 \\
+        v_C(1) &= 7, v_C(2) = 7, v_C(3) = 10
+    \end{align*}
+
+    We turn to run the algorithm of Theorem 8.8 to find a market equilibrium $(p, M)$ to find the maximum social value, in order to validate out implementation's output. We begin by initializing the prices vector $\vec{p} \equiv 0$ to be the zero vector. We then proceed to run the algorithm, updating the prices vector until there is a perfect matching $M$ in the induced preferred choice graph for $(\Gamma, \vec{p})$:
+
+    \begin{enumerate}[label=\arabic*.]
+
+        \item Observing the following \textit{induced preferred-choice graph} from $(\Gamma, \vec{p})$:
+        
+        \createPreferredGraph{
+            buyers={A, B, C},
+            items={1, 2, 3},
+            buyerValues={{4, 12, 5}, {7, 10, 9}, {7, 7, 10}},
+            prices={0, 0, 0},
+            priceVectorName=p
+        }
+
+        There obviously isn't a perfect matching as $S = \{A, B\}$ is a constricted set with $\left|N(S)\right| = \left|\{2\}\right| = 1 < 2 = \left|S\right|$ (which, by a theorem we've seen in class, implies that there isn't a perfect matching). Thus, we raise the prices for all items in $N(S)$ by 1, and update the prices vector $\vec{p}$ accordingly. The updated prices vector is $\vec{p} = (a: 0, b: 1, c: 0)$. Not all prices are greater than zero, so we don't perform a shift operation, and we proceed to the next iteration.
+
+        \item Observing the following \textit{induced preferred-choice graph} from $(\Gamma, \vec{p})$:
+        
+        \createPreferredGraph{
+            buyers={A, B, C},
+            items={1, 2, 3},
+            buyerValues={{4, 12, 5}, {7, 10, 9}, {7, 7, 10}},
+            prices={0, 1, 0},
+            priceVectorName=p
+        }
+
+        There obviously isn't a perfect matching as $S = \{A, B, C\}$ is a constricted set with $\left|N(S)\right| = \left|\{2, 3\}\right| = 2 < 3 = \left|S\right|$ (which, by a theorem we've seen in class, implies that there isn't a perfect matching). Thus, we raise the prices for all items in $N(S)$ by 1, and update the prices vector $\vec{p}$ accordingly. The updated prices vector is $\vec{p} = (a: 0, b: 2, c: 1)$. Not all prices are greater than zero, so we don't perform a shift operation, and we proceed to the next iteration.
+
+        \item Observing the following \textit{induced preferred-choice graph} from $(\Gamma, \vec{p})$:
+        
+        \createPreferredGraph{
+            buyers={A, B, C},
+            items={1, 2, 3},
+            buyerValues={{4, 12, 5}, {7, 10, 9}, {7, 7, 10}},
+            prices={0, 2, 1},
+            priceVectorName=p
+        }
+
+        Similar to the previous iteration, we raise the prices for $\{2, 3\}$, and update the prices vector $\vec{p}$ accordingly. The updated prices vector is $\vec{p} = (a: 0, b: 3, c: 2)$. Not all prices are greater than zero, so we don't perform a shift operation, and we proceed to the next iteration.
+
+        \item Observing the following \textit{induced preferred-choice graph} from $(\Gamma, \vec{p})$:
+        
+        \createPreferredGraph{
+            buyers={A, B, C},
+            items={1, 2, 3},
+            buyerValues={{4, 12, 5}, {7, 10, 9}, {7, 7, 10}},
+            prices={0, 3, 2},
+            priceVectorName=p
+        }
+
+        And there is a perfect matching in the induced preferred choice graph, which is $M = \{\{A, 2\}, \{B, 1\}, \{C, 3\}\}$. Thus, the market equilibrium is $(\vec{p}, M) = ((1: 0, 2: 3, 3: 2), \{\{A, 2\}, \{B, 1\}, \{C, 3\}\})$. and we are done.
+    \end{enumerate}
+
+    We found the market equilibrium to be $(\vec{p}, M) = ((1: 0, 2: 3, 3: 2), \{\{A, 2\}, \{B, 1\}, \{C, 3\}\})$. The maximum social value is therefore $v(A, 2) + v(B, 1) + v(C, 3) = 12 + 7 + 10 = 29$.
+
+    Our algorithm found exactly this market equilibrium.
 
 \end{enumerate}
 
