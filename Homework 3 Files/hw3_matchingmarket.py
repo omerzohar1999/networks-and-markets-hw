@@ -383,7 +383,7 @@ def vcg(n: 'players', m: 'items', V: 'valuations'):
     C = np.zeros((m,))
     for i in range(n):
         j = M[i]
-        C[i] += H[j] - P[j]
+        C[j] += H[i] - P[i]
 
     return list(C), list(M)
 
