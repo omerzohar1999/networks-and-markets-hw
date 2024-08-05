@@ -309,7 +309,7 @@ def rectangular_valuations(V: "n * m") -> "max(n, m) * max(n, m)":
     rec_V[:n, :m] = V
     return rec_V
 
-def lec5_page7_example():
+def lec5_page7_example_q7b():
     n = 3
     m = 3
     V = [[4, 12, 5], [7, 10, 9], [7, 7, 10]]
@@ -317,6 +317,29 @@ def lec5_page7_example():
     print(P, M)
 
 # === Problem 8(a) ===
+def social_value(n, m, V, M):
+    """Given a matching market with n buyers and m items, and
+    valuations V, and a matching M, output the social value of the matching.
+    -   Specifically, V is an n x m list, where
+        V[i][j] is a number representing buyer i's value for item j.
+    -   M is an n-element list, where M[i] = j if buyer i is
+        matched with item j, and M[i] = None if there is no matching.
+    -   Return a number representing the social value of the matching.
+    """
+    return sum(V[i][M[i]] if M[i] is not None else 0 for i in range(n))
+
+def calc_max_social_value(n, m, V):
+    """Given a matching market with n buyers and m items, and
+    valuations V, output the maximum social value of the matching.
+    -   Specifically, V is an n x m list, where
+        V[i][j] is a number representing buyer i's value for item j.
+    -   Return a number representing the maximum social value
+        that can be achieved in this matching market.
+    This is done by computing the market equilibrium and then computing the social value. We have seen in class that the social value of the market equilibrium is the maximum social value.
+    """
+    P, M = market_eq(n, m, V)
+    return social_value(n, m, V, M)
+
 def vcg(n: 'players', m: 'items', V: 'valuations'):
     """Given a matching market with n buyers, and m items, and
     valuations V as defined in market_eq, output a tuple (P,M)
@@ -332,31 +355,62 @@ def vcg(n: 'players', m: 'items', V: 'valuations'):
     hi = "-max |x| (j!=i) v_j (x)"
     pi_ = pi + hi
     """
-    """TODO: I assume non-negative valuations!!"""
-    """TODO: needs work on when n!=m"""
+    """TODO: I assume non-negative valuations!! (NOTE: As in the definitions in the notes)"""
+    """TODO: needs work on when n!=m (NOTE: I think opting to use the calc_max_social_value which utilizes the market_eq function for the social value maximization algorithm kinda fixes this issue? Validate what I'm saying is true)"""
     rect_V = rectangular_valuations(V)
+
+    # calc market equilibrium as social value maximizing state (i.e., allocation)
+    P, M = market_eq(n, m, V)
+
     # matching
     M = max_weight_matching(rect_V)[:n]
+
     # payments
-    sum_value = sum(V[i][M[i]] for i in range(n))
-    P = np.array([sum_value - V[i][M[i]] for i in range(n)])
+    maximum_social_value = calc_max_social_value(n, m, rect_V)
+    P = np.array([maximum_social_value - V[i][M[i]] for i in range(n)])
+
     # pivot
     H = np.zeros((n,))
     for i in range(n):
         row_i = copy(rect_V[i])
         rect_V[i] = [0] * m
-        i_M = max_weight_matching(rect_V)
-        H[i] = sum(rect_V[i][i_M[i]] for i in range(n))
+        H[i] = calc_max_social_value(n, m, rect_V) # the outed maximum social value
         rect_V[i] = row_i
 
     # item (-cost) i.e. positive
-    C = np.zeros((m,))
-    for i in range(n):
-        j = M[i]
-        C[i] += H[j] - P[j]
+    C = [H[i] - P[i] for i in range(n)]
 
     return list(C), list(M)
 
+    # rect_V = rectangular_valuations(V)
+    # # matching
+    # M = max_weight_matching(rect_V)[:n]
+    # # payments
+    # sum_value = sum(V[i][M[i]] for i in range(n))
+    # P = np.array([sum_value - V[i][M[i]] for i in range(n)])
+    # # pivot
+    # H = np.zeros((n,))
+    # for i in range(n):
+    #     row_i = copy(rect_V[i])
+    #     rect_V[i] = [0] * m
+    #     i_M = max_weight_matching(rect_V)
+    #     H[i] = sum(rect_V[i][i_M[i]] for i in range(n))
+    #     rect_V[i] = row_i
+
+    # # item (-cost) i.e. positive
+    # C = np.zeros((m,))
+    # for i in range(n):
+    #     j = M[i]
+    #     C[i] += H[j] - P[j]
+
+    # return list(C), list(M)
+
+def lec5_page7_example_q8a():
+    n = 3
+    m = 3
+    V = [[4, 12, 5], [7, 10, 9], [7, 7, 10]]
+    P, M = vcg(n, m, V)
+    print(P, M)
 
 # === Bonus Question 2(a) (Optional) ===
 def random_bundles_valuations(n, m):
@@ -444,8 +498,8 @@ def brd_on_gsp(n, m, V) -> 'V_':
 
 def main():
     # TODO: Put your analysis and plotting code here, if any
-    lec5_page7_example()
-
+    lec5_page7_example_q7b()
+    lec5_page7_example_q8a()
 
 if __name__ == "__main__":
     main()
