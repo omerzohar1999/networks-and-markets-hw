@@ -4,7 +4,7 @@
 # (i.e. the arguments and return types each function takes).
 # We will pass your grade through an autograder which expects a specific format.
 # =====================================
-
+from copy import copy
 
 # Do not include any other files or an external package, unless it is one of
 # [numpy, pandas, scipy, matplotlib, random]
@@ -12,6 +12,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from queue import Queue
+import scipy  # TODO: is this ok?
 
 
 # find maximum matching, from hw2
@@ -177,6 +178,11 @@ def max_matching(n, C):
     and M[i] = None if left i is not matched."""
     pass
 
+def max_weight_matching(C: 'n x m array') -> 'players assignment':
+    """return a maximum weight matching, C[i, j] is the weight of the edge"""
+    res = scipy.optimize.linear_sum_assignment(-C)
+    return res[1]
+
 
 # === Problem 7(a) ===
 def matching_or_cset(n, C):
@@ -226,8 +232,7 @@ def create_constraints(P, V):
     -   C[i][j] = 1 if V[i][j]-P[j] is maximal for buyer i, and
         C[i][j] = 0 otherwise.
     """
-    m = len(P)
-    n = len(V)
+    m, n = len(P), len(V)
     C = [[0] * m for _ in range(n)]
     for i in range(n):
         maximal = max(V[i][k] - P[k] for k in range(m))
@@ -264,8 +269,9 @@ def market_eq(n, m, V):
     In sum, buyer i receives item M[i] and pays P[M[i]]."""
     P = [0] * max(n, m)
     M = [None] * max(n, m)
+    # Gil: consider using rectangular_valuations func instead?
     V_square = make_square_prices(V)
-    while 1:
+    while True:
         C = create_constraints(P, V_square)
         isPerfect, M = matching_or_cset(max(n, m), C)
         if isPerfect:
@@ -279,11 +285,26 @@ def market_eq(n, m, V):
                     neighbors.add(j)
         for j in neighbors:
             P[j] += 1
-    return (P[:m], M[:n])
+    return P[:m], M[:n]
 
 
-# === Problem 8(b) ===
-def vcg(n, m, V):
+def rectangular_valuations(V: "n * m") -> "max(n, m) * max(n, m)":
+    """Given a list of valuations V of size n x m,
+    output an equivalent list of valuations of size max(n,m) x max(n,m).
+    -   Specifically, V[i][j] is the value of item j for buyer i.
+    -   Return a list V' where V'[i][j] = V[i][j] if i < n and j < m,
+        and V'[i][j] = 0 otherwise.
+    """
+    """TODO: I assume non-negative valuations!!"""
+    n, m = len(V), len(V[0])
+    # min_value = min(V[i][j] for i in range(n) for j in range(m)) - 1
+    rec_V = np.zeros((max(n, m), max(n, m)))
+    rec_V[:n, :m] = V
+    return rec_V
+
+
+# === Problem 8(a) ===
+def vcg(n: 'players', m: 'items', V: 'valuations'):
     """Given a matching market with n buyers, and m items, and
     valuations V as defined in market_eq, output a tuple (P,M)
     of prices P and a matching M as computed using the VCG mechanism
@@ -292,9 +313,36 @@ def vcg(n, m, V):
     P[j] should be positive for every j in 0...m-1. Note that P is
     still indexed by item, not by player!!
     """
-    P = [0] * m
-    M = [0] * n
-    return (P, M)
+    """
+    X_opt = "Outcome . max |x| sum v_i (x)"
+    pi = "sum (j!=i) v_j (x)"
+    hi = "-max |x| (j!=i) v_j (x)"
+    pi_ = pi + hi
+    """
+    """TODO: I assume non-negative valuations!!"""
+    """TODO: needs work on when n!=m"""
+    rect_V = rectangular_valuations(V)
+    # matching
+    M = max_weight_matching(rect_V)[:n]
+    # payments
+    sum_value = sum(V[i][M[i]] for i in range(n))
+    P = np.array([sum_value - V[i][M[i]] for i in range(n)])
+    # pivot
+    H = np.zeros((n,))
+    for i in range(n):
+        row_i = copy(rect_V[i])
+        rect_V[i] = [0] * m
+        i_M = max_weight_matching(rect_V)
+        H[i] = sum(rect_V[i][i_M[i]] for i in range(n))
+        rect_V[i] = row_i
+
+    # item (-cost) i.e. positive
+    C = np.zeros((m,))
+    for i in range(n):
+        j = M[i]
+        C[i] += H[j] - P[j]
+
+    return list(C), list(M)
 
 
 # === Bonus Question 2(a) (Optional) ===
@@ -304,19 +352,82 @@ def random_bundles_valuations(n, m):
     Each bundle j (in 0...m-1) is comprised of j copies of an identical good.
     Each player i has its own value for an individual good; this value is sampled
     uniformly at random from [1, 50] inclusive, for each player"""
-    V = [[0] * m for _ in range(n)]
-    return (n, m, V)
 
+    costs = np.random.randint(0, 51, size=n)
+    V = np.tile(np.arange(0, m), (n, 1))
+    return (V.T * costs).T
 
 # === Bonus Question 2(b) (optional) ===
-def gsp(n, m, V):
+
+def gsp_efficient(n, m, V) -> '(P, M)':
+    """ here V is the valuation of a single item"""
+    M = np.argsort(V)
+    P = np.zeros((m,), dtype=int)
+
+    for i in range(min(m, n-1)):
+        P[-(i+1)] = V[M[-(i+2)]] * (m-1-i)
+
+    return list(P), [i if i >= 0 else None for i in (M+m-n)]
+
+
+def calc_utilities_efficient(V, P, M):
+    return [(j * v - P[j])
+            if j is not None else 0
+            for j, v in zip(M, V)]
+
+# (P, M) = gsp_efficient(3, 3, [3, 41, 40])
+# print(P, M)
+# print(calc_utilities_efficient([3, 40, 40], M, P))
+
+def gsp(n, m, V) -> '(P, M)':
     """Given a matching market for bundles with n buyers, and m bundles, and
     valuations V (for bundles), output a tuple (P, M) of prices P and a
     matching M as computed using GSP."""
-    P = [0] * m
-    M = [0] * n
-    return (P, M)
+    V = [V[i][1] for i in range(n)]  # valuation of a single item.
+    return gsp_efficient(n, m, V)
 
+def brd_on_gsp(n, m, V) -> 'V_':
+    V = np.array([V[i][1] for i in range(n)])
+    real_utilities = lambda V_lie: \
+        calc_utilities_efficient(V, *gsp_efficient(n, m, V_lie))
+
+    agents = np.arange(n)
+    V_ = np.random.randint(0, V + 1)
+    while True:
+        np.random.shuffle(agents)
+        curr_utilities = real_utilities(V_)
+        for i in agents:
+            original_val = V_[i]
+
+            best_utility = curr_utilities[i]
+            best_val = original_val
+            for v in range(V[i] + 1):
+                V_[i] = v
+                my_utility = real_utilities(V_)[i]
+                if my_utility > best_utility:
+                    best_utility, best_val = my_utility, v
+
+            if original_val != best_val:
+                V_[i] = best_val
+                break
+
+            V_[i] = original_val
+            continue
+        else:   # did not break -> no change
+            break
+    return V_
+
+# V = [[0, 10], [0, 20], [0, 30], [0, 31]]
+# V_real = [l[1] for l in V]
+# n = len(V)
+# V_ = brd_on_gsp(n, 3, V)
+# print(V_)
+# (P, M) = gsp_efficient(n, 3, V_)
+# print(P, M)
+# print(calc_utilities_efficient(V_real, P, M))
+
+
+# print(brd_on_gsp(3, 2, [[0, 3], [0, 30], [0, 40]]))
 
 def main():
     # TODO: Put your analysis and plotting code here, if any
