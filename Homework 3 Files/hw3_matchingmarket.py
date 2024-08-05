@@ -315,6 +315,8 @@ def lec5_page7_example_q7b():
     V = [[4, 12, 5], [7, 10, 9], [7, 7, 10]]
     P, M = market_eq(n, m, V)
     print(P, M)
+    assert M == [1, 0, 2], "[lec5_page7_example_q7b]: M is not as expected"
+    assert P == [0, 3, 2], "[lec5_page7_example_q7b]: P is not as expected"
 
 # === Problem 8(a) ===
 def social_value(n, m, V, M):
@@ -378,7 +380,10 @@ def vcg(n: 'players', m: 'items', V: 'valuations'):
         rect_V[i] = row_i
 
     # item (-cost) i.e. positive
-    C = [H[i] - P[i] for i in range(n)]
+    C = np.zeros((m,))
+    for i in range(n):
+        j = M[i]
+        C[i] += H[j] - P[j]
 
     return list(C), list(M)
 
@@ -411,6 +416,8 @@ def lec5_page7_example_q8a():
     V = [[4, 12, 5], [7, 10, 9], [7, 7, 10]]
     P, M = vcg(n, m, V)
     print(P, M)
+    assert M == [1, 0, 2], "[lec5_page7_example_q8a]: M is not as expected"
+    assert P == [0, 3, 2], "[lec5_page7_example_q8a]: P is not as expected"
 
 # === Bonus Question 2(a) (Optional) ===
 def random_bundles_valuations(n, m):
