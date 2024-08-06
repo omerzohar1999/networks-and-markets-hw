@@ -9,6 +9,7 @@ from copy import copy
 # Do not include any other files or an external package, unless it is one of
 # [numpy, pandas, scipy, matplotlib, random]
 # please contact us before sumission if you want another package approved.
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 from queue import Queue
@@ -179,10 +180,9 @@ def max_matching(n, C):
     pass
 
 def max_weight_matching(C: 'n x m array') -> 'players assignment':
-    """return a maximum weight matching, C[i, j] is the weight of the edge"""
+    """return the maximum weight of any matching, where C[i, j] is the weight of the edge"""
     res = scipy.optimize.linear_sum_assignment(-C)
     return res[1]
-
 
 # === Problem 7(a) ===
 def matching_or_cset(n, C):
@@ -220,6 +220,12 @@ def matching_or_cset(n, C):
             if F.get_edge(i + 1, n + j + 1) == 1:
                 matching.append(j)
                 break
+
+    # Validate matching is indeed a perfect matching (TODO: remove this)
+    assert len(matching) == n, f"[matching_or_cset]: matching is not a perfect matching as it doesn't assign all riders, {matching=}, {n=}, {C=}"
+    assert all(C[i][matching[i]] == 1 for i in range(n)), f"[matching_or_cset]: matching is not a perfect matching as it contains a non-existent edge, {matching=}, {n=}, {C=}"
+    assert len(set(matching)) == n, f"[matching_or_cset]: matching is not a perfect matching as two riders are matched with the same driver, {matching=}, {n=}, {C=}"
+
     return True, matching
 
 
@@ -292,7 +298,15 @@ def market_eq(n, m, V):
         # if all prices are positive, decrease all prices by 1
         if all(P[j] > 0 for j in range(max(n, m))):
             P = [P[j] - 1 for j in range(max(n, m))]
-    return P[:m], M[:n]
+
+    # Filter out the fictive buyers
+    M = M[:n]
+
+    # Filter out the fictive items by 'None' matching
+    M = [j if j < m else None for j in M]
+
+    # Filter out the fictive prices and return it with the matching
+    return P[:m], M
 
 
 def rectangular_valuations(V: "n * m") -> "max(n, m) * max(n, m)":
@@ -314,9 +328,75 @@ def lec5_page7_example_q7b():
     m = 3
     V = [[4, 12, 5], [7, 10, 9], [7, 7, 10]]
     P, M = market_eq(n, m, V)
-    print(P, M)
+    print("[lec5_page7_example_q7b]", P, M)
     assert M == [1, 0, 2], "[lec5_page7_example_q7b]: M is not as expected"
     assert P == [0, 3, 2], "[lec5_page7_example_q7b]: P is not as expected"
+
+def sanity_checks_q7b():
+    ### Test 1
+    n = 4
+    m = 3
+    V = [[10, 1, 1], [1, 10, 1], [1, 1, 10], [1, 1, 1]]
+    P, M = market_eq(n, m, V)
+    print("[sanity_checks_q7b][T1]", P, M)
+    assert M == [0, 1, 2, None], "[sanity_checks_q7b]: M is not as expected"
+    assert P == [1, 1, 1], "[sanity_checks_q7b]: P is not as expected"
+
+    ### Test 2
+    n = 3
+    m = 4
+    V = [[10, 1, 1, 1], [1, 10, 1, 1], [1, 1, 10, 1]]
+    P, M = market_eq(n, m, V)
+    print("[sanity_checks_q7b][T2]", P, M)
+
+    ### Brute-Force Test
+    def scipy_max_social_value(n, m, V):
+        # converting V to numpy
+        V = np.array(V)
+
+        # Use the linear_sum_assignment function to get the indices of the maximum value
+        row_ind, col_ind = scipy.optimize.linear_sum_assignment(V, maximize=True)
+        print("[sanity_checks_q7b][rand]", row_ind, col_ind)
+
+        # Return the maximum value
+        return V[row_ind, col_ind].sum()
+    
+    # 50 random tests
+    for test_i in range(50):
+
+        # Random n and m
+        n = random.randint(1, 10)
+        m = random.randint(1, 10)
+
+        # Random valuations
+        V = np.random.randint(0, 100, size=(n, m))
+
+        # Calculate the market equilibrium
+        P, M = market_eq(n, m, V)
+
+        # Validate the matching is indeed a matching
+        for i_1 in range(n):
+            for i_2 in range(i_1 + 1, n):
+                if M[i_1] == M[i_2]:
+                    assert False, f"[sanity_checks_q7b][rand][T{test_i}]: market_eq didn't output a matching, Test failed for {n=}, {m=}, {V=}, {P=}, {M=}"
+
+        # Validate the matching is a perfect matching
+        assert sum(1 for i in M if i is not None) == min(n, m), f"[sanity_checks_q7b][rand][T{test_i}]: market_eq didn't output a perfect matching, Test failed for {n=}, {m=}, {V=}, {P=}, {M=}"
+
+        # Validate non-negative prices
+        assert all(p >= 0 for p in P), f"[sanity_checks_q7b][rand][T{test_i}]: market_eq didn't output non-negative prices, Test failed for {n=}, {m=}, {V=}, {P=}, {M=}"
+
+        # Calculate the maximum social value
+        scipy_max_sv = scipy_max_social_value(n, m, V)
+
+        # Calculate the social value of the market equilibrium
+        market_eq_val = social_value(n, m, V, M)
+
+        # Check if the social value of the market equilibrium is the maximum social value
+        assert market_eq_val == scipy_max_sv, f"[sanity_checks_q7b][rand][T{test_i}]: Test failed for {n=}, {m=}, {V=}, {P=}, {M=}, {market_eq_val=}, {scipy_max_sv=}"
+
+        # Success
+        print(f"[sanity_checks_q7b][rand][T{test_i}]: Test passed for {n=}, {m=}, {V=}, {P=}, {M=}, {market_eq_val=}, {scipy_max_sv=}")
 
 # === Problem 8(a) ===
 def social_value(n, m, V, M):
@@ -364,14 +444,11 @@ def vcg(n: 'players', m: 'items', V: 'valuations'):
     # calc market equilibrium as social value maximizing state (i.e., allocation)
     P, M = market_eq(n, m, V)
 
-    # matching
-    M = max_weight_matching(rect_V)[:n]
-
     # payments
     maximum_social_value = calc_max_social_value(n, m, rect_V)
     P = np.array([maximum_social_value - V[i][M[i]] for i in range(n)])
 
-    # pivot
+    # pivot (maximum social value at externality)
     H = np.zeros((n,))
     for i in range(n):
         row_i = copy(rect_V[i])
@@ -379,11 +456,11 @@ def vcg(n: 'players', m: 'items', V: 'valuations'):
         H[i] = calc_max_social_value(n, m, rect_V) # the outed maximum social value
         rect_V[i] = row_i
 
-    # item (-cost) i.e. positive
+    # externality copmutations: P - H is non-negative by definition
     C = np.zeros((m,))
     for i in range(n):
-        j = M[i]
-        C[j] += H[i] - P[i]
+        j = M[i] # the item that player i is matched with
+        C[j] += H[i] - P[i] # externality of player i is its price for its item j = M[i]
 
     return list(C), list(M)
 
@@ -415,7 +492,7 @@ def lec5_page7_example_q8a():
     m = 3
     V = [[4, 12, 5], [7, 10, 9], [7, 7, 10]]
     P, M = vcg(n, m, V)
-    print(P, M)
+    print("[lec5_page7_example_q8a]", P, M)
     assert M == [1, 0, 2], "[lec5_page7_example_q8a]: M is not as expected"
     assert P == [0, 3, 2], "[lec5_page7_example_q8a]: P is not as expected"
 
@@ -506,6 +583,7 @@ def brd_on_gsp(n, m, V) -> 'V_':
 def main():
     # TODO: Put your analysis and plotting code here, if any
     lec5_page7_example_q7b()
+    sanity_checks_q7b()
     lec5_page7_example_q8a()
 
 if __name__ == "__main__":
