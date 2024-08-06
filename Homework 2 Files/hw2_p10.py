@@ -189,6 +189,10 @@ def max_flow(G, s, t):
     v = 0
     for neighbor in F.edges_from(s):
         v += F.get_edge(s, neighbor)
+    for origin in range(G.number_of_nodes()):
+        if F.get_edge(origin, s) > 0:
+            v -= F.get_edge(origin, s)
+            
     return v, F
 
 

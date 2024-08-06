@@ -442,11 +442,11 @@
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetdash{}{0pt}%
 \pgfpathmoveto{\pgfqpoint{1.025455in}{0.696000in}}%
-\pgfpathlineto{\pgfqpoint{1.669610in}{0.763200in}}%
-\pgfpathlineto{\pgfqpoint{2.313766in}{1.838400in}}%
-\pgfpathlineto{\pgfqpoint{2.957922in}{2.980800in}}%
-\pgfpathlineto{\pgfqpoint{3.602078in}{3.686400in}}%
-\pgfpathlineto{\pgfqpoint{4.246234in}{3.955200in}}%
+\pgfpathlineto{\pgfqpoint{1.669610in}{0.796800in}}%
+\pgfpathlineto{\pgfqpoint{2.313766in}{1.569600in}}%
+\pgfpathlineto{\pgfqpoint{2.957922in}{2.846400in}}%
+\pgfpathlineto{\pgfqpoint{3.602078in}{3.652800in}}%
+\pgfpathlineto{\pgfqpoint{4.246234in}{3.854400in}}%
 \pgfpathlineto{\pgfqpoint{4.890390in}{4.022400in}}%
 \pgfpathlineto{\pgfqpoint{5.534545in}{4.056000in}}%
 \pgfusepath{stroke}%
