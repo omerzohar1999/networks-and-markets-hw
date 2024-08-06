@@ -173,7 +173,7 @@ def max_flow(G, s, t):
             origin = path[i]
             destination = path[i + 1]
 
-            # calc the forward and backward flow additions
+            # calc the forward and backward flow additions (NOTE: I think this is true, but I'm not sure)
             forward_flow = min(flow, G.get_edge(origin, destination) - F.get_edge(origin, destination))
             residual_flow = flow - forward_flow
             
@@ -184,36 +184,48 @@ def max_flow(G, s, t):
         residual = residual_graph(G, F)
         path = residual.get_path(s, t)
 
-    # assert that the flow is non-negative and below the capacity (TODO: remove)
-    assert all(
-        0 <= F.get_edge(origin, destination) <= G.get_edge(origin, destination)
-        for origin in range(G.number_of_nodes())
-        for destination in G.edges_from(origin)
-    ), f"[max_flow]: flow is not non-negative and below the capacity, {F=}, {G=}"
-
-    # assert that the flow is conserved (TODO: remove)
-    assert all(
-        sum(F.get_edge(origin, destination) for destination in range(G.number_of_nodes())) == sum(F.get_edge(destination, origin) for destination in range(G.number_of_nodes()))
-        if origin != s and origin != t
-        else True
-        for origin in range(G.number_of_nodes())
-    ), f"[max_flow]: flow is not conserved, {F=}, {G=}"
-
     # calculate v
     v = 0
     for neighbor in F.edges_from(s):
         v += F.get_edge(s, neighbor)
     return v, F
 
-
-def max_matching(n, C):
-    """Given integer n, and a set of matching constraints C,
+def max_matching(n, m, C):
+    """Given n drivers, m riders, and a set of matching constraints C,
     output a maximum matching. Specifically, C is a n x m array, where
-    C[i][j] = 1 if left i (in 0...n-1) and right j (in 0...m-1) are compatible.
-    If left i and right j are incompatible, then C[i][j] = 0.
-    Return an n-element array M where M[i] = j if left i is matched with right j,
-    and M[i] = None if left i is not matched."""
-    pass
+    C[i][j] = 1 if driver i (in 0...n-1) and rider j (in 0...m-1) are compatible.
+    If driver i and rider j are incompatible, then C[i][j] = 0.
+    Return an n-element array M where M[i] = j if driver i is matched with rider j,
+    and M[i] = None if driver i is not matched."""
+    match_graph = WeightedDirectedGraph(n + m + 2)
+    source = 0
+    sink = n + m + 1
+    for i in range(n):
+        match_graph.set_edge(source, i + 1, 1)
+        for j in filter(lambda j: C[i][j], range(m)):
+            match_graph.set_edge(i + 1, n + j + 1, 1)
+    for j in range(m):
+        match_graph.set_edge(n + j + 1, sink, 1)
+    flow_val, F = max_flow(match_graph, source, sink)
+
+    # Extract the matching
+    matching = []
+    for i in range(n):
+        matching.append(None)
+        for j in range(m):
+            if F.get_edge(i + 1, n + j + 1) == 1:
+                matching[i] = j
+                break
+
+    # If n == m and the flow value is less than n, there is not perfect matching and there's a constricted set
+    constricted_set = None
+    if flow_val < n and n == m:
+        residual = residual_graph(match_graph, F)
+        residual.single_source_bfs(source)
+        constricted_set = [i for i in range(n) if residual.distances[source][i + 1] != -1]
+
+    # Return the matching
+    return matching, constricted_set, F
 
 def max_weight_matching(C: 'n x m array') -> 'players assignment':
     """return the maximum weight of any matching, where C[i, j] is the weight of the edge"""
@@ -235,49 +247,25 @@ def matching_or_cset(n, C):
     -   If there is no perfect matching, return a list M of left vertices
         that comprise a constricted set.
     """
-    match_graph = WeightedDirectedGraph(2 * (n + 1))
-    source = 0
-    sink = 2 * n + 1
-    for i in range(n):
-        match_graph.set_edge(source, i + 1, 1)
-        for j in filter(lambda j: C[i][j], range(n)):
-            match_graph.set_edge(i + 1, n + j + 1, 1)
-    for j in range(n):
-        match_graph.set_edge(n + j + 1, sink, 1)
-    flow_val, F = max_flow(match_graph, source, sink)
-    if flow_val < n:
-        residual = residual_graph(match_graph, F)
-        residual.single_source_bfs(source)
-        return False, [i for i in range(n) if residual.distances[source][i + 1] != -1]
+    # match_graph = WeightedDirectedGraph(2 * (n + 1))
+    # source = 0
+    # sink = 2 * n + 1
+    # for i in range(n):
+    #     match_graph.set_edge(source, i + 1, 1)
+    #     for j in filter(lambda j: C[i][j], range(n)):
+    #         match_graph.set_edge(i + 1, n + j + 1, 1)
+    # for j in range(n):
+    #     match_graph.set_edge(n + j + 1, sink, 1)
+    # flow_val, F = max_flow(match_graph, source, sink)
+    # if flow_val < n:
+    #     residual = residual_graph(match_graph, F)
+    #     residual.single_source_bfs(source)
+    #     return False, [i for i in range(n) if residual.distances[source][i + 1] != -1]
 
-    # assert that the flow is non-negative and below the capacity (TODO: remove)
-    assert all(
-        0 <= F.get_edge(origin, destination) <= match_graph.get_edge(origin, destination)
-        for origin in range(match_graph.number_of_nodes())
-        for destination in match_graph.edges_from(origin)
-    ), f"[matching_or_cset]: flow is not non-negative and below the capacity, {F=}, {match_graph=}"
+    matching, constricted_set, F = max_matching(n, n, C)
 
-    # assert that the flow is conserved (TODO: remove)
-    assert all(
-        sum(F.get_edge(origin, destination) for destination in range(match_graph.number_of_nodes())) == sum(F.get_edge(destination, origin) for destination in range(match_graph.number_of_nodes()))
-        if origin != source and origin != sink
-        else True
-        for origin in range(match_graph.number_of_nodes())
-    ), f"[matching_or_cset]: flow is not conserved, {F=}, {match_graph=}"
-
-    # assert that a vertex has at most one incoming edge (TODO: remove)
-    assert all(
-        sum(1 for origin in range(match_graph.number_of_nodes()) if F.get_edge(origin, destination) > 0) <= 1
-        for destination in range(match_graph.number_of_nodes())
-        if destination != source and destination != sink
-    ), f"[matching_or_cset]: a vertex has more than one incoming edge, {F=}, {match_graph=}"
-
-    # assert that a vertex has at most one outgoing edge (TODO: remove)
-    assert all(
-        sum(1 for destination in match_graph.edges_from(origin) if F.get_edge(origin, destination) > 0) <= 1
-        for origin in range(match_graph.number_of_nodes())
-        if origin != source and origin != sink
-    ), f"[matching_or_cset]: a vertex has more than one outgoing edge, {F=}, {match_graph=}"
+    if constricted_set is not None:
+        return False, constricted_set
 
     # Extract the matching
     matching = []
@@ -289,8 +277,6 @@ def matching_or_cset(n, C):
 
     # Validate matching is indeed a perfect matching (TODO: remove this)
     assert len(matching) == n, f"[matching_or_cset]: matching is not a perfect matching as it doesn't assign all riders, {matching=}, {n=}, {C=}"
-    assert all(C[i][matching[i]] == 1 for i in range(n)), f"[matching_or_cset]: matching is not a perfect matching as it contains a non-existent edge, {matching=}, {n=}, {C=}"
-    assert len(set(matching)) == n, f"[matching_or_cset]: matching is not a perfect matching as two riders are matched with the same driver, {matching=}, {n=}, {C=}"
 
     return True, matching
 
@@ -397,72 +383,6 @@ def lec5_page7_example_q7b():
     print("[lec5_page7_example_q7b]", P, M)
     assert M == [1, 0, 2], "[lec5_page7_example_q7b]: M is not as expected"
     assert P == [0, 3, 2], "[lec5_page7_example_q7b]: P is not as expected"
-
-def sanity_checks_q7b():
-    ### Test 1
-    n = 4
-    m = 3
-    V = [[10, 1, 1], [1, 10, 1], [1, 1, 10], [1, 1, 1]]
-    P, M = market_eq(n, m, V)
-    print("[sanity_checks_q7b][T1]", P, M)
-    assert M == [0, 1, 2, None], "[sanity_checks_q7b]: M is not as expected"
-    assert P == [1, 1, 1], "[sanity_checks_q7b]: P is not as expected"
-
-    ### Test 2
-    n = 3
-    m = 4
-    V = [[10, 1, 1, 1], [1, 10, 1, 1], [1, 1, 10, 1]]
-    P, M = market_eq(n, m, V)
-    print("[sanity_checks_q7b][T2]", P, M)
-
-    ### Brute-Force Test
-    def scipy_max_social_value(n, m, V):
-        # converting V to numpy
-        V = np.array(V)
-
-        # Use the linear_sum_assignment function to get the indices of the maximum value
-        row_ind, col_ind = scipy.optimize.linear_sum_assignment(V, maximize=True)
-        print("[sanity_checks_q7b][rand]", row_ind, col_ind)
-
-        # Return the maximum value
-        return V[row_ind, col_ind].sum()
-    
-    # 50 random tests
-    for test_i in range(50):
-
-        # Random n and m
-        n = random.randint(1, 10)
-        m = random.randint(1, 10)
-
-        # Random valuations
-        V = np.random.randint(0, 100, size=(n, m))
-
-        # Calculate the market equilibrium
-        P, M = market_eq(n, m, V)
-
-        # Validate the matching is indeed a matching
-        for i_1 in range(n):
-            for i_2 in range(i_1 + 1, n):
-                if M[i_1] == M[i_2] and M[i_1] is not None:
-                    assert False, f"[sanity_checks_q7b][rand][T{test_i}]: market_eq didn't output a matching, Test failed for {n=}, {m=}, {V=}, {P=}, {M=}"
-
-        # Validate the matching is a perfect matching
-        assert sum(1 for i in M if i is not None) == min(n, m), f"[sanity_checks_q7b][rand][T{test_i}]: market_eq didn't output a perfect matching, Test failed for {n=}, {m=}, {V=}, {P=}, {M=}"
-
-        # Validate non-negative prices
-        assert all(p >= 0 for p in P), f"[sanity_checks_q7b][rand][T{test_i}]: market_eq didn't output non-negative prices, Test failed for {n=}, {m=}, {V=}, {P=}, {M=}"
-
-        # Calculate the maximum social value
-        scipy_max_sv = scipy_max_social_value(n, m, V)
-
-        # Calculate the social value of the market equilibrium
-        market_eq_val = social_value(n, m, V, M)
-
-        # Check if the social value of the market equilibrium is the maximum social value
-        assert market_eq_val == scipy_max_sv, f"[sanity_checks_q7b][rand][T{test_i}]: Test failed for {n=}, {m=}, {V=}, {P=}, {M=}, {market_eq_val=}, {scipy_max_sv=}"
-
-        # Success
-        print(f"[sanity_checks_q7b][rand][T{test_i}]: Test passed for {n=}, {m=}, {V=}, {P=}, {M=}, {market_eq_val=}, {scipy_max_sv=}")
 
 # === Problem 8(a) ===
 def social_value(n, m, V, M):

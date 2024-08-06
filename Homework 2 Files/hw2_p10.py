@@ -127,14 +127,28 @@ def max_flow(G, s, t):
 
     def residual_graph(G, F):
         R = WeightedDirectedGraph(G.number_of_nodes())
+
+        # initialize R to be the same as G (capacity graph)
         for origin in range(G.number_of_nodes()):
             for destination in G.edges_from(origin):
-                capacity = G.get_edge(origin, destination)
+                R.set_edge(origin, destination, G.get_edge(origin, destination))
+
+        # update R with the flow graph F
+        for origin in range(G.number_of_nodes()):
+            for destination in G.edges_from(origin):
                 flow = F.get_edge(origin, destination)
-                if flow < capacity:
-                    R.set_edge(origin, destination, capacity - flow)
-                if flow > 0:
-                    R.set_edge(destination, origin, flow)
+                R.set_edge(origin, destination, R.get_edge(origin, destination) - flow)
+                R.set_edge(destination, origin, R.get_edge(destination, origin) + flow)
+
+        # for origin in range(G.number_of_nodes()):
+        #     for destination in G.edges_from(origin):
+        #         capacity = G.get_edge(origin, destination)
+        #         flow = F.get_edge(origin, destination)
+        #         if flow < capacity:
+        #             R.set_edge(origin, destination, capacity - flow)
+        #         if flow > 0:
+        #             R.set_edge(destination, origin, flow)
+
         return R
 
     def path_flow(G, path):
@@ -159,7 +173,15 @@ def max_flow(G, s, t):
         for i in range(len(path) - 1):
             origin = path[i]
             destination = path[i + 1]
-            F.set_edge(origin, destination, F.get_edge(origin, destination) + flow)
+
+            # calc the forward and backward flow additions (NOTE: I think this is true, but I'm not sure)
+            forward_flow = min(flow, G.get_edge(origin, destination) - F.get_edge(origin, destination))
+            residual_flow = flow - forward_flow
+            
+            # update the flow graph
+            F.set_edge(origin, destination, F.get_edge(origin, destination) + forward_flow)
+            F.set_edge(destination, origin, F.get_edge(destination, origin) - residual_flow)
+            
         residual = residual_graph(G, F)
         path = residual.get_path(s, t)
 
@@ -227,25 +249,21 @@ def max_matching(n, m, C):
         match_graph.set_edge(source, i + 1, 1)
         for j in filter(lambda j: C[i][j], range(m)):
             match_graph.set_edge(i + 1, n + j + 1, 1)
-        # for j in range(m):
-        #     if C[i][j]:
-        #         match_graph.set_edge(i + 1, n + j + 1, 1)
     for j in range(m):
         match_graph.set_edge(n + j + 1, sink, 1)
-    _, F = max_flow(match_graph, source, sink)
+    flow_val, F = max_flow(match_graph, source, sink)
 
-    is_positive = lambda i, j: F.get_edge(i + 1, n + j + 1) > 0
-    return [next(filter(lambda j: is_positive(i, j), range(m)), None)
-            for i in range(n)]
-    # M = [None] * n
-    # for i in range(n):
-    #     edge_weight = lambda j: F.get_edge(i + 1, n + j + 1) > 0
-    #     M[i] = next(filter(edge_weight, range(m)), None)
-    #     # for j in range(m):
-    #     #     if F.get_edge(i + 1, n + j + 1) > 0:
-    #     #         M[i] = j
-    #     #         break
-    # # return M
+    # Extract the matching
+    matching = []
+    for i in range(n):
+        matching.append(None)
+        for j in range(m):
+            if F.get_edge(i + 1, n + j + 1) == 1:
+                matching[i] = j
+                break
+
+    # Return the matching
+    return matching
 
 
 def max_matching_sanity_checks():
@@ -396,7 +414,12 @@ def main():
     plt.xlabel("p")
     plt.ylabel("Estimated probability of full matching")
     plt.title(f"Estimated probability of full matching vs. p ({n=})")
+    # plt.savefig("q10d.png", format="png")
+    # plt.savefig("q10d.pgf", format="pgf")
     plt.show()
+
+    # === Bonus Question 3 === #
+    plot_min_p_for_full_matching()
 
 
 if __name__ == "__main__":
