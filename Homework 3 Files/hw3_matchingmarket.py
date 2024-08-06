@@ -556,10 +556,57 @@ def random_bundles_valuations(n, m):
     Each bundle j (in 0...m-1) is comprised of j copies of an identical good.
     Each player i has its own value for an individual good; this value is sampled
     uniformly at random from [1, 50] inclusive, for each player"""
+    individual_rand_values = np.random.randint(1, 51, size=n)
+    V = np.tile(np.arange(1, m + 1), (n, 1)) # bundle i is comprised of (i + 1) copies of an identical good
+    return (V.T * individual_rand_values).T
 
-    costs = np.random.randint(0, 51, size=n)
-    V = np.tile(np.arange(0, m), (n, 1))
-    return (V.T * costs).T
+def b2a_analysis():
+    # Evaluate on n = m = 20 contexts
+    for iter_i in range(4):
+
+        # print test number
+        print(f"[b2a_analysis] test {iter_i}:")
+
+        # generate random context
+        n = 20
+        m = 20
+        V = random_bundles_valuations(n, m)
+
+        # run VCG
+        P_vcg, M_vcg = vcg(n, m, V)
+
+        # print results
+        print(f"[b2a_analysis][graph]: {n=} {m=} {V=}")
+        print(f"[b2a_analysis][vcg]: {P_vcg=}, {M_vcg=}")
+
+        # get individual valuations
+        V_individual = np.array([l[0] for l in V])
+
+        # get indices of sorted valuations
+        V_individual_sorted_indices = np.argsort(V_individual)
+
+        # get the bundles matched to each buyer sorted by individual valuation of the buyer
+        M_vcg_sorted = [M_vcg[i] for i in V_individual_sorted_indices]
+
+        # get the vcg prices sorted by individual valuation
+        # NOTE: this is the externality for each buyer, sorted by individual valuation
+        P_vcg_sorted = [P_vcg[i] for i in M_vcg_sorted]
+
+        # print results
+        print(f"[b2a_analysis][V_individual]: {V_individual=}")
+        print(f"[b2a_analysis][V_individual_sorted]: {np.sort(V_individual)}")
+        print(f"[b2a_analysis][V_individual_sorted_indices]: {np.argsort(V_individual)}")
+        print(f"[b2a_analysis][vcg_sorted]: {P_vcg_sorted=}")
+
+        # plot the sorted vcg prices
+        plt.figure()
+        plt.plot(np.sort(V_individual), P_vcg_sorted, 'o-')
+        plt.title(f"VCG prices sorted by individual valuation")
+        plt.xlabel("Buyer Valuation")
+        plt.ylabel("VCG-Clarke-Pivot Price")
+        plt.savefig(f"b2a_analysis_{iter_i}.png", format="png")
+        plt.savefig(f"b2a_analysis_{iter_i}.pgf", format="pgf")
+        plt.show()
 
 # === Bonus Question 2(b) (optional) ===
 
@@ -638,6 +685,7 @@ def main():
     lec5_page7_example_q7b()
     lec5_page7_example_q8a()
     q8b_analysis()
+    b2a_analysis()
 
 if __name__ == "__main__":
     main()

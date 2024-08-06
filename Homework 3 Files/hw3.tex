@@ -1,6 +1,7 @@
 \documentclass{article}
 \usepackage[a4paper, margin=2.5cm]{geometry}
 \usepackage{graphicx}
+\usepackage{subcaption} % Use subcaption instead of subfigure for newer versions
 \usepackage{pgf}
 \usepackage{pgfkeys}
 \usepackage{caption}
@@ -571,9 +572,44 @@
 
 \begin{enumerate}[label=(\alph*)]
 
-    \item 
+    \item We structure a \textit{markets-for-bundles} context of identical goods as a simple matching market context, where each bundle $B_j$'s value for bidder $b_i$ is the product of the value of $b_i$ for the good and the amount of goods in the bundle, $c_i$. That is, $v_{i}(B_j) = c_j \cdot t_i$, where $t_i$ is the value of $b_i$ for the singular good, and $c_j$ is the amount of goods in bundle $B_j$. We then run the VCG algorithm we implemented in the previous part on a few randomized examples of such a markets-for-bundles context, where there are $n = m = 20$ bundles and bidders, and the values $t_i$ are randomized between $1$ and $50$, and where $c_j = j$ ($j \in \{1, 2, \ldots, 20\}$).
 
+    \Cref{fig:b2a} summarizes the results of the VCG algorithm on 4 such randomized examples of markets-for-bundles contexts (the results remained the same for other examples we ran). The $x$-axis represents the individual valuation $t_i$ of the bidders for the singular good, and the $y$-axis represents the VCG price for the bidder---commonly referred to as the \textit{externalities} of the bidder on the market. We observe a clear trend, where the VCG prices---i.e. \textit{externalities} of bidders, are linearly increasing with the valuation of the bidders for the singular good, which is expected given the structure of the markets-for-bundles context.
+
+    \begin{figure*}[ht]
+        \centering
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2a_analysis_0.pgf}}
+            \caption{Example 1}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2a_analysis_1.pgf}}
+            \caption{Example 2}
+        \end{subfigure}
+        
+        \vspace{1em} % Add vertical space between rows
+        
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2a_analysis_2.pgf}}
+            \caption{Example 3}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2a_analysis_3.pgf}}
+            \caption{Example 4}
+        \end{subfigure}
+        
+        \caption{VCG prices for bidders in markets-for-bundles contexts}
+        \label{fig:b2a}
+    \end{figure*}
     
+    As we've seen in class, the socially optimal assignment in a \textit{markets-for-bundles} of identical goods, is that the larger bundles are assigned to the higher valuation of a singular good. Thus, as the valuation of the singular good increases, the bidder $b_i$ (w.l.o.g. the bidders are sorted by decreasing valuation of the singular goods) is assigned a larger bundle $B_i$ (w.l.o.g. the bundles are sorted by decreasing sizes $c_i$). Without said bidder $b_i$, the bundles assignment shifts for the lower-bidding bidders. That is, $\forall j > i \, . \, b_j \text{ is changed to be assigned } B_{j-1}$. This sets the externality to be $\sum_{j=i+1}^{n} (c_{j-1} - c_j) \cdot t_j$ for bidder $b_i$. In our case, this is $\sum_{j=i+1}^{n} t_j$. In either case, it is easy to see that as the valuation of the singular good increases (i.e., $i$ grows), the externality of the bidder (i.e., $b_i$) should increase for regularly distributed bundle sizes and valuations of the singular good (as in our randomization).
+
     \item 
 
 
