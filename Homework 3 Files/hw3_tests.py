@@ -267,8 +267,121 @@ class TestMarketEquilibrium(unittest.TestCase):
                 msg=f"market_eq didn't output the maximum social value, {n=}, {m=}, {V=}, {P=}, {M=}, {market_eq_val=}, {scipy_max_sv=}"
             )
 
+            # Streamlined test
+            self.assertTrue(
+                calc_max_social_value(n, m, V) == scipy_max_sv,
+                msg=f"calc_max_social_value didn't output the maximum social value, {n=}, {m=}, {V=}, {P=}, {M=}, {market_eq_val=}, {scipy_max_sv=}"
+            )
+
             # Success
             print(f"[sanity_checks_q7b][rand][T{test_i}]: Test passed {market_eq_val} == {scipy_max_sv}")
+
+class TestVCG(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def test_1(self):
+        n = 4
+        m = 3
+        V = [[10, 1, 1], [1, 10, 1], [1, 1, 10], [1, 1, 1]]
+        P, M = vcg(n, m, V)
+        print("[sanity_checks_q7c][T1]", P, M)
+        self.assertTrue(
+            M == [0, 1, 2, None] and P == [1, 1, 1],
+            msg="vcg failed sanity check"
+        )
+        print("[sanity_checks_q7c][T1] Passed")
+
+    def test_2(self):
+        n = 3
+        m = 4
+        V = [[10, 1, 1, 1], [1, 10, 1, 1], [1, 1, 10, 1]]
+        P, M = vcg(n, m, V)
+        print("[sanity_checks_q7c][T2]", P, M)
+        self.assertTrue(
+            M == [0, 1, 2] and P == [0, 0, 0, 0],
+        )
+        print("[sanity_checks_q7c][T2] Passed")
+
+    def test_random(self):
+
+        ### Brute-Force Test
+        def scipy_max_social_value(n, m, V):
+            # converting V to numpy
+            V = np.array(V)
+
+            # Use the linear_sum_assignment function to get the indices of the maximum value
+            row_ind, col_ind = scipy.optimize.linear_sum_assignment(V, maximize=True)
+
+            # Return the maximum value
+            return V[row_ind, col_ind].sum()
+        
+        # 50 random tests
+        for test_i in range(50):
+
+            # Random n and m
+            n = random.randint(1, 20)
+            m = random.randint(1, 20)
+
+            # Random valuations
+            V = np.random.randint(0, 100, size=(n, m))
+
+            # Calculate the vcg + clarke pivot rule prices and matching
+            P, M = vcg(n, m, V)
+
+            # Validate the matching is indeed a matching
+            for i_1 in range(n):
+                for i_2 in range(i_1 + 1, n):
+                    if M[i_1] == M[i_2] and M[i_1] is not None:
+                        self.assertTrue(False, msg=f"vcg didn't output a matching, {n=}, {m=}, {V=}, {P=}, {M=}")
+
+            # Validate the matching is a perfect matching
+            self.assertTrue(
+                sum(1 for i in M if i is not None) == min(n, m),
+                msg=f"vcg didn't output a perfect matching, {n=}, {m=}, {V=}, {P=}, {M=}"
+            )
+
+            # Validate non-negative prices
+            self.assertTrue(
+                all(p >= 0 for p in P),
+                msg=f"vcg didn't output non-negative prices, {n=}, {m=}, {V=}, {P=}, {M=}"
+            )
+
+            # Calculate the social value of the market equilibrium
+            market_eq_val = social_value(n, m, V, M)
+
+            # Calculate the maximum social value
+            scipy_max_sv = scipy_max_social_value(n, m, V)
+
+            # Check if the social value of the market equilibrium is the maximum social value
+            self.assertTrue(
+                market_eq_val == scipy_max_sv,
+                msg=f"vcg didn't output the maximum social value, {n=}, {m=}, {V=}, {P=}, {M=}, {market_eq_val=}, {scipy_max_sv=}"
+            )
+
+            # Calculate the externality values
+            externality_values = np.zeros(n)
+            for i in range(n):
+                row_i = copy(V[i])
+                V[i] = np.zeros(m)
+                externality_values[i] = scipy_max_social_value(n, m, V)
+                V[i] = row_i
+
+            # Calculate externality prices
+            externality_prices = np.zeros(m)
+            for i in range(n):
+                if M[i] is not None:
+                    externality_prices[M[i]] += externality_values[i] - (scipy_max_sv - V[i][M[i]])
+
+            # Check if the prices are indeed externality prices
+            self.assertTrue(
+                all(P[i] == externality_prices[i] for i in range(m)),
+                msg=f"vcg didn't output the externality prices, {n=}, {m=}, {V=}, {P=}, {M=}, {externality_prices=}"
+            )
+
+            # print success
+            print(f"[sanity_checks_q7c][rand][T{test_i}]: Test passed {market_eq_val} == {scipy_max_sv}")
 
 if __name__ == '__main__':
     unittest.main()

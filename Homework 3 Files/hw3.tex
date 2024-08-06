@@ -299,6 +299,36 @@
     \end{figure}
 }
 
+% Define the command to create a matching market graph
+\newcommand{\createMatchingMarketGraph}[1]{
+    \pgfkeys{/graph/.cd,#1}  % Apply settings within the /graph family
+    \expandafter\parseMatchingMarketGraphData\expandafter{\GraphBuyers}{\GraphItems}{\GraphBuyerValues}
+}
+
+% Helper macro to process the graph data and render the tikzpicture
+\newcommand{\parseMatchingMarketGraphData}[3]{
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[every node/.style={align=center}]
+            % Define nodes for buyers
+            \typeout{msg={#1}}
+            \foreach \buyer [count=\bi] in {#1} {
+                \node[draw, circle] (buyer-\bi) at (0, {-2*\bi}) {\buyer};
+            }
+            % Define nodes for items
+            \typeout{msg={#2}}
+            \foreach \item [count=\ii] in #2 {
+                \node[draw, circle] (item-\ii) at (4, {-2*\ii}) {\item};
+            }
+            % Calculate utilities and draw acceptable choices
+            \foreach \buyer [count=\bi] in {#1} {
+                \getValueDict{\bi}
+                \node[anchor=east] at (-1, {-2*\bi + 0.3}) {Values for \buyer: $\{\valueList\}$};
+            }
+        \end{tikzpicture}
+    \end{figure}
+}
+
 % start
 \title{
     Homework Assignment 3 - Coding Part Write-up\\
@@ -327,23 +357,11 @@
 
     \item[(b)] Consider the matching market example in Lecture 5 Page 7:
     
-    \begin{figure}[h]
-        \centering
-        \begin{tikzpicture}
-            % Define nodes for buyers
-            \node[draw, circle] (buyer-1) at (0, 0) {Person A};
-            \node[draw, circle] (buyer-2) at (0, -2) {Person B};
-            \node[draw, circle] (buyer-3) at (0, -4) {Person C};
-            % Define nodes for items
-            \node[draw, circle, align=center] (item-1) at (4, 0) {House 1};
-            \node[draw, circle, align=center] (item-2) at (4, -2) {House 2};
-            \node[draw, circle, align=center] (item-3) at (4, -4) {House 3};
-            % Output values
-            \node[anchor=east] at (-1, 0) {Values for Person A: $\{4, 12, 5\}$};
-            \node[anchor=east] at (-1, -2) {Values for Person B: $\{7, 10, 9\}$};
-            \node[anchor=east] at (-1, -4) {Values for Person C: $\{7, 7, 10\}$};
-        \end{tikzpicture}
-    \end{figure}
+    \createMatchingMarketGraph{
+        buyers={Person A, Person B, Person C},
+        items={House 1, House 2, House 3},
+        buyerValues={{4, 12, 5}, {7, 10, 9}, {7, 7, 10}}
+    }
 
     Formally, the matching market context is $\Gamma = (\{A, B, C\}, \{1, 2, 3\}, v)$, where $v$ is the valuation function defined as follows:
 
@@ -416,11 +434,136 @@
 
 \begin{enumerate}[label=(\alph*)]
 
-    \item 
-
+    \item In this part we analyze how the prices output by the VCG mechanism compare with the ones output by the algorithm of Theorem 8.8 (finding a market equilibrium $(p, M)$). The following are the examples we analyze and their corresponding results for each mechanism:
     
-    \item 
+    \begin{enumerate}[label=\arabic*.]
+        \item Example 1:
 
+        % [q8b_analysis] test 0:
+        % [q8b_analysis][graph]: n=7 m=3 test_V=array([[ 3,  0, 15],
+        %        [11, 12,  8],
+        %        [14, 13, 18],
+        %        [ 3, 18,  5],
+        %        [15,  9,  1],
+        %        [14, 17,  9],
+        %        [14, 17, 13]])
+        % [q8b_analysis][market_eq]: P_eq=[14, 17, 15], M_eq=[None, None, 2, 1, 0, None, None]
+        % [q8b_analysis][vcg]: P_vcg=[14.0, 17.0, 15.0], M_vcg=[None, None, 2, 1, 0, None, None]
+        % [q8b_analysis][different?]: False
+
+        \FloatBarrier
+
+        \createMatchingMarketGraph{
+            buyers={$b_1$, $b_2$, $b_3$, $b_4$, $b_5$, $b_6$, $b_7$},
+            items={1, 2, 3},
+            buyerValues={{3, 0, 15}, {11, 12, 8}, {14, 13, 18}, {3, 18, 5}, {15, 9, 1}, {14, 17, 9}, {14, 17, 13}}
+        }
+
+        \FloatBarrier
+
+        And we observe that the prices output by the VCG mechanism and the algorithm of Theorem 8.8 are the same (the matching is also the same because we used the same algorithm to compute the socially optimal state as part of the VCG mechanism)
+
+        \item Example 2:
+
+        % [q8b_analysis] test 1:
+        % [q8b_analysis][graph]: n=6 m=6 test_V=array([[12, 14, 16,  8,  6, 17],
+        %        [11,  7,  9, 19,  1, 11],
+        %        [18, 13, 17, 17,  2, 16],
+        %        [15,  0,  4,  1, 15, 15],
+        %        [ 7,  8,  5, 12, 18, 13],
+        %        [ 7, 19,  8, 12,  4,  1]])
+        % [q8b_analysis][market_eq]: P_eq=[1, 0, 0, 0, 1, 1], M_eq=[2, 3, 0, 5, 4, 1]
+        % [q8b_analysis][vcg]: P_vcg=[1.0, 0.0, 0.0, 0.0, 1.0, 1.0], M_vcg=[2, 3, 0, 5, 4, 1]
+        % [q8b_analysis][different?]: False
+
+        \FloatBarrier
+
+        \createMatchingMarketGraph{
+            buyers={$b_1$, $b_2$, $b_3$, $b_4$, $b_5$, $b_6$},
+            items={1, 2, 3, 4, 5, 6},
+            buyerValues={{12, 14, 16, 8, 6, 17}, {11, 7, 9, 19, 1, 11}, {18, 13, 17, 17, 2, 16}, {15, 0, 4, 1, 15, 15}, {7, 8, 5, 12, 18, 13}, {7, 19, 8, 12, 4, 1}}
+        }
+
+        \FloatBarrier
+
+        And we observe that the prices output by the VCG mechanism and the algorithm of Theorem 8.8 are the same (the matching is also the same because we used the same algorithm to compute the socially optimal state as part of the VCG mechanism)
+
+        \item Example 3:
+
+        % [q8b_analysis] test 2:
+        % [q8b_analysis][graph]: n=6 m=6 test_V=array([[ 8, 11,  0,  3,  6,  7],
+        %        [19, 14, 15, 14, 14, 16],
+        %        [17, 19, 19, 13,  8, 17],
+        %        [ 2, 15,  1, 18, 11, 10],
+        %        [ 8,  9,  7, 15,  6, 10],
+        %        [12, 15, 15,  8,  2,  1]])
+        % [q8b_analysis][market_eq]: P_eq=[2, 4, 4, 7, 0, 2], M_eq=[1, 0, 5, 4, 3, 2]
+        % [q8b_analysis][vcg]: P_vcg=[2.0, 4.0, 4.0, 7.0, 0.0, 2.0], M_vcg=[1, 0, 5, 4, 3, 2]
+        % [q8b_analysis][different?]: False
+
+        \FloatBarrier
+
+        \createMatchingMarketGraph{
+            buyers={$b_1$, $b_2$, $b_3$, $b_4$, $b_5$, $b_6$},
+            items={1, 2, 3, 4, 5, 6},
+            buyerValues={{8, 11, 0, 3, 6, 7}, {19, 14, 15, 14, 14, 16}, {17, 19, 19, 13, 8, 17}, {2, 15, 1, 18, 11, 10}, {8, 9, 7, 15, 6, 10}, {12, 15, 15, 8, 2, 1}}
+        }
+
+        \FloatBarrier
+
+        And we observe that the prices output by the VCG mechanism and the algorithm of Theorem 8.8 are the same (the matching is also the same because we used the same algorithm to compute the socially optimal state as part of the VCG mechanism)
+
+        \item Example 4:
+
+        % [q8b_analysis] test 3:
+        % [q8b_analysis][graph]: n=6 m=10 test_V=array([[ 5,  3,  0,  7, 10,  5, 17,  6, 18,  8],
+        %        [ 5,  4,  6,  9, 15,  9, 17,  2, 10, 14],
+        %        [10, 11, 10,  6,  4, 10, 16, 11, 10,  6],
+        %        [ 2, 19,  4, 12,  5,  8, 12,  0, 11, 11],
+        %        [18,  7, 15, 11,  7,  4,  2,  9,  9,  8],
+        %        [ 5,  2,  2,  5,  1, 12, 13, 18,  8,  1]])
+        % [q8b_analysis][market_eq]: P_eq=[0, 0, 0, 0, 0, 0, 2, 0, 0, 0], M_eq=[8, 4, 6, 1, 0, 7]
+        % [q8b_analysis][vcg]: P_vcg=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0], M_vcg=[8, 4, 6, 1, 0, 7]
+        % [q8b_analysis][different?]: False    
+        
+        \FloatBarrier
+
+        \createMatchingMarketGraph{
+            buyers={$b_1$, $b_2$, $b_3$, $b_4$, $b_5$, $b_6$},
+            items={1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+            buyerValues={{5, 3, 0, 7, 10, 5, 17, 6, 18, 8}, {5, 4, 6, 9, 15, 9, 17, 2, 10, 14}, {10, 11, 10, 6, 4, 10, 16, 11, 10, 6}, {2, 19, 4, 12, 5, 8, 12, 0, 11, 11}, {18, 7, 15, 11, 7, 4, 2, 9, 9, 8}, {5, 2, 2, 5, 1, 12, 13, 18, 8, 1}}
+        }
+
+        \FloatBarrier
+
+        And we observe that the prices output by the VCG mechanism and the algorithm of Theorem 8.8 are the same (the matching is also the same because we used the same algorithm to compute the socially optimal state as part of the VCG mechanism)
+
+        \item Example 5:
+
+        % [q8b_analysis][graph]: n=6 m=4 test_V=array([[15,  3,  1,  5],
+        % [11, 11, 16,  5],
+        % [ 9, 15, 13, 17],
+        % [15, 11, 10, 16],
+        % [19,  0, 12,  7],
+        % [17, 16, 13,  9]])
+        % [q8b_analysis][market_eq]: P_eq=[15, 14, 12, 16], M_eq=[None, 2, 3, None, 0, 1]
+        % [q8b_analysis][vcg]: P_vcg=[15.0, 14.0, 12.0, 16.0], M_vcg=[None, 2, 3, None, 0, 1]
+        % [q8b_analysis][different?]: False
+
+        \FloatBarrier
+
+        \createMatchingMarketGraph{
+            buyers={$b_1$, $b_2$, $b_3$, $b_4$, $b_5$, $b_6$},
+            items={1, 2, 3, 4},
+            buyerValues={{15, 3, 1, 5}, {11, 11, 16, 5}, {9, 15, 13, 17}, {15, 11, 10, 16}, {19, 0, 12, 7}, {17, 16, 13, 9}}
+        }
+
+        \FloatBarrier
+
+        And we observe that the prices output by the VCG mechanism and the algorithm of Theorem 8.8 are the same (the matching is also the same because we used the same algorithm to compute the socially optimal state as part of the VCG mechanism)
+    \end{enumerate}
+    
+    That is, in all examples we analyzed, the prices output by the VCG mechanism and the algorithm of Theorem 8.8 were the same, and the matching was also the same because we used the same algorithm to compute the socially optimal state as part of the VCG mechanism. We analyzed far more examples besides the ones presented here, and the results were consistent across all of them---the prices output by the VCG mechanism and the algorithm of Theorem 8.8 were the same (and the matching was also the same because we used the same algorithm to compute the socially optimal state as part of the VCG mechanism).
 
 \end{enumerate}
 

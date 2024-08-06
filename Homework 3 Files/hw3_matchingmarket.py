@@ -432,21 +432,22 @@ def vcg(n: 'players', m: 'items', V: 'valuations'):
 
     # payments
     maximum_social_value = calc_max_social_value(n, m, rect_V)
-    P = np.array([maximum_social_value - V[i][M[i]] for i in range(n)])
+    P = np.array([maximum_social_value - V[i][M[i]] if M[i] is not None else 0 for i in range(n)])
 
     # pivot (maximum social value at externality)
     H = np.zeros((n,))
     for i in range(n):
         row_i = copy(rect_V[i])
-        rect_V[i] = [0] * m
-        H[i] = calc_max_social_value(n, m, rect_V) # the outed maximum social value
+        rect_V[i] = [0] * len(rect_V[i])
+        H[i] = calc_max_social_value(n, m, rect_V) # the ousted maximum social value
         rect_V[i] = row_i
 
     # externality copmutations: P - H is non-negative by definition
     C = np.zeros((m,))
     for i in range(n):
         j = M[i] # the item that player i is matched with
-        C[j] += H[i] - P[i] # externality of player i is its price for its item j = M[i]
+        if j is not None:
+            C[j] = H[i] - P[i] # externality of player i is its price for its item j = M[i]
 
     return list(C), list(M)
 
@@ -481,6 +482,68 @@ def lec5_page7_example_q8a():
     print("[lec5_page7_example_q8a]", P, M)
     assert M == [1, 0, 2], "[lec5_page7_example_q8a]: M is not as expected"
     assert P == [0, 3, 2], "[lec5_page7_example_q8a]: P is not as expected"
+
+def q8b_analysis():
+
+    # test array
+    tests = [
+        [[ 3,  0, 15],
+       [11, 12,  8],
+       [14, 13, 18],
+       [ 3, 18,  5],
+       [15,  9,  1],
+       [14, 17,  9],
+       [14, 17, 13]],
+       [[12, 14, 16,  8,  6, 17],
+       [11,  7,  9, 19,  1, 11],
+       [18, 13, 17, 17,  2, 16],
+       [15,  0,  4,  1, 15, 15],
+       [ 7,  8,  5, 12, 18, 13],
+       [ 7, 19,  8, 12,  4,  1]],
+       [[ 8, 11,  0,  3,  6,  7],
+       [19, 14, 15, 14, 14, 16],
+       [17, 19, 19, 13,  8, 17],
+       [ 2, 15,  1, 18, 11, 10],
+       [ 8,  9,  7, 15,  6, 10],
+       [12, 15, 15,  8,  2,  1]],
+       [[ 5,  3,  0,  7, 10,  5, 17,  6, 18,  8],
+       [ 5,  4,  6,  9, 15,  9, 17,  2, 10, 14],
+       [10, 11, 10,  6,  4, 10, 16, 11, 10,  6],
+       [ 2, 19,  4, 12,  5,  8, 12,  0, 11, 11],
+       [18,  7, 15, 11,  7,  4,  2,  9,  9,  8],
+       [ 5,  2,  2,  5,  1, 12, 13, 18,  8,  1]],
+       [[15,  3,  1,  5],
+       [11, 11, 16,  5],
+       [ 9, 15, 13, 17],
+       [15, 11, 10, 16],
+       [19,  0, 12,  7],
+       [17, 16, 13,  9]]
+    ]
+
+    # 5 random tests
+    for test_i, test_V in enumerate(tests):
+        
+        # print test number
+        print(f"[q8b_analysis] test {test_i}:")
+
+        # cast to numpy
+        test_V = np.array(test_V)
+
+        # get n and m
+        n = len(test_V)
+        m = len(test_V[0])
+
+        # run market equilibrium
+        P_eq, M_eq = market_eq(n, m, test_V)
+
+        # run VCG
+        P_vcg, M_vcg = vcg(n, m, test_V)
+        
+        # print results
+        print(f"[q8b_analysis][graph]: {n=} {m=} {test_V=}")
+        print(f"[q8b_analysis][market_eq]: {P_eq=}, {M_eq=}")
+        print(f"[q8b_analysis][vcg]: {P_vcg=}, {M_vcg=}")
+        print(f"[q8b_analysis][different?]: {P_eq != P_vcg}")
 
 # === Bonus Question 2(a) (Optional) ===
 def random_bundles_valuations(n, m):
@@ -569,8 +632,8 @@ def brd_on_gsp(n, m, V) -> 'V_':
 def main():
     # TODO: Put your analysis and plotting code here, if any
     lec5_page7_example_q7b()
-    sanity_checks_q7b()
     lec5_page7_example_q8a()
+    q8b_analysis()
 
 if __name__ == "__main__":
     main()
