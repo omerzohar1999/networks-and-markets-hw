@@ -120,14 +120,27 @@ class WeightedDirectedGraph:
 
 def residual_graph(G, F):
     R = WeightedDirectedGraph(G.number_of_nodes())
+
+    # initialize R to be the same as G (capacity graph)
     for origin in range(G.number_of_nodes()):
         for destination in G.edges_from(origin):
-            capacity = G.get_edge(origin, destination)
+            R.set_edge(origin, destination, G.get_edge(origin, destination))
+
+    # update R with the flow graph F
+    for origin in range(G.number_of_nodes()):
+        for destination in G.edges_from(origin):
             flow = F.get_edge(origin, destination)
-            if flow < capacity:
-                R.set_edge(origin, destination, capacity - flow)
-            if flow > 0:
-                R.set_edge(destination, origin, flow)
+            R.set_edge(origin, destination, R.get_edge(origin, destination) - flow)
+            R.set_edge(destination, origin, R.get_edge(destination, origin) + flow)
+
+    # for origin in range(G.number_of_nodes()):
+    #     for destination in G.edges_from(origin):
+    #         capacity = G.get_edge(origin, destination)
+    #         flow = F.get_edge(origin, destination)
+    #         if flow < capacity:
+    #             R.set_edge(origin, destination, capacity - flow)
+    #         if flow > 0:
+    #             R.set_edge(destination, origin, flow)
     return R
 
 
@@ -159,9 +172,32 @@ def max_flow(G, s, t):
         for i in range(len(path) - 1):
             origin = path[i]
             destination = path[i + 1]
-            F.set_edge(origin, destination, F.get_edge(origin, destination) + flow)
+
+            # calc the forward and backward flow additions
+            forward_flow = min(flow, G.get_edge(origin, destination) - F.get_edge(origin, destination))
+            residual_flow = flow - forward_flow
+            
+            # update the flow graph
+            F.set_edge(origin, destination, F.get_edge(origin, destination) + forward_flow)
+            F.set_edge(destination, origin, F.get_edge(destination, origin) - residual_flow)
+
         residual = residual_graph(G, F)
         path = residual.get_path(s, t)
+
+    # assert that the flow is non-negative and below the capacity (TODO: remove)
+    assert all(
+        0 <= F.get_edge(origin, destination) <= G.get_edge(origin, destination)
+        for origin in range(G.number_of_nodes())
+        for destination in G.edges_from(origin)
+    ), f"[max_flow]: flow is not non-negative and below the capacity, {F=}, {G=}"
+
+    # assert that the flow is conserved (TODO: remove)
+    assert all(
+        sum(F.get_edge(origin, destination) for destination in range(G.number_of_nodes())) == sum(F.get_edge(destination, origin) for destination in range(G.number_of_nodes()))
+        if origin != s and origin != t
+        else True
+        for origin in range(G.number_of_nodes())
+    ), f"[max_flow]: flow is not conserved, {F=}, {G=}"
 
     # calculate v
     v = 0
@@ -214,6 +250,36 @@ def matching_or_cset(n, C):
         residual.single_source_bfs(source)
         return False, [i for i in range(n) if residual.distances[source][i + 1] != -1]
 
+    # assert that the flow is non-negative and below the capacity (TODO: remove)
+    assert all(
+        0 <= F.get_edge(origin, destination) <= match_graph.get_edge(origin, destination)
+        for origin in range(match_graph.number_of_nodes())
+        for destination in match_graph.edges_from(origin)
+    ), f"[matching_or_cset]: flow is not non-negative and below the capacity, {F=}, {match_graph=}"
+
+    # assert that the flow is conserved (TODO: remove)
+    assert all(
+        sum(F.get_edge(origin, destination) for destination in range(match_graph.number_of_nodes())) == sum(F.get_edge(destination, origin) for destination in range(match_graph.number_of_nodes()))
+        if origin != source and origin != sink
+        else True
+        for origin in range(match_graph.number_of_nodes())
+    ), f"[matching_or_cset]: flow is not conserved, {F=}, {match_graph=}"
+
+    # assert that a vertex has at most one incoming edge (TODO: remove)
+    assert all(
+        sum(1 for origin in range(match_graph.number_of_nodes()) if F.get_edge(origin, destination) > 0) <= 1
+        for destination in range(match_graph.number_of_nodes())
+        if destination != source and destination != sink
+    ), f"[matching_or_cset]: a vertex has more than one incoming edge, {F=}, {match_graph=}"
+
+    # assert that a vertex has at most one outgoing edge (TODO: remove)
+    assert all(
+        sum(1 for destination in match_graph.edges_from(origin) if F.get_edge(origin, destination) > 0) <= 1
+        for origin in range(match_graph.number_of_nodes())
+        if origin != source and origin != sink
+    ), f"[matching_or_cset]: a vertex has more than one outgoing edge, {F=}, {match_graph=}"
+
+    # Extract the matching
     matching = []
     for i in range(n):
         for j in range(n):
@@ -377,7 +443,7 @@ def sanity_checks_q7b():
         # Validate the matching is indeed a matching
         for i_1 in range(n):
             for i_2 in range(i_1 + 1, n):
-                if M[i_1] == M[i_2]:
+                if M[i_1] == M[i_2] and M[i_1] is not None:
                     assert False, f"[sanity_checks_q7b][rand][T{test_i}]: market_eq didn't output a matching, Test failed for {n=}, {m=}, {V=}, {P=}, {M=}"
 
         # Validate the matching is a perfect matching
