@@ -46,11 +46,11 @@ def create_random_bipartite_graph(left_side_node_amount=10, right_side_node_amou
 class TestMaxFlow(unittest.TestCase):
 
     def setUp(self):
-        self.test_amount = 40
+        self.test_amount = 200
         self.node_amount = 50
         self.thresh = 0.5
         self.capacity_limit = 40
-        self.random_graphs = [create_random_directed_graph(self.test_amount, self.thresh, self.capacity_limit) for _ in range(self.node_amount)]
+        self.random_graphs = [create_random_directed_graph(self.node_amount, self.thresh, self.capacity_limit) for _ in range(self.test_amount)]
 
     def test_max_flow(self):
         
@@ -102,7 +102,7 @@ class TestMaxFlow(unittest.TestCase):
 class TestMaximumMatching(unittest.TestCase):
 
     def setUp(self):
-        self.test_amount = 40
+        self.test_amount = 200
         self.left_side_node_amount = 25
         self.right_side_node_amount = 35
         self.total_node_amount = self.left_side_node_amount + self.right_side_node_amount
