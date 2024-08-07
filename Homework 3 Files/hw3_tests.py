@@ -25,7 +25,7 @@ def create_random_directed_graph(node_amount=10, thresh=0.5, capacity_limit=10):
     # return both
     return G, WDG
 
-def create_random_bipartite_graph(left_side_node_amount=10, right_side_node_amount=10, thresh=0.2, capacity_limit=10):
+def create_random_bipartite_graph(left_side_node_amount=10, right_side_node_amount=10, thresh=0.2):
     
     # Create constraints matrix
     C = [[0 if random.random() < thresh else 1 for _ in range(right_side_node_amount)] for _ in range(left_side_node_amount)]
@@ -47,9 +47,9 @@ class TestMaxFlow(unittest.TestCase):
 
     def setUp(self):
         self.test_amount = 40
-        self.node_amount = 30
+        self.node_amount = 50
         self.thresh = 0.5
-        self.capacity_limit = 20
+        self.capacity_limit = 40
         self.random_graphs = [create_random_directed_graph(self.test_amount, self.thresh, self.capacity_limit) for _ in range(self.node_amount)]
 
     def test_max_flow(self):
@@ -106,9 +106,8 @@ class TestMaximumMatching(unittest.TestCase):
         self.left_side_node_amount = 25
         self.right_side_node_amount = 35
         self.total_node_amount = self.left_side_node_amount + self.right_side_node_amount
-        self.thresh = 0.2
-        self.capacity_limit = 20
-        self.random_graphs = [create_random_bipartite_graph(self.left_side_node_amount, self.right_side_node_amount, self.thresh, self.capacity_limit) for _ in range(self.test_amount)]
+        self.thresh = 0.97
+        self.random_graphs = [create_random_bipartite_graph(self.left_side_node_amount, self.right_side_node_amount, self.thresh) for _ in range(self.test_amount)]
 
     def test_maximum_matching(self):
         
@@ -116,7 +115,7 @@ class TestMaximumMatching(unittest.TestCase):
         for i, (G, C) in enumerate(self.random_graphs):
 
             # calculate maximum matching for G using networkx
-            nx_matching = nx.bipartite.maximum_matching(G)
+            nx_matching = nx.bipartite.maximum_matching(G, top_nodes=list(range(self.left_side_node_amount)))
             nx_max_matching = len(nx_matching) // 2 # each edge is counted twice
 
             # calculate maximum matching for WDG using our implementation
@@ -146,8 +145,8 @@ class TestMaximumMatching(unittest.TestCase):
             # assert flow value is as advertised
             self.assertEqual(
                 sum(F.get_edge(0, destination) for destination in range(1, self.left_side_node_amount + 1)),
-                len(WDG_matching),
-                msg="flow value is incorrect"
+                len(list(filter(lambda x: x != None, WDG_matching))),
+                msg=f"flow value is incorrect, {self.left_side_node_amount=}, {self.right_side_node_amount=}, {C=}, {WDG_matching=}"
             )
 
             # assert that a vertex has at most one incoming edge
