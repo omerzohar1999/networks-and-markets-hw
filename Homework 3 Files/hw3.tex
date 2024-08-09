@@ -574,7 +574,9 @@
 
     \item We structure a \textit{markets-for-bundles} context of identical goods as a simple matching market context, where each bundle $B_j$'s value for bidder $b_i$ is the product of the value of $b_i$ for the good and the amount of goods in the bundle, $c_i$. That is, $v_{i}(B_j) = c_j \cdot t_i$, where $t_i$ is the value of $b_i$ for the singular good, and $c_j$ is the amount of goods in bundle $B_j$. We then run the VCG algorithm we implemented in the previous part on a few randomized examples of such a markets-for-bundles context, where there are $n = m = 20$ bundles and bidders, and the values $t_i$ are randomized between $1$ and $50$, and where $c_j = j$ ($j \in \{1, 2, \ldots, 20\}$).
 
-    \Cref{fig:b2a} summarizes the results of the VCG algorithm on 4 such randomized examples of markets-for-bundles contexts (the results remained the same for other examples we ran). The $x$-axis represents the individual valuation $t_i$ of the bidders for the singular good, and the $y$-axis represents the VCG price for the bidder---commonly referred to as the \textit{externalities} of the bidder on the market. We observe a clear trend, where the VCG prices---i.e. \textit{externalities} of bidders, are linearly increasing with the valuation of the bidders for the singular good, which is expected given the structure of the markets-for-bundles context.
+    \Cref{fig:b2a} summarizes the results of the VCG algorithm on 4 such randomized examples of markets-for-bundles contexts (the results remained the same for other examples we ran). The $x$-axis represents the individual valuation $t_i$ of the bidders for the singular good, and the $y$-axis represents the VCG price for the bidder---commonly referred to as the \textit{externalities} of the bidder on the market. 
+    
+    We observe a clear trend, where the VCG prices---i.e. \textit{externalities} of bidders, are increasing with the valuation of the bidders for the singular good (post tie-breaks of valuations), which is expected given the structure of the markets-for-bundles context.
 
     \begin{figure*}[ht]
         \centering
@@ -608,10 +610,47 @@
         \label{fig:b2a}
     \end{figure*}
     
-    As we've seen in class, the socially optimal assignment in a \textit{markets-for-bundles} of identical goods, is that the larger bundles are assigned to the higher valuation of a singular good. Thus, as the valuation of the singular good increases, the bidder $b_i$ (w.l.o.g. the bidders are sorted by decreasing valuation of the singular goods) is assigned a larger bundle $B_i$ (w.l.o.g. the bundles are sorted by decreasing sizes $c_i$). Without said bidder $b_i$, the bundles assignment shifts for the lower-bidding bidders. That is, $\forall j > i \, . \, b_j \text{ is changed to be assigned } B_{j-1}$. This sets the externality to be $\sum_{j=i+1}^{n} (c_{j-1} - c_j) \cdot t_j$ for bidder $b_i$. In our case, this is $\sum_{j=i+1}^{n} t_j$. In either case, it is easy to see that as the valuation of the singular good increases (i.e., $i$ grows), the externality of the bidder (i.e., $b_i$) should increase for regularly distributed bundle sizes and valuations of the singular good (as in our randomization).
+    As we've seen in class, the socially optimal assignment in a \textit{markets-for-bundles} of identical goods, is that the larger bundles are assigned to the higher valuation of a singular good. Thus, as the valuation of the singular good increases, the bidder $b_i$ (w.l.o.g. the bidders are sorted by decreasing valuation of the singular goods) is assigned a larger bundle $B_i$ (w.l.o.g. the bundles are sorted by decreasing sizes $c_i$). Without said bidder $b_i$, the bundles assignment shifts for the lower-bidding bidders. That is, $\forall j > i \, . \, b_j \text{ is changed to be assigned } B_{j-1}$. This sets the externality to be $\sum_{j=i+1}^{n} (c_{j-1} - c_j) \cdot t_j$ for bidder $b_i$. In our case, this is $\sum_{j=i+1}^{n} t_j$. In either case, it is easy to see that as the valuation of the singular good increases (i.e., $i$ grows), the externality of the bidder (i.e., of $b_i$) should increase for similarly distributed bundle sizes and similarly distributed valuations of the singular good (as in our randomization).
 
-    \item 
+    \item We implemented a GSP pricing mechanism in a \textit{matching-market} context. The following are comparisons of the prices output by the GSP mechanism and the VCG mechanism over different contexts.
+    
+    \paragraph{Randomized Matching-Market Contexts:} We use the randomization scheme described in the previous part to generate randomized matching-market contexts, where there are $n = m = 20$ bidders and goods, and the values $t_i$ are randomized between $1$ and $50$. We then run the GSP pricing mechanism we implemented on a few such randomized examples of matching-market contexts, and compare the prices output by the GSP mechanism to the VCG prices. 
 
+    \Cref{fig:b2b} summarizes the results of the GSP pricing mechanism on 4 such randomized examples of matching-market contexts (the results remained the same for other examples we ran), compared to the VCG prices. The $x$-axis represents the individual valuation $t_i$ of the bidders for the singular good, and the $y$-axis represents the GSP price for the bidder in orange and the VCG price for the bidder in blue.
+    
+    \begin{figure*}[ht]
+        \centering
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2b_analysis_0.pgf}}
+            \caption{Example 1}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2b_analysis_1.pgf}}
+            \caption{Example 2}
+        \end{subfigure}
+        
+        \vspace{1em} % Add vertical space between rows
+        
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2b_analysis_2.pgf}}
+            \caption{Example 3}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2b_analysis_3.pgf}}
+            \caption{Example 4}
+        \end{subfigure}
+        
+        \caption{GSP and VCG prices for bidders in matching-market contexts}
+        \label{fig:b2b}
+    \end{figure*}
+
+    We observe a clear trend, that the GSP prices mimic a \textit{downward-opening} parabola, where the prices are highest for bidders of intermediate valuation for the singular good, and decrease as the valuation of the singular good increases or decreases. This is expected, as the GSP pricing mechanism is designed to maximize the revenue of the seller, and thus the prices are set to be the highest for the bidders that are most likely to win the good, and decrease as the valuation of the singular good increases or decreases.
 
     \item 
 
@@ -623,9 +662,27 @@
 
 \section*{Part 5: Exchange Networks for Uber}
 \setcounter{section}{0}
+We will construct a simplified market scenario for a ridesharing app like Uber. Our world will consist of an $\ell \times \ell$ grid, and there will be two types of participants, riders and drivers.
 
+\begin{itemize}
+    \item A rider $R$ is specified by a current location $(x_0, y_0) \in [\ell] \times [\ell]$, a desired destination $(x_1, y_1) \in [\ell] \times [\ell]$, and a value for reaching that destination.
+    \item A driver $D$ is specified by a current location $(x_0, y_0) \in [\ell] \times [\ell]$.
+\end{itemize}
+
+We define the cost of a matching between a rider $R$ and a driver $D$, $c(R, D)$, to be the distance from the driver to the rider and then to the destination (measured via Manhattan distance, i.e., $L^1$ distance).
 
 \section{Question 9}
+We are tasked with encoding the above as an exchange network. Namely, defining a graph $G = (V, E)$ where the vertices are the riders and rivers and there is en edge between every rider and driver.
+
+Denoting the value for rider $R$ reaching his destination as $v_R$, and reminded that the value of an edge in an exchange network must be a natural number, we define the values associated with each edge in the graph in the following way:
+
+\begin{equation*}
+    v(\overrightarrow{RD}) = \begin{cases}
+        v_R - c(R, D) & \text{if } v_R \geq c(R, D) \\
+        0 & \text{otherwise}
+    \end{cases}
+\end{equation*}
+
 
 \section{Question 10}
 

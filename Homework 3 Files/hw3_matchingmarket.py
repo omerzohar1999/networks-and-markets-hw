@@ -580,13 +580,20 @@ def b2a_analysis():
         print(f"[b2a_analysis][vcg]: {P_vcg=}, {M_vcg=}")
 
         # get individual valuations
-        V_individual = np.array([l[0] for l in V])
+        V_individual = [l[0] for l in V]
 
         # get indices of sorted valuations
-        V_individual_sorted_indices = np.argsort(V_individual)
+        V_individual_sorted_indices = list(
+            sorted(
+                list(range(n)),
+                key=lambda i: V_individual[i] + (M_vcg[i] / 1000)
+            )
+        )
 
         # get the bundles matched to each buyer sorted by individual valuation of the buyer
         M_vcg_sorted = [M_vcg[i] for i in V_individual_sorted_indices]
+        print(f"[b2a_analysis][M_vcg_sorted]: {M_vcg_sorted}")
+        print(f"[b2a_analysis][M_vcg_sorted increasing?]: {list(sorted(M_vcg_sorted)) == M_vcg_sorted}")
 
         # get the vcg prices sorted by individual valuation
         # NOTE: this is the externality for each buyer, sorted by individual valuation
@@ -611,31 +618,116 @@ def b2a_analysis():
 # === Bonus Question 2(b) (optional) ===
 
 def gsp_efficient(n, m, V) -> '(P, M)':
-    """ here V is the valuation of a single item"""
-    M = np.argsort(V)
-    P = np.zeros((m,), dtype=int)
+    """here V is the valuation of a single item"""
+    sorted_bids = list(sorted(enumerate(V), key=lambda x: x[1], reverse=True)) # (index, bid) pairs sorted by descending single-item valuation (bid)
+    M = [None] * n # matching from buyer to bundle
+    P = np.zeros((m,), dtype=int) # prices
 
-    for i in range(min(m, n-1)):
-        P[-(i+1)] = V[M[-(i+2)]] * (m-1-i)
+    for rank, (bidder_ind, _) in enumerate(sorted_bids):
+        # if we have more buyers than bundles, we can't sell all bundles
+        if rank >= m:
+            break
 
-    return list(P), [i if i >= 0 else None for i in (M+m-n)]
+        # assign the bundle to the buyer
+        M[bidder_ind] = rank
 
+        # set the price of the bundle to the bid of the next highest bidder
+        base_cost = sorted_bids[rank + 1][1] if rank + 1 < n else sorted_bids[rank][1] # if this isn't the lowest bidder, the price is the bid of the next highest bidder, else it's the bid of the lowest bidder
+        P[rank] = base_cost * (rank + 1) # (rank + 1) items in bundle (rank)
+
+    # return the prices and the matching
+    return list(P), M
 
 def calc_utilities_efficient(V, P, M):
-    return [(j * v - P[j])
+    return [((j + 1) * v - P[j])
             if j is not None else 0
             for j, v in zip(M, V)]
 
-# (P, M) = gsp_efficient(3, 3, [3, 41, 40])
+# P, M = gsp_efficient(3, 3, [3, 41, 40])
 # print(P, M)
-# print(calc_utilities_efficient([3, 40, 40], M, P))
+# print(calc_utilities_efficient([3, 40, 40], P, M))
 
 def gsp(n, m, V) -> '(P, M)':
     """Given a matching market for bundles with n buyers, and m bundles, and
     valuations V (for bundles), output a tuple (P, M) of prices P and a
     matching M as computed using GSP."""
-    V = [V[i][1] for i in range(n)]  # valuation of a single item.
+    V = [V[i][0] for i in range(n)] # valuation of a single item.
     return gsp_efficient(n, m, V)
+
+def b2b_analysis():
+    # Evaluate on n = m = 20 contexts
+    for iter_i in range(4):
+
+        # print test number
+        print(f"[b2b_analysis] test {iter_i}:")
+
+        # generate random context
+        n = 20
+        m = 20
+        V = random_bundles_valuations(n, m)
+
+        # run VCG
+        P_vcg, M_vcg = vcg(n, m, V)
+
+        # print results
+        print(f"[b2b_analysis][graph]: {n=} {m=} {V=}")
+        print(f"[b2b_analysis][vcg]: {P_vcg=}, {M_vcg=}")
+
+        # get individual valuations
+        V_individual = [l[0] for l in V]
+
+        # get indices of sorted valuations
+        V_individual_sorted_indices = list(
+            sorted(
+                list(range(n)),
+                key=lambda i: V_individual[i] + (M_vcg[i] / 1000)
+            )
+        )
+
+        # get the bundles matched to each buyer sorted by individual valuation of the buyer
+        M_vcg_sorted = [M_vcg[i] for i in V_individual_sorted_indices]
+        print(f"[b2b_analysis][M_vcg_sorted]: {M_vcg_sorted}")
+        print(f"[b2b_analysis][M_vcg_sorted increasing?]: {list(sorted(M_vcg_sorted)) == M_vcg_sorted}")
+
+        # get the vcg prices sorted by individual valuation
+        # NOTE: this is the externality for each buyer, sorted by individual valuation
+        P_vcg_sorted = [P_vcg[i] for i in M_vcg_sorted]
+
+        # print results
+        print(f"[b2b_analysis][V_individual]: {V_individual=}")
+        print(f"[b2b_analysis][V_individual_sorted]: {np.sort(V_individual)}")
+        print(f"[b2b_analysis][V_individual_sorted_indices]: {np.argsort(V_individual)}")
+        print(f"[b2b_analysis][vcg_sorted]: {P_vcg_sorted=}")
+
+        # run GSP
+        P_gsp, M_gsp = gsp(n, m, V)
+
+        # print results
+        print(f"[b2b_analysis][gsp]: {P_gsp=}, {M_gsp=}")
+
+        # get the bundles matched to each buyer sorted by individual valuation of the buyer
+        M_gsp_sorted = [M_gsp[i] for i in V_individual_sorted_indices]
+        print(f"[b2b_analysis][M_gsp_sorted]: {M_gsp_sorted}")
+        print(f"[b2b_analysis][M_gsp_sorted increasing?]: {list(sorted(M_gsp_sorted)) == M_gsp_sorted}")
+
+        # get the gsp prices sorted by individual valuation
+        P_gsp_sorted = [P_gsp[i] for i in M_gsp_sorted]
+
+        # print results
+        print(f"[b2b_analysis][gsp_sorted]: {P_gsp_sorted=}")
+        print(f"[b2b_analysis][different?]: {P_vcg_sorted != P_gsp_sorted}")
+
+        # plot the sorted vcg prices and gsp prices
+        plt.figure()
+        plt.plot(np.sort(V_individual), P_vcg_sorted, 'o-', label="VCG")
+        plt.plot(np.sort(V_individual), P_gsp_sorted, 'o-', label="GSP")
+        plt.title(f"VCG and GSP prices sorted by individual valuation")
+        plt.xlabel("Buyer Valuation")
+        plt.ylabel("Price")
+        plt.legend()
+        # plt.savefig(f"b2b_analysis_{iter_i}.png", format="png")
+        # plt.savefig(f"b2b_analysis_{iter_i}.pgf", format="pgf")
+        plt.show()
 
 def brd_on_gsp(n, m, V) -> 'V_':
     V = np.array([V[i][1] for i in range(n)])
@@ -686,6 +778,7 @@ def main():
     lec5_page7_example_q8a()
     q8b_analysis()
     b2a_analysis()
+    b2b_analysis()
 
 if __name__ == "__main__":
     main()

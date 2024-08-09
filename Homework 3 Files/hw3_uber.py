@@ -63,10 +63,11 @@ def stable_outcome(n, m, V):
     A_drivers = [0] * m
     P, M = market_eq(n, m, V)
     for i in range(n):
-        if M[i] is None:
+        matched_driver = M[i]
+        if matched_driver is None:
             continue
-        A_riders[i] = V[i][M[i]] - P[M[i]]
-        A_drivers[M[i]] = P[M[i]]
+        A_riders[i] = V[i][matched_driver] - P[matched_driver]
+        A_drivers[matched_driver] = P[matched_driver]
     return (M, A_riders, A_drivers)
 
 
@@ -87,11 +88,40 @@ def random_riders_drivers_stable_outcomes(n, m):
     with random destinations, each rider with a ride value of 100,
     and returns the stable outcome."""
     value = 100
-    M = [0] * n
-    A_riders = [0] * n
-    A_drivers = [0] * m
-    return (M, A_riders, A_drivers)
 
+    # generate random riders, drivers, and destinations
+    rider_vals = [value] * n
+    rider_locs = np.random.randint(0, 100, (n, 2))
+    rider_dests = np.random.randint(0, 100, (n, 2))
+    driver_locs = np.random.randint(0, 100, (m, 2))
+
+    # generate exchange network
+    n, m, V = exchange_network_from_uber(n, m, 100, rider_vals, rider_locs, rider_dests, driver_locs)
+
+    # get stable outcome
+    return stable_outcome(n, m, V)
+
+def q10b_analysis():
+
+    # given an amount of riders and drivers, generate 100 random stable outcomes and analyze them
+    def analyze_outcomes(n, m):
+        # get 100 random stable outcomes
+        results = [random_riders_drivers_stable_outcomes(n, m) for _ in range(100)]
+        
+        # get the list of prices paid by riders
+        prices = [results[i][1] for i in range(100)]
+
+        # get the list of profits made by drivers
+        profits = [results[i][2] for i in range(100)]
+
+    # n = m = 10
+    analyze_outcomes(10, 10)
+
+    # 5 = n < m = 20
+    analyze_outcomes(5, 20)
+    
+    # 20 = n > m = 5
+    analyze_outcomes(20, 5)
 
 # === Bonus 3(a) (Optional) ===
 def public_transport_stable_outcome(
