@@ -11,6 +11,7 @@
 # please contact us before sumission if you want another package approved.
 import numpy as np
 import matplotlib.pyplot as plt
+from hw3_matchingmarket import market_eq
 
 
 def manhatten_distance(p1, p2):
@@ -58,9 +59,14 @@ def stable_outcome(n, m, V):
         allocated to rider i.
     -   A_drivers is an m-element list, where A_drivers[j] is the value
         allocated to driver j."""
-    M = [0] * n
     A_riders = [0] * n
     A_drivers = [0] * m
+    P, M = market_eq(n, m, V)
+    for i in range(n):
+        if M[i] is None:
+            continue
+        A_riders[i] = V[i][M[i]] - P[M[i]]
+        A_drivers[M[i]] = P[M[i]]
     return (M, A_riders, A_drivers)
 
 
