@@ -77,29 +77,29 @@ def rider_driver_example_1():
     m = 5
     l = 20
     rider_vals = [30] * 5
-    rider_locs = [(3, 10), (7, 10), (11, 10), (15, 10), (19, 10)]
-    rider_dests = [(3, 15), (7, 15), (11, 15), (15, 15), (19, 15)]
-    driver_locs = [(0, 0), (4, 4), (8, 8), (12, 12), (16, 16)]
+    rider_locs = [(2, 10), (6, 10), (10, 10), (14, 10), (18, 10)]
+    rider_dests = [(2, 15), (6, 15), (10, 15), (14, 15), (18, 15)]
+    driver_locs = [(2, 2), (6, 6), (10, 10), (14, 14), (18, 18)]
     return (n, m, l, rider_vals, rider_locs, rider_dests, driver_locs)
 
 
 def rider_driver_example_2():
     n = 5
-    m = 20
+    m = 10
     l = 20
     rider_vals = [30] * 5
-    rider_locs = [(3, 10), (7, 10), (11, 10), (15, 10), (19, 10)]
-    rider_dests = [(3, 15), (7, 15), (11, 15), (15, 15), (19, 15)]
-    driver_locs = [(0, 0), (2, 2), (4, 4), (6, 6), (8, 8), (10, 10), (12, 12), (14, 14), (16, 16), (18, 18), (0, 2), (2, 4), (4, 6), (6, 8), (8, 10), (10, 12), (12, 14), (14, 16), (16, 18), (18, 20)]
+    rider_locs = [(2, 10), (6, 10), (10, 10), (14, 10), (18, 10)]
+    rider_dests = [(2, 15), (6, 15), (10, 15), (14, 15), (18, 15)]
+    driver_locs = [(0, 0), (2, 2), (4, 4), (6, 6), (8, 8), (10, 10), (12, 12), (14, 14), (16, 16), (18, 18)]
     return (n, m, l, rider_vals, rider_locs, rider_dests, driver_locs)
 
 def rider_driver_example_3():
-    n = 20
+    n = 10
     m = 5
     l = 20
-    rider_vals = [50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
-    rider_locs = [(3, 10), (7, 10), (11, 10), (15, 10), (19, 10), (3, 12), (7, 12), (11, 12), (15, 12), (19, 12), (3, 14), (7, 14), (11, 14), (15, 14), (19, 14), (3, 16), (7, 16), (11, 16), (15, 16), (19, 16)]
-    rider_dests = [(3, 15), (7, 15), (11, 15), (15, 15), (19, 15), (3, 17), (7, 17), (11, 17), (15, 17), (19, 17), (3, 19), (7, 19), (11, 19), (15, 19), (19, 19), (3, 21), (7, 21), (11, 21), (15, 21), (19, 21)]
+    rider_vals = [50, 45, 40, 35, 30, 25, 30, 35, 40, 45]
+    rider_locs = [(1, 10), (3, 10), (5, 10), (7, 10), (9, 10), (11, 10), (13, 10), (15, 10), (17, 10), (19, 10)]
+    rider_dests = [(1, 15), (3, 15), (5, 15), (7, 15), (9, 15), (11, 15), (13, 15), (15, 15), (17, 15), (19, 15)]
     driver_locs = [(0, 0), (4, 4), (8, 8), (12, 12), (16, 16)]
     return (n, m, l, rider_vals, rider_locs, rider_dests, driver_locs)
 
@@ -128,14 +128,9 @@ def q10a_analysis():
 
         # plot the riders and drivers
         for i in range(n):
-            plt.plot([rider_locs[i][0], rider_dests[i][0]], [rider_locs[i][1], rider_dests[i][1]], 'b')
             if M[i] is not None:
-                plt.plot([rider_locs[i][0], driver_locs[M[i]][0]], [rider_locs[i][1], driver_locs[M[i]][1]], 'g')
-            else:
                 plt.plot([rider_locs[i][0], rider_dests[i][0]], [rider_locs[i][1], rider_dests[i][1]], 'r')
-        for j in range(m):
-            if j in M:
-                plt.plot([driver_locs[j][0], rider_locs[M.index(j)][0]], [driver_locs[j][1], rider_locs[M.index(j)][1]], 'g')
+                plt.plot([driver_locs[M[i]][0], rider_locs[i][0]], [driver_locs[M[i]][1], rider_locs[i][1]], 'b')
 
         # plot the grid
         plt.xlim(0, l)
