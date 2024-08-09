@@ -621,22 +621,25 @@ def gsp_efficient(n, m, V) -> '(P, M)':
     """here V is the valuation of a single item"""
     sorted_bids = list(sorted(enumerate(V), key=lambda x: x[1], reverse=True)) # (index, bid) pairs sorted by descending single-item valuation (bid)
     M = [None] * n # matching from buyer to bundle
-    P = np.zeros((m,), dtype=int) # prices
+    P = [0] * m # prices
 
     for rank, (bidder_ind, _) in enumerate(sorted_bids):
         # if we have more buyers than bundles, we can't sell all bundles
         if rank >= m:
             break
 
+        # assigned bundle index
+        bundle_ind = m - 1 - rank
+
         # assign the bundle to the buyer
-        M[bidder_ind] = rank
+        M[bidder_ind] = bundle_ind
 
         # set the price of the bundle to the bid of the next highest bidder
         base_cost = sorted_bids[rank + 1][1] if rank + 1 < n else sorted_bids[rank][1] # if this isn't the lowest bidder, the price is the bid of the next highest bidder, else it's the bid of the lowest bidder
-        P[rank] = base_cost * (rank + 1) # (rank + 1) items in bundle (rank)
+        P[bundle_ind] = base_cost * (bundle_ind + 1) # (bundle_ind + 1) items in bundle (bundle_ind)
 
     # return the prices and the matching
-    return list(P), M
+    return P, M
 
 def calc_utilities_efficient(V, P, M):
     return [((j + 1) * v - P[j])
@@ -676,7 +679,7 @@ def b2b_analysis():
         # get individual valuations
         V_individual = [l[0] for l in V]
 
-        # get indices of sorted valuations
+        # get indices of sorted valuations (tie-breaking by the assigned bundle)
         V_individual_sorted_indices = list(
             sorted(
                 list(range(n)),
@@ -725,10 +728,17 @@ def b2b_analysis():
         plt.xlabel("Buyer Valuation")
         plt.ylabel("Price")
         plt.legend()
-        # plt.savefig(f"b2b_analysis_{iter_i}.png", format="png")
-        # plt.savefig(f"b2b_analysis_{iter_i}.pgf", format="pgf")
+        plt.savefig(f"b2b_analysis_{iter_i}.png", format="png")
+        plt.savefig(f"b2b_analysis_{iter_i}.pgf", format="pgf")
         plt.show()
 
+def b2b_analysis_gsg_vcg_similar():
+    pass
+
+def b2b_analysis_gsp_vcg_different():
+    pass
+
+# === Bonus Question 3(c) (optional) ===
 def brd_on_gsp(n, m, V) -> 'V_':
     V = np.array([V[i][1] for i in range(n)])
     real_utilities = lambda V_lie: \
@@ -760,6 +770,9 @@ def brd_on_gsp(n, m, V) -> 'V_':
             break
     return V_
 
+def b3c_analysis():
+    pass
+
 # V = [[0, 10], [0, 20], [0, 30], [0, 31]]
 # V_real = [l[1] for l in V]
 # n = len(V)
@@ -779,6 +792,8 @@ def main():
     q8b_analysis()
     b2a_analysis()
     b2b_analysis()
+    b2b_analysis_gsg_vcg_similar()
+    b2b_analysis_gsp_vcg_different()
 
 if __name__ == "__main__":
     main()
