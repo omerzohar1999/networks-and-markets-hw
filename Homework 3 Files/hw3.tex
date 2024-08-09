@@ -626,6 +626,7 @@
 
 
 \section{Question 9}
+A matching would have the rider receiving utility of "reaching destination" value minus the price, and the driver receiving the price. This means the value of the edge between them would be the sum of these two, meaning only the "reaching destination" value for the rider.
 
 \section{Question 10}
 
@@ -641,15 +642,23 @@
 
 
 \section{Question 11}
+We can increase an edge's value if the destination is close to a high-value location.\\
+This can be done in many ways, for example by lowering the value with the distance from the closest high-value location.\\ 
+Such calculation can also incorporate the value of the high-value location: min((distance / value) for all high-value locations).
 
 \section{Bonus Question 3}
 
 \begin{enumerate}[label=(\alph*)]
 
     \item 
-
+    We simulated this as $n$ more drivers simulating public transportation, whose cost of driving is the price described.\\
+    This ensures all players have the ability to take public transportation instead of uber.\\
+    Since we still have a bipartite graph, we know that a stable matching must exist.
     
     \item 
+    Higher values for $a$ means public transportation becomes less attractive for everyone.\\
+    Higher values for $b$ means public transportation is more reliable for shorter distances.\\
+    $b>1$ means the drive itself costs more with public transportation than with uber (so with a short distance between an uber and a rider it could be preferable to take an uber, depending on the base fare $a$).\\
 
 \end{enumerate}
 
