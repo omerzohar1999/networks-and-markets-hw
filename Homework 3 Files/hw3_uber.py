@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from hw3_matchingmarket import market_eq
 
 
-def manhatten_distance(p1, p2):
+def manhattan_distance(p1, p2):
     return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
 
@@ -41,9 +41,9 @@ def exchange_network_from_uber(
     # cost of i,j is the distance between rider i and driver j + distance between rider i and rider i's destination
     # value is the value of the rider minus cost
     for i in range(n):
-        rider_dest_dist = manhatten_distance(rider_locs[i], rider_dests[i])
+        rider_dest_dist = manhattan_distance(rider_locs[i], rider_dests[i])
         for j in range(m):
-            cost = manhatten_distance(rider_locs[i], driver_locs[j]) + rider_dest_dist
+            cost = manhattan_distance(rider_locs[i], driver_locs[j]) + rider_dest_dist
             V[i][j] = max(rider_vals[i] - cost, 0)
     return (n, m, V)
 
@@ -73,14 +73,81 @@ def stable_outcome(n, m, V):
 
 # === Problem 10(a) ===
 def rider_driver_example_1():
-    # TODO fill in your own example
+    n = 5
+    m = 5
+    l = 20
+    rider_vals = [30] * 5
+    rider_locs = [(3, 10), (7, 10), (11, 10), (15, 10), (19, 10)]
+    rider_dests = [(3, 15), (7, 15), (11, 15), (15, 15), (19, 15)]
+    driver_locs = [(0, 0), (4, 4), (8, 8), (12, 12), (16, 16)]
     return (n, m, l, rider_vals, rider_locs, rider_dests, driver_locs)
 
 
 def rider_driver_example_2():
-    # TODO fill in your own example
+    n = 5
+    m = 20
+    l = 20
+    rider_vals = [30] * 5
+    rider_locs = [(3, 10), (7, 10), (11, 10), (15, 10), (19, 10)]
+    rider_dests = [(3, 15), (7, 15), (11, 15), (15, 15), (19, 15)]
+    driver_locs = [(0, 0), (2, 2), (4, 4), (6, 6), (8, 8), (10, 10), (12, 12), (14, 14), (16, 16), (18, 18), (0, 2), (2, 4), (4, 6), (6, 8), (8, 10), (10, 12), (12, 14), (14, 16), (16, 18), (18, 20)]
     return (n, m, l, rider_vals, rider_locs, rider_dests, driver_locs)
 
+def rider_driver_example_3():
+    n = 20
+    m = 5
+    l = 20
+    rider_vals = [50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
+    rider_locs = [(3, 10), (7, 10), (11, 10), (15, 10), (19, 10), (3, 12), (7, 12), (11, 12), (15, 12), (19, 12), (3, 14), (7, 14), (11, 14), (15, 14), (19, 14), (3, 16), (7, 16), (11, 16), (15, 16), (19, 16)]
+    rider_dests = [(3, 15), (7, 15), (11, 15), (15, 15), (19, 15), (3, 17), (7, 17), (11, 17), (15, 17), (19, 17), (3, 19), (7, 19), (11, 19), (15, 19), (19, 19), (3, 21), (7, 21), (11, 21), (15, 21), (19, 21)]
+    driver_locs = [(0, 0), (4, 4), (8, 8), (12, 12), (16, 16)]
+    return (n, m, l, rider_vals, rider_locs, rider_dests, driver_locs)
+
+def q10a_analysis():
+
+    # analyze the stable outcomes for the two examples
+    def analyze_stable_outcome(example, example_tag=""):
+        # get the stable outcome for the example
+        stable_outcome_example = stable_outcome(*exchange_network_from_uber(*example))
+
+        # get the values from the example
+        n, m, l, rider_vals, rider_locs, rider_dests, driver_locs = example
+        M, A_riders, A_drivers = stable_outcome_example
+
+        # print the total value allocated to riders and drivers for the example
+        total_value = sum(A_riders) + sum(A_drivers)
+        print(f"""
+        Example {example_tag}:
+            Total value allocated to riders and drivers: {total_value}
+            Matching: {M=}
+            Driver Allocations: {A_drivers}
+            Rider Allocations: {A_riders}
+            Driver Profits: {A_drivers}
+            Rider Prices: {list(np.array(rider_vals) - np.array(A_riders))}
+        """)
+
+        # plot the riders and drivers
+        for i in range(n):
+            plt.plot([rider_locs[i][0], rider_dests[i][0]], [rider_locs[i][1], rider_dests[i][1]], 'b')
+            if M[i] is not None:
+                plt.plot([rider_locs[i][0], driver_locs[M[i]][0]], [rider_locs[i][1], driver_locs[M[i]][1]], 'g')
+            else:
+                plt.plot([rider_locs[i][0], rider_dests[i][0]], [rider_locs[i][1], rider_dests[i][1]], 'r')
+        for j in range(m):
+            if j in M:
+                plt.plot([driver_locs[j][0], rider_locs[M.index(j)][0]], [driver_locs[j][1], rider_locs[M.index(j)][1]], 'g')
+
+        # plot the grid
+        plt.xlim(0, l)
+        plt.ylim(0, l)
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.savefig(f"q10a_{n=}_{m=}_{example_tag=}.pgf", format="pgf")
+        plt.savefig(f"q10a_{n=}_{m=}_{example_tag=}.png", format="png")
+        plt.show()
+
+    analyze_stable_outcome(rider_driver_example_1(), "1")
+    analyze_stable_outcome(rider_driver_example_2(), "2")
+    analyze_stable_outcome(rider_driver_example_3(), "3")
 
 # === Problem 10(b) ===
 def random_riders_drivers_stable_outcomes(n, m):
@@ -108,11 +175,22 @@ def q10b_analysis():
         # get 100 random stable outcomes
         results = [random_riders_drivers_stable_outcomes(n, m) for _ in range(100)]
         
-        # get the list of prices paid by riders
-        prices = [results[i][1] for i in range(100)]
+        # get the list of profits for the drivers
+        driver_profits = [results[i][2] for i in range(100)]
 
-        # get the list of profits made by drivers
-        profits = [results[i][2] for i in range(100)]
+        # get the list of estimated prices for the riders
+        rider_prices = [list(np.array([100] * n) - np.array(results[i][1])) for i in range(100)]
+
+        # plot
+        plt.hist(driver_profits, bins=5)
+        plt.title(f"Driver Profits for {n=}, {m=}")
+        plt.savefig(f"q10b_{n=}_{m=}_driver_profits.png")
+        plt.show()
+
+        plt.hist(rider_prices, bins=5)
+        plt.title(f"Rider Prices for {n=}, {m=}")
+        plt.savefig(f"q10b_{n=}_{m=}_rider_prices.png")
+        plt.show()
 
     # n = m = 10
     analyze_outcomes(10, 10)
@@ -138,33 +216,40 @@ def public_transport_stable_outcome(
     -   A_riders, A_drivers are defined as before.
     -   If there is no stable outcome, return None.
     """
+    # build the exchange network
     A_riders = [0] * n
     A_drivers = [0] * m
     V = np.zeros((n, m + n))
     for i in range(n):
-        rider_dest_dist = manhatten_distance(rider_locs[i], rider_dests[i])
+        rider_dest_dist = manhattan_distance(rider_locs[i], rider_dests[i])
         public_transport_price = a + b * rider_dest_dist
         for j in range(m):
-            cost = manhatten_distance(rider_locs[i], driver_locs[j]) + rider_dest_dist
+            cost = manhattan_distance(rider_locs[i], driver_locs[j]) + rider_dest_dist
             V[i][j] = max(rider_vals[i] - cost, 0)
         for j in range(m, m + n):
             V[i][j] = max(rider_vals[i] - public_transport_price, 0)
+
+    # get the stable outcome
     P, M = market_eq(n, m + n, V)
     for i in range(n):
-        if M[i] is None:
+        matched_driver = M[i]
+        if matched_driver is None:
             continue
-        elif M[i] >= m:
-            A_riders[i] = V[i][M[i]]
+        elif matched_driver >= m:
+            A_riders[i] = V[i][matched_driver]
             M[i] = -1
         else:
-            A_riders[i] = V[i][M[i]] - P[M[i]]
-            A_drivers[M[i]] = P[M[i]]
+            A_riders[i] = V[i][matched_driver] - P[matched_driver]
+            A_drivers[matched_driver] = P[matched_driver]
+
+    # return the stable outcome
     return (M, A_riders, A_drivers)
 
 
 def main():
     # TODO: Put your analysis and plotting code here, if any
-    print("hello world")
+    q10a_analysis()
+    q10b_analysis()
 
 
 if __name__ == "__main__":
