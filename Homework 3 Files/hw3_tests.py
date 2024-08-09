@@ -382,5 +382,78 @@ class TestVCG(unittest.TestCase):
             # print success
             print(f"[sanity_checks_q7c][rand][T{test_i}]: Test passed {market_eq_val} == {scipy_max_sv}")
 
+
+def generate_random_uber_instance(n, m, max_val, max_loc):
+    # generate random riders values, locations, and destinations
+    rider_vals = np.random.randint(0, max_val, n)
+    rider_locs = np.random.randint(0, max_loc, (n, 2))
+    rider_dests = np.random.randint(0, max_loc, (n, 2))
+
+    # generate random driver locations
+    driver_locs = np.random.randint(0, max_loc, (m, 2))
+
+    # return the exchange network
+    return exchange_network_from_uber(n, m, max_loc, rider_vals, rider_locs, rider_dests, driver_locs)
+
+class TestStableOutcome(unittest.TestCase):
+
+    def setUp(self):
+        self.test_amount = 200
+        self.n_range = list(range(5, 30))
+        self.m_range = list(range(5, 30))
+        self.max_val_range = list(range(10, 100))
+        self.max_loc_range = list(range(10, 100))
+        self.random_instances = [generate_random_uber_instance(np.random.choice(self.n_range), np.random.choice(self.m_range), np.random.choice(self.max_val_range), np.random.choice(self.max_loc_range)) for _ in range(self.test_amount)]
+
+    def test_random(self):
+
+        # For each random instance
+        for test_i, (n, m, V) in enumerate(self.random_instances):
+
+            # Calculate the stable outcome
+            M, A_r, A_d = stable_outcome(n, m, V)
+
+            # Verify basic properties of the stable outcome
+            self.assertEqual(len(M), n, msg=f"[TestStableOutcome][T{test_i}] Matching has incorrect length")
+            self.assertEqual(len(A_r), n, msg=f"[TestStableOutcome][T{test_i}] Rider allocations has incorrect length")
+            self.assertEqual(len(A_d), m, msg=f"[TestStableOutcome][T{test_i}] Driver allocations has incorrect length")
+
+            for i in range(n):
+                self.assertTrue(M[i] is None or 0 <= M[i] < m, msg=f"[TestStableOutcome][T{test_i}] Matching has incorrect indices")
+
+            # Verify that the matching is indeed a matching
+            for i in range(n):
+                for j in range(i + 1, n):
+                    if M[i] == M[j] and M[i] is not None:
+                        self.assertTrue(False, msg=f"[TestStableOutcome][T{test_i}] Matching is not a matching")
+
+            # Verify that allocations are all non-negative
+            if not all(A_r[i] >= 0 for i in range(n)):
+                self.assertTrue(False, msg=f"[TestStableOutcome][T{test_i}] Rider allocations are not non-negative")
+
+            # Verify that any unmatched rider has an allocation of 0
+            for i in range(n):
+                if M[i] is None:
+                    self.assertTrue(A_r[i] == 0, msg=f"[TestStableOutcome][T{test_i}] Unmatched rider has non-zero allocation")
+
+            # Verify that any unmatched driver has an allocation of 0
+            for i in range(m):
+                if i not in M:
+                    self.assertTrue(A_d[i] == 0, msg=f"[TestStableOutcome][T{test_i}] Unmatched driver has non-zero allocation")
+
+            # Verify that the sum of allocation for every edge in the matching is equal to the valuation
+            for i in range(n):
+                if M[i] is not None:
+                    self.assertTrue(A_r[i] + A_d[M[i]] == V[i][M[i]], msg=f"[TestStableOutcome][T{test_i}] Allocation does not match valuation")
+
+            # Verify that the outcome is stable (for every non-present edge, the sum of the allocation of the nodes is greater or equal to the valuation)
+            for i in range(n):
+                for j in range(m):
+                    if M[i] != j:
+                        self.assertTrue(A_r[i] + A_d[j] >= V[i][j], msg=f"[TestStableOutcome][T{test_i}] Outcome is not stable")
+
+            # Print success
+            print(f"[TestStableOutcome][T{test_i}] Passed. All allocation 0: {all(A_r[i] == 0 for i in range(n)) and all(A_d[i] == 0 for i in range(m))}")
+
 if __name__ == '__main__':
     unittest.main()
