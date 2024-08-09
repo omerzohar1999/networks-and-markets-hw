@@ -141,16 +141,14 @@ def public_transport_stable_outcome(
     A_riders = [0] * n
     A_drivers = [0] * m
     V = np.zeros((n, m + n))
-    public_transport_prices = [
-        a + b * manhatten_distance(rider_locs[i], rider_dests[i]) for i in range(n)
-    ]
     for i in range(n):
         rider_dest_dist = manhatten_distance(rider_locs[i], rider_dests[i])
+        public_transport_price = a + b * rider_dest_dist
         for j in range(m):
             cost = manhatten_distance(rider_locs[i], driver_locs[j]) + rider_dest_dist
             V[i][j] = max(rider_vals[i] - cost, 0)
         for j in range(m, m + n):
-            V[i][j] = max(rider_vals[i] - public_transport_prices[i], 0)
+            V[i][j] = max(rider_vals[i] - public_transport_price, 0)
     P, M = market_eq(n, m + n, V)
     for i in range(n):
         if M[i] is None:
