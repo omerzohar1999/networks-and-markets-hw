@@ -642,6 +642,13 @@ def gsp_efficient(n, m, V) -> '(P, M)':
     return P, M
 
 def calc_utilities_efficient(V, P, M):
+    """
+    V: valuations of a single item
+    P: prices of bundles
+    M: matching from buyer to bundle
+
+    returns the utilities of the buyers
+    """
     return [((j + 1) * v - P[j])
             if j is not None else 0
             for j, v in zip(M, V)]
@@ -739,39 +746,220 @@ def b2b_analysis_gsp_vcg_different():
     pass
 
 # === Bonus Question 3(c) (optional) ===
-def brd_on_gsp(n, m, V) -> 'V_':
-    V = np.array([V[i][1] for i in range(n)])
+def brd_on_gsp(n, m, V) -> '(V_, iteration_count, social_value_pne, max_social_value)':
+    """
+    Given a matching market for bundles with n buyers, and m bundles, and
+    valuations V (for bundles), output a tuple (V_, iteration_count, social_value_pne, max_social_value)
+    of the converged valuations V_, the number of iterations until convergence, the social value of the PNE, and the maximum social value.
+    """
+    # get valuation of a single item
+    V = np.array([V[i][0] for i in range(n)])
+
+    # lambda to get utilities
     real_utilities = lambda V_lie: \
         calc_utilities_efficient(V, *gsp_efficient(n, m, V_lie))
 
+    # calculate the amount of states in the BRD graph
+    state_count = np.prod(V + 1)
+
+    # start BRD at random state (i.e., random initial bids)
     agents = np.arange(n)
-    V_ = np.random.randint(0, V + 1)
+    V_ = np.random.randint(0, V + 1) # any valuation out of this range is dominated by a valuation in this range
+
+    # visited states array
+    visited_states = set(V_.tobytes())
+
+    # run BRD
+    iteration_count = 0
     while True:
-        np.random.shuffle(agents)
-        curr_utilities = real_utilities(V_)
+        np.random.shuffle(agents) # randomize the order of the agents
+        curr_utilities = real_utilities(V_) # get the utilities of the current state
+
+        # iterate over the agents
         for i in agents:
-            original_val = V_[i]
+            original_val = V_[i] # save the original value
 
-            best_utility = curr_utilities[i]
-            best_val = original_val
-            for v in range(V[i] + 1):
-                V_[i] = v
-                my_utility = real_utilities(V_)[i]
-                if my_utility > best_utility:
-                    best_utility, best_val = my_utility, v
+            # find a best-response that is strictly better than the current value
+            best_utility = curr_utilities[i] # best utility so far
+            best_val = original_val # best value so far
+            for tmp_val in range(V[i] + 1): # any valuation out of this range is dominated by a valuation in this range
+                V_[i] = tmp_val
+                tmp_utility = real_utilities(V_)[i]
+                if tmp_utility > best_utility:
+                    best_utility, best_val = tmp_utility, tmp_val
 
+            # perform best-response update if found a strictly better value
             if original_val != best_val:
                 V_[i] = best_val
                 break
-
+            
+            # else, current action is a best-response to the other agents' actions
             V_[i] = original_val
             continue
+
+        # if no agent changed its value, the state is a best-response to itself, thus PNE/BRD-converged
         else:   # did not break -> no change
             break
-    return V_
+
+        # increment iteration count
+        iteration_count += 1
+
+        # if the iteration count exceeds the amount of states, the BRD is stuck in a loop
+        if iteration_count >= state_count:
+            print(f"[brd_on_gsp] did not converge in {state_count} iterations (the maximum amount)", flush=True)
+            print(f"[brd_on_gsp] {V=}", flush=True)
+            return None
+
+        # if the state has been visited before, the BRD is stuck in a loop
+        if V_.tobytes() in visited_states:
+            print(f"[brd_on_gsp] did not converge in {iteration_count} iterations (loop detected)", flush=True)
+            return None
+
+    # construct full valuation matrix
+    V_full = np.tile(np.arange(1, m + 1), (n, 1)) # bundle i is comprised of (i + 1) copies of an identical good
+    V_full = (V_full.T * V_).T # full valuation matrix
+
+    # run gsp on the converged state + calculate social value
+    P, M = gsp(n, m, V_full)
+    social_value_pne = social_value(n, m, V_full, M)
+    max_social_value = calc_max_social_value(n, m, V_full)
+
+    # return the converged state (i.e., a PNE)
+    print(f"[brd_on_gsp] converged in {iteration_count} iterations", flush=True)
+    return V_, iteration_count, social_value_pne, max_social_value
+
+def random_bundles_valuations_b3c(n, m, max_valuation=15):
+    """Given n buyers, m bundles, generate a matching market context
+    (n, m, V) where V[i][j] is buyer i's valuation for bundle j.
+    Each bundle j (in 0...m-1) is comprised of j copies of an identical good.
+    Each player i has its own value for an individual good; this value is sampled
+    uniformly at random from [1, 50] inclusive, for each player"""
+    individual_rand_values = np.random.randint(1, max_valuation + 1, size=n)
+    V = np.tile(np.arange(1, m + 1), (n, 1)) # bundle i is comprised of (i + 1) copies of an identical good
+    return (V.T * individual_rand_values).T
 
 def b3c_analysis():
-    pass
+    """
+    Analysis to determine how often BRD converges and how quickly.
+    """
+    # Analysis 1: n = m = 10
+    results = [brd_on_gsp(5, 5, random_bundles_valuations_b3c(5, 5)) for i in range(20)]
+    results = list(map(lambda x: x if x is not None else (None, -100, None, None), results)) # for non-converged results set iteration count to -100
+    print(f"[b3c_analysis][n = m]: {results}")
+
+    plt.figure()
+    num_bins = 10
+    iterations = np.array([r[1] for r in results])
+    bins = np.concatenate(([-100, 0], np.linspace(0, max(iterations), num_bins)))
+    plt.hist(iterations, bins=bins, align='mid')
+    plt.title("BRD Convergence Iterations (n = m = 10)")
+    plt.xlabel("Iterations")
+    plt.ylabel("Frequency")
+    plt.savefig("b3c_analysis_n_m.png", format="png")
+    plt.savefig("b3c_analysis_n_m.pgf", format="pgf")
+    plt.show()
+
+    plt.figure()
+    x = np.array([r[3] for r in results if r[3] is not None])
+    y = np.array([r[2] for r in results if r[2] is not None])
+    m, b = np.polyfit(x, y, 1)
+    plt.plot(x, m*x + b, color='red')
+    plt.scatter(x, y, color='blue')
+    plt.title("BRD Convergence Social Value vs. Max Social Value (n = m = 10)")
+    plt.xlabel("Social Value")
+    plt.ylabel("Max Social Value")
+    plt.savefig("b3c_analysis_n_m_social.png", format="png")
+    plt.savefig("b3c_analysis_n_m_social.pgf", format="pgf")
+    plt.show()
+
+    # Analysis 2: n << m
+    results = [brd_on_gsp(5, 20, random_bundles_valuations_b3c(5, 20)) for i in range(20)]
+    results = list(map(lambda x: x if x is not None else (None, -100, None, None), results)) # for non-converged results set iteration count to -100
+    print(f"[b3c_analysis][n << m]: {results}")
+
+    plt.figure()
+    num_bins = 10
+    iterations = np.array([r[1] for r in results])
+    bins = np.concatenate(([-100, 0], np.linspace(0, max(iterations), num_bins)))
+    plt.hist(iterations, bins=bins, align='mid')
+    plt.title("BRD Convergence Iterations (n << m)")
+    plt.xlabel("Iterations")
+    plt.ylabel("Frequency")
+    plt.savefig("b3c_analysis_n_lt_m.png", format="png")
+    plt.savefig("b3c_analysis_n_lt_m.pgf", format="pgf")
+    plt.show()
+
+    plt.figure()
+    x = np.array([r[3] for r in results if r[3] is not None])
+    y = np.array([r[2] for r in results if r[2] is not None])
+    m, b = np.polyfit(x, y, 1)
+    plt.plot(x, m*x + b, color='red')
+    plt.scatter(x, y, color='blue')
+    plt.title("BRD Convergence Social Value vs. Max Social Value (n << m)")
+    plt.xlabel("Social Value")
+    plt.ylabel("Max Social Value")
+    plt.savefig("b3c_analysis_n_lt_m_social.png", format="png")
+    plt.savefig("b3c_analysis_n_lt_m_social.pgf", format="pgf")
+    plt.show()
+
+    # Analysis 3: n >> m
+    results = [brd_on_gsp(20, 5, random_bundles_valuations_b3c(20, 5)) for i in range(20)]
+    results = list(map(lambda x: x if x is not None else (None, -100, None, None), results)) # for non-converged results set iteration count to -100
+    print(f"[b3c_analysis][n >> m]: {results}")
+
+    plt.figure()
+    num_bins = 10
+    iterations = np.array([r[1] for r in results])
+    bins = np.concatenate(([-100, 0], np.linspace(0, max(iterations), num_bins)))
+    plt.hist(iterations, bins=bins, align='mid')
+    plt.title("BRD Convergence Iterations (n >> m)")
+    plt.xlabel("Iterations")
+    plt.ylabel("Frequency")
+    plt.savefig("b3c_analysis_n_gt_m.png", format="png")
+    plt.savefig("b3c_analysis_n_gt_m.pgf", format="pgf")
+    plt.show()
+
+    plt.figure()
+    x = np.array([r[3] for r in results if r[3] is not None])
+    y = np.array([r[2] for r in results if r[2] is not None])
+    m, b = np.polyfit(x, y, 1)
+    plt.plot(x, m*x + b, color='red')
+    plt.scatter(x, y, color='blue')
+    plt.title("BRD Convergence Social Value vs. Max Social Value (n >> m)")
+    plt.xlabel("Social Value")
+    plt.ylabel("Max Social Value")
+    plt.savefig("b3c_analysis_n_gt_m_social.png", format="png")
+    plt.savefig("b3c_analysis_n_gt_m_social.pgf", format="pgf")
+    plt.show()
+
+def b3c_example():
+    # Example 1
+    V_individual = [5, 6, 2, 3, 9]
+    V_full = np.tile(np.arange(1, 5 + 1), (5, 1)) # bundle i is comprised of (i + 1) copies of an identical good
+    V_full = (V_full.T * V_individual).T # full valuation matrix
+
+    print(f"[b3c_example][n,m]: {len(V_full), len(V_full[0])}")
+    print(f"[b3c_example][V_individual]: {V_individual}")
+    print(f"[b3c_example][brd_on_gsp]: {brd_on_gsp(5, 5, V)}")
+
+    # Example 2
+    V_individual = [5, 6, 2, 3, 9]
+    V_full = np.tile(np.arange(1, 20 + 1), (5, 1)) # bundle i is comprised of (i + 1) copies of an identical good
+    V_full = (V_full.T * V_individual).T # full valuation matrix
+
+    print(f"[b3c_example][n,m]: {len(V_full), len(V_full[0])}")
+    print(f"[b3c_example][V_individual]: {V_individual}")
+    print(f"[b3c_example][brd_on_gsp]: {brd_on_gsp(5, 20, V)}")
+
+    # Example 3
+    V_individual = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30]
+    V_full = np.tile(np.arange(1, 5 + 1), (20, 1)) # bundle i is comprised of (i + 1) copies of an identical good
+    V_full = (V_full.T * V_individual).T # full valuation matrix
+
+    print(f"[b3c_example][n,m]: {len(V_full), len(V_full[0])}")
+    print(f"[b3c_example][V_individual]: {V_individual}")
+    print(f"[b3c_example][brd_on_gsp]: {brd_on_gsp(20, 5, V)}")
+
 
 # V = [[0, 10], [0, 20], [0, 30], [0, 31]]
 # V_real = [l[1] for l in V]
@@ -794,6 +982,8 @@ def main():
     b2b_analysis()
     b2b_analysis_gsg_vcg_similar()
     b2b_analysis_gsp_vcg_different()
+    b3c_analysis()
+    b3c_example()
 
 if __name__ == "__main__":
     main()

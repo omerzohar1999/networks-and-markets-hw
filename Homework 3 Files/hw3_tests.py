@@ -382,6 +382,54 @@ class TestVCG(unittest.TestCase):
             # print success
             print(f"[sanity_checks_q7c][rand][T{test_i}]: Test passed {market_eq_val} == {scipy_max_sv}")
 
+class TestGSP(unittest.TestCase):
+
+    def setUp(self):
+        self.test_amount = 50
+        self.n_range = list(range(5, 30))
+        self.m_range = list(range(5, 30))
+        self.random_instances = [random_bundles_valuations(np.random.choice(self.n_range), np.random.choice(self.m_range)) for _ in range(self.test_amount)]
+
+    def test_random(self):
+
+        # run the test for each random instance
+        for test_i, V in enumerate(self.random_instances):
+
+            # get n and m
+            n = len(V)
+            m = len(V[0])
+
+            # calculate the GSP prices and matching
+            P, M = gsp(n, m, V)
+
+            # validate the matching is indeed a matching
+            for i_1 in range(n):
+                for i_2 in range(i_1 + 1, n):
+                    if M[i_1] == M[i_2] and M[i_1] is not None:
+                        self.assertTrue(False, msg=f"gsp didn't output a matching, {n=}, {m=}, {V=}, {P=}, {M=}")
+
+            # validate the matching matches min(n, m) buyers to sellers
+            self.assertTrue(
+                sum(1 for i in M if i is not None) == min(n, m),
+                msg=f"gsp didn't output a perfect matching, {n=}, {m=}, {V=}, {P=}, {M=}"
+            )
+
+            # validate non-negative prices
+            self.assertTrue(
+                all(p >= 0 for p in P),
+                msg=f"gsp didn't output non-negative prices, {n=}, {m=}, {V=}, {P=}, {M=}"
+            )
+
+            # verify social value is maximized
+            curr_social_value = social_value(n, m, V, M)
+            max_social_value = calc_max_social_value(n, m, V)
+            self.assertTrue(
+                curr_social_value == max_social_value,
+                msg=f"gsp didn't output the maximum social value, {n=}, {m=}, {V=}, {P=}, {M=}, {curr_social_value=}, {max_social_value=}"
+            )
+
+            # print success
+            print(f"[TestGSP][T{test_i}] Passed. Social value: {curr_social_value} == {max_social_value}")
 
 def generate_random_uber_instance(n, m, max_val, max_loc):
     # generate random riders values, locations, and destinations
