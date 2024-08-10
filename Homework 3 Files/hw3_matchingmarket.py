@@ -828,7 +828,7 @@ def brd_on_gsp(n, m, V) -> '(V_, iteration_count, social_value_pne, max_social_v
     print(f"[brd_on_gsp] converged in {iteration_count} iterations", flush=True)
     return V_, iteration_count, social_value_pne, max_social_value
 
-def random_bundles_valuations_b3c(n, m, max_valuation=15):
+def random_bundles_valuations_b2c(n, m, max_valuation=15):
     """Given n buyers, m bundles, generate a matching market context
     (n, m, V) where V[i][j] is buyer i's valuation for bundle j.
     Each bundle j (in 0...m-1) is comprised of j copies of an identical good.
@@ -838,14 +838,14 @@ def random_bundles_valuations_b3c(n, m, max_valuation=15):
     V = np.tile(np.arange(1, m + 1), (n, 1)) # bundle i is comprised of (i + 1) copies of an identical good
     return (V.T * individual_rand_values).T
 
-def b3c_analysis():
+def b2c_analysis():
     """
     Analysis to determine how often BRD converges and how quickly.
     """
     # Analysis 1: n = m = 10
-    results = [brd_on_gsp(5, 5, random_bundles_valuations_b3c(5, 5)) for i in range(20)]
+    results = [brd_on_gsp(5, 5, random_bundles_valuations_b2c(5, 5)) for i in range(20)]
     results = list(map(lambda x: x if x is not None else (None, -100, None, None), results)) # for non-converged results set iteration count to -100
-    print(f"[b3c_analysis][n = m]: {results}")
+    print(f"[b2c_analysis][n = m]: {results}")
 
     plt.figure()
     num_bins = 10
@@ -855,27 +855,28 @@ def b3c_analysis():
     plt.title("BRD Convergence Iterations (n = m = 10)")
     plt.xlabel("Iterations")
     plt.ylabel("Frequency")
-    plt.savefig("b3c_analysis_n_m.png", format="png")
-    plt.savefig("b3c_analysis_n_m.pgf", format="pgf")
+    plt.savefig("b2c_analysis_n_m.png", format="png")
+    plt.savefig("b2c_analysis_n_m.pgf", format="pgf")
     plt.show()
 
     plt.figure()
     x = np.array([r[3] for r in results if r[3] is not None])
     y = np.array([r[2] for r in results if r[2] is not None])
     m, b = np.polyfit(x, y, 1)
-    plt.plot(x, m*x + b, color='red')
+    plt.plot(x, m*x + b, color='red', label=f"y = {m:.2f}x + {b:.2f}")
     plt.scatter(x, y, color='blue')
     plt.title("BRD Convergence Social Value vs. Max Social Value (n = m = 10)")
     plt.xlabel("Social Value")
     plt.ylabel("Max Social Value")
-    plt.savefig("b3c_analysis_n_m_social.png", format="png")
-    plt.savefig("b3c_analysis_n_m_social.pgf", format="pgf")
+    plt.legend()
+    plt.savefig("b2c_analysis_n_m_social.png", format="png")
+    plt.savefig("b2c_analysis_n_m_social.pgf", format="pgf")
     plt.show()
 
     # Analysis 2: n << m
-    results = [brd_on_gsp(5, 20, random_bundles_valuations_b3c(5, 20)) for i in range(20)]
+    results = [brd_on_gsp(5, 20, random_bundles_valuations_b2c(5, 20)) for i in range(20)]
     results = list(map(lambda x: x if x is not None else (None, -100, None, None), results)) # for non-converged results set iteration count to -100
-    print(f"[b3c_analysis][n << m]: {results}")
+    print(f"[b2c_analysis][n << m]: {results}")
 
     plt.figure()
     num_bins = 10
@@ -885,27 +886,28 @@ def b3c_analysis():
     plt.title("BRD Convergence Iterations (n << m)")
     plt.xlabel("Iterations")
     plt.ylabel("Frequency")
-    plt.savefig("b3c_analysis_n_lt_m.png", format="png")
-    plt.savefig("b3c_analysis_n_lt_m.pgf", format="pgf")
+    plt.savefig("b2c_analysis_n_lt_m.png", format="png")
+    plt.savefig("b2c_analysis_n_lt_m.pgf", format="pgf")
     plt.show()
 
     plt.figure()
     x = np.array([r[3] for r in results if r[3] is not None])
     y = np.array([r[2] for r in results if r[2] is not None])
     m, b = np.polyfit(x, y, 1)
-    plt.plot(x, m*x + b, color='red')
+    plt.plot(x, m*x + b, color='red', label=f"y = {m:.2f}x + {b:.2f}")
     plt.scatter(x, y, color='blue')
     plt.title("BRD Convergence Social Value vs. Max Social Value (n << m)")
     plt.xlabel("Social Value")
     plt.ylabel("Max Social Value")
-    plt.savefig("b3c_analysis_n_lt_m_social.png", format="png")
-    plt.savefig("b3c_analysis_n_lt_m_social.pgf", format="pgf")
+    plt.legend()
+    plt.savefig("b2c_analysis_n_lt_m_social.png", format="png")
+    plt.savefig("b2c_analysis_n_lt_m_social.pgf", format="pgf")
     plt.show()
 
     # Analysis 3: n >> m
-    results = [brd_on_gsp(20, 5, random_bundles_valuations_b3c(20, 5)) for i in range(20)]
+    results = [brd_on_gsp(20, 5, random_bundles_valuations_b2c(20, 5)) for i in range(20)]
     results = list(map(lambda x: x if x is not None else (None, -100, None, None), results)) # for non-converged results set iteration count to -100
-    print(f"[b3c_analysis][n >> m]: {results}")
+    print(f"[b2c_analysis][n >> m]: {results}")
 
     plt.figure()
     num_bins = 10
@@ -915,50 +917,51 @@ def b3c_analysis():
     plt.title("BRD Convergence Iterations (n >> m)")
     plt.xlabel("Iterations")
     plt.ylabel("Frequency")
-    plt.savefig("b3c_analysis_n_gt_m.png", format="png")
-    plt.savefig("b3c_analysis_n_gt_m.pgf", format="pgf")
+    plt.savefig("b2c_analysis_n_gt_m.png", format="png")
+    plt.savefig("b2c_analysis_n_gt_m.pgf", format="pgf")
     plt.show()
 
     plt.figure()
     x = np.array([r[3] for r in results if r[3] is not None])
     y = np.array([r[2] for r in results if r[2] is not None])
     m, b = np.polyfit(x, y, 1)
-    plt.plot(x, m*x + b, color='red')
+    plt.plot(x, m*x + b, color='red', label=f"y = {m:.2f}x + {b:.2f}")
     plt.scatter(x, y, color='blue')
     plt.title("BRD Convergence Social Value vs. Max Social Value (n >> m)")
     plt.xlabel("Social Value")
     plt.ylabel("Max Social Value")
-    plt.savefig("b3c_analysis_n_gt_m_social.png", format="png")
-    plt.savefig("b3c_analysis_n_gt_m_social.pgf", format="pgf")
+    plt.legend()
+    plt.savefig("b2c_analysis_n_gt_m_social.png", format="png")
+    plt.savefig("b2c_analysis_n_gt_m_social.pgf", format="pgf")
     plt.show()
 
-def b3c_example():
+def b2c_example():
     # Example 1
     V_individual = [5, 6, 2, 3, 9]
     V_full = np.tile(np.arange(1, 5 + 1), (5, 1)) # bundle i is comprised of (i + 1) copies of an identical good
     V_full = (V_full.T * V_individual).T # full valuation matrix
 
-    print(f"[b3c_example][n,m]: {len(V_full), len(V_full[0])}")
-    print(f"[b3c_example][V_individual]: {V_individual}")
-    print(f"[b3c_example][brd_on_gsp]: {brd_on_gsp(5, 5, V_full)}")
+    print(f"[b2c_example][n,m]: {len(V_full), len(V_full[0])}")
+    print(f"[b2c_example][V_individual]: {V_individual}")
+    print(f"[b2c_example][brd_on_gsp]: {brd_on_gsp(5, 5, V_full)}")
 
     # Example 2
     V_individual = [5, 6, 2, 3, 9]
     V_full = np.tile(np.arange(1, 10 + 1), (5, 1)) # bundle i is comprised of (i + 1) copies of an identical good
     V_full = (V_full.T * V_individual).T # full valuation matrix
 
-    print(f"[b3c_example][n,m]: {len(V_full), len(V_full[0])}")
-    print(f"[b3c_example][V_individual]: {V_individual}")
-    print(f"[b3c_example][brd_on_gsp]: {brd_on_gsp(5, 10, V_full)}")
+    print(f"[b2c_example][n,m]: {len(V_full), len(V_full[0])}")
+    print(f"[b2c_example][V_individual]: {V_individual}")
+    print(f"[b2c_example][brd_on_gsp]: {brd_on_gsp(5, 10, V_full)}")
 
     # Example 3
     V_individual = [5, 6, 2, 3, 9, 10, 11, 12, 13, 14]
     V_full = np.tile(np.arange(1, 5 + 1), (10, 1)) # bundle i is comprised of (i + 1) copies of an identical good
     V_full = (V_full.T * V_individual).T # full valuation matrix
 
-    print(f"[b3c_example][n,m]: {len(V_full), len(V_full[0])}")
-    print(f"[b3c_example][V_individual]: {V_individual}")
-    print(f"[b3c_example][brd_on_gsp]: {brd_on_gsp(10, 5, V_full)}")
+    print(f"[b2c_example][n,m]: {len(V_full), len(V_full[0])}")
+    print(f"[b2c_example][V_individual]: {V_individual}")
+    print(f"[b2c_example][brd_on_gsp]: {brd_on_gsp(10, 5, V_full)}")
 
 
 # V = [[0, 10], [0, 20], [0, 30], [0, 31]]
@@ -975,15 +978,15 @@ def b3c_example():
 
 def main():
     # TODO: Put your analysis and plotting code here, if any
-    # lec5_page7_example_q7b()
-    # lec5_page7_example_q8a()
-    # q8b_analysis()
-    # b2a_analysis()
-    # b2b_analysis()
-    # b2b_analysis_gsg_vcg_similar()
-    # b2b_analysis_gsp_vcg_different()
-    # b3c_analysis()
-    b3c_example()
+    lec5_page7_example_q7b()
+    lec5_page7_example_q8a()
+    q8b_analysis()
+    b2a_analysis()
+    b2b_analysis()
+    b2b_analysis_gsg_vcg_similar()
+    b2b_analysis_gsp_vcg_different()
+    b2c_analysis()
+    b2c_example()
 
 if __name__ == "__main__":
     main()
