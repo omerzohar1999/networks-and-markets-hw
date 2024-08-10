@@ -940,25 +940,25 @@ def b3c_example():
 
     print(f"[b3c_example][n,m]: {len(V_full), len(V_full[0])}")
     print(f"[b3c_example][V_individual]: {V_individual}")
-    print(f"[b3c_example][brd_on_gsp]: {brd_on_gsp(5, 5, V)}")
+    print(f"[b3c_example][brd_on_gsp]: {brd_on_gsp(5, 5, V_full)}")
 
     # Example 2
     V_individual = [5, 6, 2, 3, 9]
-    V_full = np.tile(np.arange(1, 20 + 1), (5, 1)) # bundle i is comprised of (i + 1) copies of an identical good
+    V_full = np.tile(np.arange(1, 10 + 1), (5, 1)) # bundle i is comprised of (i + 1) copies of an identical good
     V_full = (V_full.T * V_individual).T # full valuation matrix
 
     print(f"[b3c_example][n,m]: {len(V_full), len(V_full[0])}")
     print(f"[b3c_example][V_individual]: {V_individual}")
-    print(f"[b3c_example][brd_on_gsp]: {brd_on_gsp(5, 20, V)}")
+    print(f"[b3c_example][brd_on_gsp]: {brd_on_gsp(5, 10, V_full)}")
 
     # Example 3
-    V_individual = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30]
-    V_full = np.tile(np.arange(1, 5 + 1), (20, 1)) # bundle i is comprised of (i + 1) copies of an identical good
+    V_individual = [5, 6, 2, 3, 9, 10, 11, 12, 13, 14]
+    V_full = np.tile(np.arange(1, 5 + 1), (10, 1)) # bundle i is comprised of (i + 1) copies of an identical good
     V_full = (V_full.T * V_individual).T # full valuation matrix
 
     print(f"[b3c_example][n,m]: {len(V_full), len(V_full[0])}")
     print(f"[b3c_example][V_individual]: {V_individual}")
-    print(f"[b3c_example][brd_on_gsp]: {brd_on_gsp(20, 5, V)}")
+    print(f"[b3c_example][brd_on_gsp]: {brd_on_gsp(10, 5, V_full)}")
 
 
 # V = [[0, 10], [0, 20], [0, 30], [0, 31]]
@@ -975,14 +975,14 @@ def b3c_example():
 
 def main():
     # TODO: Put your analysis and plotting code here, if any
-    lec5_page7_example_q7b()
-    lec5_page7_example_q8a()
-    q8b_analysis()
-    b2a_analysis()
-    b2b_analysis()
-    b2b_analysis_gsg_vcg_similar()
-    b2b_analysis_gsp_vcg_different()
-    b3c_analysis()
+    # lec5_page7_example_q7b()
+    # lec5_page7_example_q8a()
+    # q8b_analysis()
+    # b2a_analysis()
+    # b2b_analysis()
+    # b2b_analysis_gsg_vcg_similar()
+    # b2b_analysis_gsp_vcg_different()
+    # b3c_analysis()
     b3c_example()
 
 if __name__ == "__main__":
