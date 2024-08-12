@@ -605,11 +605,14 @@ def b2a_analysis():
         print(f"[b2a_analysis][V_individual_sorted_indices]: {np.argsort(V_individual)}")
         print(f"[b2a_analysis][vcg_sorted]: {P_vcg_sorted=}")
 
-        # plot the sorted vcg prices
+        # plot the sorted vcg prices where the x-axis is simply the index, and the line y = 25x
         plt.figure()
-        plt.plot(np.sort(V_individual), P_vcg_sorted, 'o-')
-        plt.title(f"VCG prices sorted by individual valuation")
-        plt.xlabel("Buyer Valuation")
+        plt.plot(list(range(1, n + 1)), P_vcg_sorted[::-1], 'o-')
+        plt.plot(list(range(1, n + 1)), [25 * (n - i - 1) for i in range(n)], 'r--')
+        plt.xticks(list(range(1, n + 1)))
+        plt.legend(["VCG-Clarke-Pivot Price", "y = 25 (n - x - 1)"])
+        plt.title(f"VCG prices sorted by decreasing individual valuation")
+        plt.xlabel("Buyer Index (sorted by decreasing individual valuation)")
         plt.ylabel("VCG-Clarke-Pivot Price")
         plt.savefig(f"b2a_analysis_{iter_i}.png", format="png")
         plt.savefig(f"b2a_analysis_{iter_i}.pgf", format="pgf")
@@ -664,6 +667,75 @@ def gsp(n, m, V) -> '(P, M)':
     V = [V[i][0] for i in range(n)] # valuation of a single item.
     return gsp_efficient(n, m, V)
 
+def b2b_compare_vcg_gsp(n, m, V, tag=''):
+    """
+    n: number of buyers
+    m: number of bundles
+    V: valuations of bundles
+    tag: tag for the plot file names
+
+    compares the VCG and GSP mechanisms on the given matching market for bundles context
+    """
+    # run VCG
+    P_vcg, M_vcg = vcg(n, m, V)
+
+    # run GSP
+    P_gsp, M_gsp = gsp(n, m, V)
+
+    # print results
+    print(f"[b2b_compare_vcg_gsp][graph]: {n=} {m=} {V=}")
+    print(f"[b2b_compare_vcg_gsp][vcg]: {P_vcg=}, {M_vcg=}")
+    print(f"[b2b_compare_vcg_gsp][gsp]: {P_gsp=}, {M_gsp=}")
+
+    # get individual valuations
+    V_individual = [l[0] for l in V]
+
+    # get indices of sorted valuations (tie-breaking by the assigned bundle)
+    V_individual_sorted_indices = list(
+        sorted(
+            list(range(n)),
+            key=lambda i: V_individual[i] + (M_vcg[i] / 1000)
+        )
+    )
+
+    # get the bundles matched to each buyer sorted by individual valuation of the buyer
+    M_vcg_sorted = [M_vcg[i] for i in V_individual_sorted_indices]
+    print(f"[b2b_compare_vcg_gsp][M_vcg_sorted]: {M_vcg_sorted}")
+    print(f"[b2b_compare_vcg_gsp][M_vcg_sorted increasing?]: {list(sorted(M_vcg_sorted)) == M_vcg_sorted}")
+
+    # get the vcg prices sorted by individual valuation
+    # NOTE: this is the externality for each buyer, sorted by individual valuation
+    P_vcg_sorted = [P_vcg[i] for i in M_vcg_sorted]
+
+    # get the bundles matched to each buyer sorted by individual valuation of the buyer
+    M_gsp_sorted = [M_gsp[i] for i in V_individual_sorted_indices]
+    print(f"[b2b_compare_vcg_gsp][M_gsp_sorted]: {M_gsp_sorted}")
+    print(f"[b2b_compare_vcg_gsp][M_gsp_sorted increasing?]: {list(sorted(M_gsp_sorted)) == M_gsp_sorted}")
+
+    # get the gsp prices sorted by individual valuation
+    P_gsp_sorted = [P_gsp[i] for i in M_gsp_sorted]
+
+    # print results
+    print(f"[b2b_compare_vcg_gsp][V_individual]: {V_individual=}")
+    print(f"[b2b_compare_vcg_gsp][V_individual_sorted]: {np.sort(V_individual)}")
+    print(f"[b2b_compare_vcg_gsp][V_individual_sorted_indices]: {np.argsort(V_individual)}")
+    print(f"[b2b_compare_vcg_gsp][vcg_sorted]: {P_vcg_sorted=}")
+    print(f"[b2b_compare_vcg_gsp][gsp_sorted]: {P_gsp_sorted=}")
+    print(f"[b2b_compare_vcg_gsp][different?]: {P_vcg_sorted != P_gsp_sorted}")
+
+    # plot the sorted vcg prices and gsp prices
+    plt.figure()
+    plt.plot(list(range(1, n + 1)), P_vcg_sorted[::-1], 'o-', label="VCG")
+    plt.plot(list(range(1, n + 1)), P_gsp_sorted[::-1], 'o-', label="GSP")
+    plt.xticks(list(range(1, n + 1)))
+    plt.title(f"VCG and GSP prices sorted by decreasing individual valuation")
+    plt.xlabel("Buyer Index (sorted by decreasing individual valuation)")
+    plt.ylabel("Price")
+    plt.legend()
+    plt.savefig(f"b2b_compare_vcg_gsp_{tag}.png", format="png")
+    plt.savefig(f"b2b_compare_vcg_gsp_{tag}.pgf", format="pgf")
+    plt.show()
+
 def b2b_analysis():
     # Evaluate on n = m = 20 contexts
     for iter_i in range(4):
@@ -676,74 +748,47 @@ def b2b_analysis():
         m = 20
         V = random_bundles_valuations(n, m)
 
-        # run VCG
-        P_vcg, M_vcg = vcg(n, m, V)
-
-        # print results
-        print(f"[b2b_analysis][graph]: {n=} {m=} {V=}")
-        print(f"[b2b_analysis][vcg]: {P_vcg=}, {M_vcg=}")
-
-        # get individual valuations
-        V_individual = [l[0] for l in V]
-
-        # get indices of sorted valuations (tie-breaking by the assigned bundle)
-        V_individual_sorted_indices = list(
-            sorted(
-                list(range(n)),
-                key=lambda i: V_individual[i] + (M_vcg[i] / 1000)
-            )
-        )
-
-        # get the bundles matched to each buyer sorted by individual valuation of the buyer
-        M_vcg_sorted = [M_vcg[i] for i in V_individual_sorted_indices]
-        print(f"[b2b_analysis][M_vcg_sorted]: {M_vcg_sorted}")
-        print(f"[b2b_analysis][M_vcg_sorted increasing?]: {list(sorted(M_vcg_sorted)) == M_vcg_sorted}")
-
-        # get the vcg prices sorted by individual valuation
-        # NOTE: this is the externality for each buyer, sorted by individual valuation
-        P_vcg_sorted = [P_vcg[i] for i in M_vcg_sorted]
-
-        # print results
-        print(f"[b2b_analysis][V_individual]: {V_individual=}")
-        print(f"[b2b_analysis][V_individual_sorted]: {np.sort(V_individual)}")
-        print(f"[b2b_analysis][V_individual_sorted_indices]: {np.argsort(V_individual)}")
-        print(f"[b2b_analysis][vcg_sorted]: {P_vcg_sorted=}")
-
-        # run GSP
-        P_gsp, M_gsp = gsp(n, m, V)
-
-        # print results
-        print(f"[b2b_analysis][gsp]: {P_gsp=}, {M_gsp=}")
-
-        # get the bundles matched to each buyer sorted by individual valuation of the buyer
-        M_gsp_sorted = [M_gsp[i] for i in V_individual_sorted_indices]
-        print(f"[b2b_analysis][M_gsp_sorted]: {M_gsp_sorted}")
-        print(f"[b2b_analysis][M_gsp_sorted increasing?]: {list(sorted(M_gsp_sorted)) == M_gsp_sorted}")
-
-        # get the gsp prices sorted by individual valuation
-        P_gsp_sorted = [P_gsp[i] for i in M_gsp_sorted]
-
-        # print results
-        print(f"[b2b_analysis][gsp_sorted]: {P_gsp_sorted=}")
-        print(f"[b2b_analysis][different?]: {P_vcg_sorted != P_gsp_sorted}")
-
-        # plot the sorted vcg prices and gsp prices
-        plt.figure()
-        plt.plot(np.sort(V_individual), P_vcg_sorted, 'o-', label="VCG")
-        plt.plot(np.sort(V_individual), P_gsp_sorted, 'o-', label="GSP")
-        plt.title(f"VCG and GSP prices sorted by individual valuation")
-        plt.xlabel("Buyer Valuation")
-        plt.ylabel("Price")
-        plt.legend()
-        plt.savefig(f"b2b_analysis_{iter_i}.png", format="png")
-        plt.savefig(f"b2b_analysis_{iter_i}.pgf", format="pgf")
-        plt.show()
+        # compare VCG and GSP
+        b2b_compare_vcg_gsp(n, m, V, f"random_{iter_i}")
 
 def b2b_analysis_gsg_vcg_similar():
-    pass
+
+    # Evaluate on n = m = 10 contexts, where individual valuations are the same, and bundle sizes are i + 1
+    n = 10
+    m = 10
+    V = np.tile(np.arange(1, 1 + m), (n, 1)) # bundle i is comprised of (i + 1) copies of an identical good
+    V = (V.T * np.arange(1000, n + 1000)).T # individual valuations are very similar 
+
+    # compare VCG and GSP
+    b2b_compare_vcg_gsp(n, m, V, "similar")
 
 def b2b_analysis_gsp_vcg_different():
-    pass
+    # successive sizes is small, and where the valuations of the bidders for the singular good are similar. For instance, in a context where $n = m = 10$, $t_i = i$, and $c_i = 100 \cdot i$, we see that the VCG prices are much larger than the GSP prices, as seen in \Cref{fig:b2d}.
+
+    # Evaluate on n = m = 10 contexts, where individual valuations are the same, and bundle sizes are 100 * i
+    n = 10
+    m = 10
+    V = np.tile(100 + np.arange(1, 1 + m), (n, 1)) # bundle i is comprised of (100 * i) copies of an identical good
+    V = (V.T * np.arange(1, n + 1)).T # individual valuations are very different
+
+    # compare VCG and GSP
+    b2b_compare_vcg_gsp(n, m, V, "different_1")
+
+    # An additional context in which the VCG and GSP prices are wildly different is when the bundle sizes are relatively small and similar, and where the valuations of the bidders for the singular good are such that $t_i \gg t_{i+1} \cdot (n - i)$. For instance, take $n = m = 10$, $t_i = 2^{i}$, and $c_i = n - i + 1$. In this case,
+
+    # \begin{center}
+    #     $p^{VCG}_i = \sum_{j=i+1}^{n} \left( c_{j-1} - c_j \right) \cdot t_j = \sum_{j=i+1}^{n} t_j \approx t_{i+1} \cdot (n - i) \ll t_{i+1} \cdot c_i = p^{GSP}_i$
+    # \end{center}
+
+    # Evaluate on n = m = 10 contexts, where individual valuations are 2^i, and bundle sizes are n - i + 1
+    n = 10
+    m = 10
+    V = np.tile(np.arange(1, 1 + m), (n, 1)) # bundle i is comprised of (n - i + 1) copies of an identical good
+    V = (V.T * (2 ** np.arange(3, 3 + n))).T # individual valuations are very different
+    print(V)
+
+    # compare VCG and GSP
+    b2b_compare_vcg_gsp(n, m, V, "different_2")
 
 # === Bonus Question 3(c) (optional) ===
 def brd_on_gsp(n, m, V) -> '(V_, iteration_count, social_value_pne, max_social_value)':

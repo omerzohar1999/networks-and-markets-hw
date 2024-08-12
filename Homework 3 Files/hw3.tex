@@ -576,9 +576,9 @@
 
     \item We structure a \textit{markets-for-bundles} context of identical goods as a simple matching market context, where each bundle $B_j$'s value for bidder $b_i$ is the product of the value of $b_i$ for the good and the amount of goods in the bundle, $c_i$. That is, $v_{i}(B_j) = c_j \cdot t_i$, where $t_i$ is the value of $b_i$ for the singular good, and $c_j$ is the amount of goods in bundle $B_j$. We then run the VCG algorithm we implemented in the previous part on a few randomized examples of such a markets-for-bundles context, where there are $n = m = 20$ bundles and bidders, and the values $t_i$ are randomized between $1$ and $50$, and where $c_j = j$ ($j \in \{1, 2, \ldots, 20\}$).
 
-    \Cref{fig:b2a} summarizes the results of the VCG algorithm on 4 such randomized examples of markets-for-bundles contexts (the results remained the same for other examples we ran). The $x$-axis represents the individual valuation $t_i$ of the bidders for the singular good, and the $y$-axis represents the VCG price for the bidder---commonly referred to as the \textit{externalities} of the bidder on the market. 
+    \Cref{fig:b2a} summarizes the results of the VCG algorithm on 4 such randomized examples of markets-for-bundles contexts (the results remained the same for other examples we ran). The $x$-axis represents the index of the bidder, where the bidders are sorted by decreasing order of their individual valuation $t_i$ for the singular good, and the $y$-axis represents the VCG price for the bidder---commonly referred to as the \textit{externalities} of the bidder on the market. 
     
-    We observe a clear trend, where the VCG prices---i.e. \textit{externalities} of bidders, are increasing with the valuation of the bidders for the singular good (post tie-breaks of valuations), which is expected given the structure of the markets-for-bundles context.
+    We observe a clear trend, where the VCG prices---i.e. \textit{externalities} of bidders, are decreasing as the valuation of the bidders for the singular good (post tie-breaks of valuations) decreases, which is expected given the structure of the markets-for-bundles context.
 
     \begin{figure*}[ht]
         \centering
@@ -612,25 +612,27 @@
         \label{fig:b2a}
     \end{figure*}
     
-    As we've seen in class, the socially optimal assignment in a \textit{markets-for-bundles} of identical goods, is that the larger bundles are assigned to the higher valuation of a singular good. Thus, as the valuation of the singular good increases, the bidder $b_i$ (w.l.o.g. the bidders are sorted by decreasing valuation of the singular goods) is assigned a larger bundle $B_i$ (w.l.o.g. the bundles are sorted by decreasing sizes $c_i$). Without said bidder $b_i$, the bundles assignment shifts for the lower-bidding bidders. That is, $\forall j > i \, . \, b_j \text{ is changed to be assigned } B_{j-1}$. This sets the externality to be $\sum_{j=i+1}^{n} (c_{j-1} - c_j) \cdot t_j$ for bidder $b_i$. In our case, this is $\sum_{j=i+1}^{n} t_j$. In either case, it is easy to see that as the valuation of the singular good increases (i.e., $i$ grows), the externality of the bidder (i.e., of $b_i$) should increase for similarly distributed bundle sizes and similarly distributed valuations of the singular good (as in our randomization).
+    As we've seen in class, the socially optimal assignment in a \textit{markets-for-bundles} of identical goods, is that the larger bundles are assigned to the higher valuation of a singular good. Thus, as the valuation of the singular good increases, the bidder $b_i$ (w.l.o.g. the bidders are sorted by decreasing valuation of the singular goods) is assigned a larger bundle $B_i$ (w.l.o.g. the bundles are sorted by decreasing sizes $c_i$). Without said bidder $b_i$, the bundles assignment shifts for the lower-bidding bidders. That is, $\forall j > i \, . \, b_j \text{ is changed to be assigned } B_{j-1}$. This sets the externality to be $\sum_{j=i+1}^{n} (c_{j-1} - c_j) \cdot t_j$ for bidder $b_i$. This is the price, and in our case, it's $p^{VCG}_i = \sum_{j=i+1}^{n} t_j$. 
+    
+    We are thus able to conclude that as the valuation of the singular good increases (i.e., as $i$ grows), the externality of the bidder (of $b_i$) should increase. Moreover, due to the uniformity of the randomization of the values $t_i \sim U([a, a+1, ..., b])$ in our context (where $a = 1, b = 50$), and as $c_j - c_{j+1} = 1$ in our context, we should see the externalities remaining under the $y = \left(\frac{a+b}{2}\right) \cdot (n - x - 1)$ line, and approaching it as the valuation of the bidders for the singular good increases. This is in fact what we see in \Cref{fig:b2a}.
 
     \item We implemented a GSP pricing mechanism in a \textit{matching-market} context. The following are comparisons of the prices output by the GSP mechanism and the VCG mechanism over different contexts.
     
     \paragraph{Randomized Matching-Market Contexts:} We use the randomization scheme described in the previous part to generate randomized matching-market contexts, where there are $n = m = 20$ bidders and goods, and the values $t_i$ are randomized between $1$ and $50$. We then run the GSP pricing mechanism we implemented on a few such randomized examples of matching-market contexts, and compare the prices output by the GSP mechanism to the VCG prices. 
 
-    \Cref{fig:b2b} summarizes the results of the GSP pricing mechanism on 4 such randomized examples of matching-market contexts (the results remained the same for other examples we ran), compared to the VCG prices. The $x$-axis represents the individual valuation $t_i$ of the bidders for the singular good, and the $y$-axis represents the GSP price for the bidder in orange and the VCG price for the bidder in blue.
+    \Cref{fig:b2b} summarizes the results of the GSP pricing mechanism on 4 such randomized examples of matching-market contexts (the results remained the same for other examples we ran), compared to the VCG prices. The $x$-axis represents the index of the bidder, where the bidders are sorted by decreasing order of their individual valuation $t_i$ for the singular good, and the $y$-axis represents the GSP price for the bidders in orange and the VCG price for the bidder in blue.
     
     \begin{figure*}[ht]
         \centering
         \begin{subfigure}{0.49\textwidth}
             \centering
-            \resizebox{\textwidth}{!}{\input{figures/b2b_analysis_0.pgf}}
+            \resizebox{\textwidth}{!}{\input{figures/b2b_compare_vcg_gsp_random_0.pgf}}
             \caption{Example 1}
         \end{subfigure}
         \hfill
         \begin{subfigure}{0.49\textwidth}
             \centering
-            \resizebox{\textwidth}{!}{\input{figures/b2b_analysis_1.pgf}}
+            \resizebox{\textwidth}{!}{\input{figures/b2b_compare_vcg_gsp_random_1.pgf}}
             \caption{Example 2}
         \end{subfigure}
         
@@ -638,13 +640,13 @@
         
         \begin{subfigure}{0.49\textwidth}
             \centering
-            \resizebox{\textwidth}{!}{\input{figures/b2b_analysis_2.pgf}}
+            \resizebox{\textwidth}{!}{\input{figures/b2b_compare_vcg_gsp_random_2.pgf}}
             \caption{Example 3}
         \end{subfigure}
         \hfill
         \begin{subfigure}{0.49\textwidth}
             \centering
-            \resizebox{\textwidth}{!}{\input{figures/b2b_analysis_3.pgf}}
+            \resizebox{\textwidth}{!}{\input{figures/b2b_compare_vcg_gsp_random_3.pgf}}
             \caption{Example 4}
         \end{subfigure}
         
@@ -652,15 +654,87 @@
         \label{fig:b2b}
     \end{figure*}
 
-    Unsurprisingly, the GSP prices are also increasing with the valuation of the bidders for the singular good (up to tie-breaks), as for every bidder $b_i$, the price/item is set to be the valuation of the next bidder $b_{i+1}$ (or $b_i$ if $i = n$), and the larger bundles are assigned to the higher-valuing bidders (as in the VCG mechanism). Thus, the GSP prices are increasing with the valuation of the bidders for the singular good, as the VCG prices are.
+    Unsurprisingly, the GSP prices are also decreasing as the valuation of the bidders for the singular good (up to tie-breaks) decreases. This is expected, as for every bidder $b_i$, the price/item is set to be the valuation of the next bidder $t_{i+1}$ (where $t_{n + 1} = t_n$), and the larger bundles are assigned to the higher-valuing bidders (as in the VCG mechanism). Thus, the GSP price for the bidder, denoted by $p^{GSP}_i = t_{i+1} \cdot c_i$, is increasing with the valuation of the bidders for the singular good (i.e., with $i$). This is in fact what we see in \Cref{fig:b2b}.
+
+    In our case, this price is $p^{GSP}_i = t_{i+1} \cdot (n - i + 1) \geq \sum_{j=i+1}^{n} t_j = p^{VCG}_i$. Thus, we expect that the GSP prices will be greater than the VCG prices, and this is indeed what we see in \Cref{fig:b2b}.
 
     \paragraph{Contexts in which VCG and GSP prices are similar}
-    FILL IN 
+    As already highlighted, for the VCG mechanism, the externality of a matched bidder $b_i$---i.e. for $i \in [\min{(n, m)}]$ (where $n, m$ are the amount of bidders and bundles respectively), assuming bidders and bundles are ordered (w.l.o.g) by decreasing valuation of the singular good and decreasing bundle size respectively, is its price $p^{VCG}_i = \sum_{j=i+1}^{n} \left( c_{j-1} - c_j \right) \cdot t_j$. This is in contrast to the GSP mechanism, where the price is $p^{GSP}_i = t_{i+1} \cdot c_i$. 
+    
+    Therefore, a context in which those are similar prices would be where $\forall j \in [m] \, . \, c_j = 1$ (as we've demanded so far) and where the valuations differ very little from each other by some small constant $a \in \mathbb{N}$, such that $\forall i \in [n] \, . \, a \cdot n^2 \ll t_i$. To take an example, we set $n = m = 10$, $a = 1$, and $t_i = 1000 + (n - i)$. In such a context, 
+    
+    \begin{center}
+        $p^{VCG}_i = \sum_{j=i+1}^{n} \left( c_{j-1} - c_j \right) \cdot t_j = \sum_{j=i+1}^{n} t_j \approx t_{i+1} \cdot (n - i) - \sum_{j=1}^{n - i - 1} a \cdot j \approx t_{i+1} \cdot (n - i) - a \cdot \frac{(n - i - 1)(n - i)}{2} \approx t_{i+1} \cdot (n - i) \approx t_{i+1} \cdot c_i = p^{GSP}_i$
+    \end{center}
+    
+    \noindent
+    This is indeed what we see in \Cref{fig:b2c}.
 
-    \paragraph{Contexts in which VCG and GSP prices are different}
-    FILL IN
+    \FloatBarrier
 
-    \item 
+    \begin{figure}[H]
+        \centering
+        \resizebox{0.5\textwidth}{!}{\input{figures/b2b_compare_vcg_gsp_similar.pgf}}
+        \caption{VCG and GSP prices for bidders in a context where they are similar}
+        \label{fig:b2c}
+    \end{figure}
+
+    \FloatBarrier
+
+    An additional context in which the VCG and GSP prices are similar is when the valuations of the bidders for the singular good are the same, and the bundle sizes are such that $c_i = (n - i + 1)$. In this case, 
+    
+    \begin{center}
+        $p^{VCG}_i = \sum_{j=i+1}^{n} \left( c_{j-1} - c_j \right) \cdot t_j = t_{i+1} \cdot (n - i) \approx t_{i+1} \cdot c_i = p^{GSP}_i$
+    \end{center}
+
+    \paragraph{Contexts in which VCG and GSP prices are wildly different}
+    A context in which the VCG and GSP prices are wildly different is where the bundle sizes $c_i$ (w.l.o.g they are ordered by decreasing size), satisfy the following:
+
+    \begin{center}
+        $\forall i \in [1, m-1] \, . \, c_i = c_{i+1} + 1$ \\
+        and \\ 
+        $\forall i \in [m] \, . \, c_i \gg (n - i + 1)$
+    \end{center}
+    
+    This induces that 
+    
+    \begin{center}
+        $p^{VCG}_i = \sum_{j=i+1}^{n} \left( c_{j-1} - c_j \right) \cdot t_j = \sum_{j=i+1}^{n} t_j \leq t_{i+1} \cdot (n - i) \ll t_{i+1} \cdot c_i = p^{GSP}_i$
+    \end{center}
+        
+    This is indeed what we see in \Cref{fig:b2d}, for which $n = m = 10$, $c_i = 100 + (n - i)$ and $t_i = n - i + 1$.
+
+    \FloatBarrier
+
+    \begin{figure}[H]
+        \centering
+        \resizebox{0.5\textwidth}{!}{\input{figures/b2b_compare_vcg_gsp_different_1.pgf}}
+        \caption{VCG and GSP prices for bidders in a context where they are different}
+        \label{fig:b2d}
+    \end{figure}
+
+    \FloatBarrier
+
+    An additional context in which the VCG and GSP prices are wildly different is when the bundle sizes are relatively small and similar, and where the valuations of the bidders for the singular good are such that $t_i \gg t_{i+1} \cdot (n - i)$. For instance, take $n = m = 10$, $t_i = 2^{i + 3}$, and $c_i = n - i + 1$. In this case,
+
+    \begin{center}
+        $p^{VCG}_i = \sum_{j=i+1}^{n} \left( c_{j-1} - c_j \right) \cdot t_j = \sum_{j=i+1}^{n} t_j \approx t_{i+1} \cdot (n - i) \ll t_{i+1} \cdot c_i = p^{GSP}_i$
+    \end{center}
+
+    This is indeed what we see in \Cref{fig:b2e}.
+
+    \FloatBarrier
+
+    \begin{figure}[H]
+        \centering
+        \resizebox{0.5\textwidth}{!}{\input{figures/b2b_compare_vcg_gsp_different_2.pgf}}
+        \caption{VCG and GSP prices for bidders in a context where they are different}
+        \label{fig:b2e}
+    \end{figure}
+
+    \FloatBarrier
+
+    \item We turn to analyze the BRD procedure on a GSP matching market auction, here a player's strategy is their valuation report. After implementing this procedure, we gather statistics about the convergence of the BRD procedure on a GSP matching market auction. We run the BRD procedure on a few randomized examples of matching-market contexts, where there are $n = m = 20$ bidders and goods, and the values $t_i$ are randomized between $1$ and $50$. We then gather statistics about the convergence of the BRD procedure on these contexts.
 
     
     \item 
@@ -1026,22 +1100,22 @@ Such calculation can also incorporate the value of the high-value location:
 \begin{enumerate}[label=(\alph*)]
 
     \item 
-    We simulated this as $n$ more drivers simulating public transportation, whose cost of driving is the price described.
+    We simulated this as $n$ additional drivers emulating public transportation, where the cost of driving is as described.
 
     \noindent
-    This ensures all players have the ability to take public transportation instead of uber.
+    This ensures that all players have the ability to choose public transportation instead of Uber.
 
     \noindent
     Since we still have a bipartite graph, we know that a stable matching must exist.
     
     \item 
-    Higher values for $a$ means public transportation becomes less attractive for everyone.
+    Higher values of $a$ mean that public transportation becomes less attractive for everyone.
 
     \noindent
-    Higher values for $b$ means public transportation is more reliable for shorter distances.
+    Higher values of $b$ mean that public transportation is more reliable for shorter distances.
 
     \noindent
-    $b>1$ means the drive itself costs more with public transportation than with uber (so with a short distance between an uber and a rider it could be preferable to take an uber, depending on the base fare $a$).
+    If $b>1$, the cost of driving with public transportation is higher than with Uber (so with a short distance between an Uber and a rider, it might be preferable to take an Uber, depending on the base fare $a$).
 
 \end{enumerate}
 
