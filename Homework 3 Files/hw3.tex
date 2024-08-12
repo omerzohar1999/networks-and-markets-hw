@@ -668,7 +668,7 @@
     \end{center}
     
     \noindent
-    This is indeed what we see in \Cref{fig:b2c}.
+    This is indeed what we see in \Cref{fig:b2b_similar}.
 
     \FloatBarrier
 
@@ -676,7 +676,7 @@
         \centering
         \resizebox{0.5\textwidth}{!}{\input{figures/b2b_compare_vcg_gsp_similar.pgf}}
         \caption{VCG and GSP prices for bidders in a context where they are similar}
-        \label{fig:b2c}
+        \label{fig:b2b_similar}
     \end{figure}
 
     \FloatBarrier
@@ -702,7 +702,7 @@
         $p^{VCG}_i = \sum_{j=i+1}^{n} \left( c_{j-1} - c_j \right) \cdot t_j = \sum_{j=i+1}^{n} t_j \leq t_{i+1} \cdot (n - i) \ll t_{i+1} \cdot c_i = p^{GSP}_i$
     \end{center}
         
-    This is indeed what we see in \Cref{fig:b2d}, for which $n = m = 10$, $c_i = 100 + (n - i)$ and $t_i = n - i + 1$.
+    This is indeed what we see in \Cref{fig:b2b_different_1}, for which $n = m = 10$, $c_i = 100 + (n - i)$ and $t_i = n - i + 1$.
 
     \FloatBarrier
 
@@ -710,7 +710,7 @@
         \centering
         \resizebox{0.5\textwidth}{!}{\input{figures/b2b_compare_vcg_gsp_different_1.pgf}}
         \caption{VCG and GSP prices for bidders in a context where they are different}
-        \label{fig:b2d}
+        \label{fig:b2b_different_1}
     \end{figure}
 
     \FloatBarrier
@@ -721,7 +721,7 @@
         $p^{VCG}_i = \sum_{j=i+1}^{n} \left( c_{j-1} - c_j \right) \cdot t_j = \sum_{j=i+1}^{n} t_j \approx t_{i+1} \cdot (n - i) \ll t_{i+1} \cdot c_i = p^{GSP}_i$
     \end{center}
 
-    This is indeed what we see in \Cref{fig:b2e}.
+    This is indeed what we see in \Cref{fig:b2b_different_2}.
 
     \FloatBarrier
 
@@ -729,14 +729,81 @@
         \centering
         \resizebox{0.5\textwidth}{!}{\input{figures/b2b_compare_vcg_gsp_different_2.pgf}}
         \caption{VCG and GSP prices for bidders in a context where they are different}
-        \label{fig:b2e}
+        \label{fig:b2b_different_2}
     \end{figure}
 
     \FloatBarrier
 
-    \item We turn to analyze the BRD procedure on a GSP matching market auction, here a player's strategy is their valuation report. After implementing this procedure, we gather statistics about the convergence of the BRD procedure on a GSP matching market auction. We run the BRD procedure on a few randomized examples of matching-market contexts, where there are $n = m = 20$ bidders and goods, and the values $t_i$ are randomized between $1$ and $50$. We then gather statistics about the convergence of the BRD procedure on these contexts.
-
+    \item We turn to analyze the BRD procedure on a GSP matching market auction, here a player's strategy is their valuation report. We have in place mechanisms inside the procedure that identify cycles in order to break them and report a divergence of the procedure.
     
+    After implementing the \textit{BRD on GSP matching market auctions} procedure, we gather statistics about the convergence of the BRD procedure on a GSP matching market auction. We run the BRD procedure on many randomized examples such as in part (a), for different configurations of $n, m$ and the maximum valuation $t$ (which was 50 in part (a)). We $\approx 20$ randomized examples from each of the following configurations, all of which had $t = 15$:
+
+    \begin{itemize}
+        \item $n = 5 = m$
+        \item $n = 5 \ll 20 = m$
+        \item $m = 5 \ll 20 = n$
+    \end{itemize}
+
+    The results were consistent among all of them: the BRD procedure converged in all cases around $90\%$ of the time, and for some relatively small amounts of $\approx 20$ iterations (we observe what appears to be statistical noise in the iteration measurement for $n = 5 = m$). This is depicted in \Cref{fig:b2c_convergence}.
+
+    \begin{figure*}[ht]
+        \centering
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2c_analysis_n_m.pgf}}
+            \caption{$n = 5 = m$}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2c_analysis_n_lt_m.pgf}}
+            \caption{$n = 5 \ll 20 = m$}
+        \end{subfigure}
+
+        \vspace{1em} % Add vertical space between rows
+
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2c_analysis_n_gt_m.pgf}}
+            \caption{$m = 5 \ll 20 = n$}
+        \end{subfigure}
+
+        \caption{Histograms of the iteration count for the BRD procedure on GSP matching market auctions. Negative values indicate divergence.}
+        \label{fig:b2c_convergence}
+    \end{figure*}
+    
+    We remind ourselves that the GSP mechanism \textit{Nash-implements social value maximization in any market-for-bundles context}. That is, their exists a report profile $\vec{r}$ such that $GSP^{\Gamma}(\vec{r})$ for context $\Gamma$ is the socially optimal outcome, and such that $\vec{r}$ is a Nash equilibrium in the $GSP^{\Gamma}$ mechanism. Therefore, we sought to analyze the social value of the outcomes of the BRD procedure on the GSP mechanism when it converges. We found that the social value of the outcomes of the BRD procedure on the GSP mechanism when it converges is indeed the same as the maximum social value in the context. This is depicted in \Cref{fig:b2c_social_value}.
+
+    \FloatBarrier
+
+    \begin{figure*}[h]
+        \centering
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2c_analysis_n_m_social.pgf}}
+            \caption{$n = 5 = m$}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2c_analysis_n_lt_m_social.pgf}}
+            \caption{$n = 5 \ll 20 = m$}
+        \end{subfigure}
+
+        \vspace{1em} % Add vertical space between rows
+
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{\input{figures/b2c_analysis_n_gt_m_social.pgf}}
+            \caption{$m = 5 \ll 20 = n$}
+        \end{subfigure}
+
+        \caption{Scatter plots where the $x$-axis represents the social value of the outcome of the BRD procedure on the GSP mechanism when it converges, and the $y$-axis represents the maximum social value in the context. The scatter plot is over the results of the previous BRD runs in \Cref{fig:b2c_convergence}. The red line represents the line $y = x$.}
+        \label{fig:b2c_social_value}
+    \end{figure*}
+
+    \FloatBarrier
+
     \item 
 
 
@@ -1024,7 +1091,7 @@ Where $v(R_i, D_j)$ denotes the value of the edge between $R_i$ and $D_j$ in the
     \end{itemize}
 
 
-    \paragraph{Configuration 2: $5 = n << m = 20$}
+    \paragraph{Configuration 2: $5 = n \ll m = 20$}
     This configuration exhibits a scenario where there are more drivers than riders---an example of higher supply than demand. The following is the analysis of the distribution of the prices/profits for each individual rider/driver in this configuration, after using our procedure to generate random instances of this configuration:
 
     \begin{itemize}
@@ -1051,7 +1118,7 @@ Where $v(R_i, D_j)$ denotes the value of the edge between $R_i$ and $D_j$ in the
         This is expected, as the higher supply than demand means that the riders have more options to choose from, and thus the prices are more spread out (due to heightened competition between drivers).
     \end{itemize}
 
-    \paragraph{Configuration 3: $20 = n >> m = 5$}
+    \paragraph{Configuration 3: $20 = n \gg m = 5$}
     This configuration exhibits a scenario where there are more riders than drivers---an example of higher demand than supply. The following is the analysis of the distribution of the prices/profits for each individual rider/driver in this configuration, after using our procedure to generate random instances of this configuration:
 
     \begin{itemize}
