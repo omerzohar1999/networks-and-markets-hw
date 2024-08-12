@@ -566,6 +566,8 @@
     
     That is, in all examples we analyzed, the prices output by the VCG mechanism and the algorithm of Theorem 8.8 were the same, and the matching was also the same because we used the same algorithm to compute the socially optimal state as part of the VCG mechanism. We analyzed far more examples besides the ones presented here, and the results were consistent across all of them---the prices output by the VCG mechanism and the algorithm of Theorem 8.8 were the same (and the matching was also the same because we used the same algorithm to compute the socially optimal state as part of the VCG mechanism).
 
+    We found evidence online that this phenomenon is not a coincidence, detailed further in \cite{cornellpage26}.
+
 \end{enumerate}
 
 \section{Bonus Question 2}
@@ -693,9 +695,22 @@ This value function ensures economic rationality by capping the cost of a match 
 
 \section{Question 10}
 
+In the following we analyze the prices and profits in the computed stable outcomes for the exchange networks we defined in the previous part. The prices and profits are derived from the computed stable outcome $(M, a)$. For a rider $R_i$ and driver $D_j$ match in the stable outcome, the rider price is 
+    
+\begin{equation*}
+    v_{R_i} - a(R_i) = c(R_i, D_j) + ((v_{R_i} - c(R_i, D_j)) - a(R_i)) = c(R_i, D_j) + (v(R_i, D_j) - a(R_i)) = c(R_i, D_j) + a(D_j)
+\end{equation*}
+
+\noindent
+Where $v(R_i, D_j)$ denotes the value of the edge between $R_i$ and $D_j$ in the exchange network, which per our definition is $v_{R_i} - c(R_i, D_j)$. Conversely, the driver profit is 
+
+\begin{equation*}
+    (v_{R_i} - a(R_i)) - c(R_i, D_j) = (v_{R_i} - c(R_i, D_j)) - a(R_i) = v(D_j, R_i) - a(R_i) = a(D_j)
+\end{equation*}
+
 \begin{enumerate}[label=(\alph*)]
 
-    \item We consider the following examples of exchange networks for Uber-like ridesharing apps, show their computed stable outcome, and argue the legitimacy of the computed driver profits and rider prices. We define the driver profits as their allocation in the stable outcome, and the rider prices as the difference between their valuation of reaching their destination and their allocation in the stable outcome.
+    \item We consider the following examples of exchange networks for Uber-like ridesharing apps, show their computed stable outcome, and argue the legitimacy of the computed driver profits and rider prices.
 
     \paragraph{Example 1}
 
@@ -759,6 +774,8 @@ This value function ensures economic rationality by capping the cost of a match 
         }
     \end{figure}
 
+    Where the rider values are all set to 30.
+
     % Example 1:
     % Total value allocated to riders and drivers: 101.0
     % Matching: M=[0, 1, 2, 3, 4]
@@ -781,118 +798,20 @@ This value function ensures economic rationality by capping the cost of a match 
         \item Rider Prices: $[13, 9, 5, 9, 13]$
     \end{itemize}
     
-    The profits are sensible, as the stable outcome is calculated by the the market equilibrium algorithm which prioritizes lower prices for the buyers---which we modeled to be the riders when encoding the exchange network as a matching market context.
+    We observe driver profits all to be 0. This is sensible, as our algorithm from Question 9, which encodes the exchange network as a matching market context, encodes the riders being the buyers and the drivers being the sellers. As the stable outcome is calculated by the market equilibrium algorithm which prioritizes lower prices for the buyers, the profits are thus expected to be on the lower end.
 
-    FIXME: FILL IN MORE
+    Rider prices, on the other hand, depict that network position greatly affects the ability to extract more value due to more opportunities/alternatives. As the rider is closer to the center, its average distance from all drivers is lower (where its distance from its destination remains the same), which heightens competition between drivers for the rider, and thus the rider can extract more value from the drivers.
 
     \paragraph{Example 2}
 
     % def rider_driver_example_2():
-    % n = 5
-    % m = 10
-    % l = 20
-    % rider_vals = [30] * 5
-    % rider_locs = [(2, 10), (6, 10), (10, 10), (14, 10), (18, 10)]
-    % rider_dests = [(2, 15), (6, 15), (10, 15), (14, 15), (18, 15)]
-    % driver_locs = [(0, 0), (2, 2), (4, 4), (6, 6), (8, 8), (10, 10), (12, 12), (14, 14), (16, 16), (18, 18)]
-    % return (n, m, l, rider_vals, rider_locs, rider_dests, driver_locs)
-
-    Depicted by the following grid representation is the second example, using similar conventions as the first example:
-
-    \begin{figure}[H]
-        \centering
-        \resizebox{0.5\textwidth}{!}{
-            \begin{tikzpicture}
-                \draw[step=1cm,gray,very thin] (0,0) grid (20,20);
-                \draw[fill=red] (2,10) circle (0.3cm);
-                \node[left] at (1.7,10) {\Huge R1};
-                \draw[fill=red] (6,10) circle (0.3cm);
-                \node[left] at (5.7,10) {\Huge R2};
-                \draw[fill=red] (10,10) circle (0.3cm);
-                \node[left] at (9.7,10) {\Huge R3};
-                \draw[fill=red] (14,10) circle (0.3cm);
-                \node[left] at (13.7,10) {\Huge R4};
-                \draw[fill=red] (18,10) circle (0.3cm);
-                \node[left] at (17.7,10) {\Huge R5};
-                \draw[fill=blue] (0,0) circle (0.3cm);
-                \node[right] at (0.3,0) {\Huge D1};
-                \draw[fill=blue] (2,2) circle (0.3cm);
-                \node[right] at (2.3,2) {\Huge D2};
-                \draw[fill=blue] (4,4) circle (0.3cm);
-                \node[right] at (4.3,4) {\Huge D3};
-                \draw[fill=blue] (6,6) circle (0.3cm);
-                \node[right] at (6.3,6) {\Huge D4};
-                \draw[fill=blue] (8,8) circle (0.3cm);
-                \node[right] at (8.3,8) {\Huge D5};
-                \draw[fill=blue] (10,10) circle (0.3cm);
-                \node[right] at (10.3,10) {\Huge D6};
-                \draw[fill=blue] (12,12) circle (0.3cm);
-                \node[right] at (12.3,12) {\Huge D7};
-                \draw[fill=blue] (14,14) circle (0.3cm);
-                \node[right] at (14.3,14) {\Huge D8};
-                \draw[fill=blue] (16,16) circle (0.3cm);
-                \node[right] at (16.3,16) {\Huge D9};
-                \draw[fill=blue] (18,18) circle (0.3cm);
-                \node[right] at (18.3,18) {\Huge D10};
-
-                % draw red lines from rider loc to dest (width 0.1)
-                \draw[red, ultra thick] (2,10) -- (2,15);
-                \draw[red, ultra thick] (6,10) -- (6,15);
-                \draw[red, ultra thick] (10,10) -- (10,15);
-                \draw[red, ultra thick] (14,10) -- (14,15);
-                \draw[red, ultra thick] (18,10) -- (18,15);
-
-                % draw green circles at dest
-                \draw[fill=green] (2,15) circle (0.3cm);
-                \node[above] at (2,15.3) {\Huge Dest1};
-                \draw[fill=green] (6,15) circle (0.3cm);
-                \node[above] at (6,15.3) {\Huge Dest2};
-                \draw[fill=green] (10,15) circle (0.3cm);
-                \node[above] at (10,15.3) {\Huge Dest3};
-                \draw[fill=green] (14,15) circle (0.3cm);
-                \node[above] at (14,15.3) {\Huge Dest4};
-                \draw[fill=green] (18,15) circle (0.3cm);
-                \node[above] at (18,15.3) {\Huge Dest5};
-            \end{tikzpicture}
-        }
-    \end{figure}
-
-    The matching of the stable outcome illustrated by connecting a driver to the rider by a blue line, and by connecting the rider's location to the destination by a red line, for each edge between a rider and a driver:
-
-    \begin{figure}[H]
-        \centering
-        \input{figures/q10a_n=5_m=10_example_tag='2'.pgf}
-    \end{figure}
-
-    And the driver profits and rider prices for this stable outcome are as follows:
-
-    % Example 2:
-    % Total value allocated to riders and drivers: 101.0
-    % Matching: M=[1, 3, 5, 6, 7]
-    % Driver Allocations: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    % Rider Allocations: [17.0, 21.0, 25.0, 21.0, 17.0]
-    % Driver Profits: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    % Rider Prices: [13.0, 9.0, 5.0, 9.0, 13.0]
-
-    \begin{itemize}
-        \item Driver Profits: $[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]$
-        \item Rider Prices: $[13, 9, 5, 9, 13]$
-    \end{itemize}
-
-    The profits are sensible, as the stable outcome is calculated by the the market equilibrium algorithm which prioritizes lower prices for the buyers---which we modeled to be the riders when encoding the exchange network as a matching market context.
-
-    FIXME: FILL IN MORE
-
-    \paragraph{Example 3}
-
-    % def rider_driver_example_3():
     % n = 10
     % m = 5
     % l = 20
     % rider_vals = [50, 45, 40, 35, 30, 25, 30, 35, 40, 45]
     % rider_locs = [(1, 10), (3, 10), (5, 10), (7, 10), (9, 10), (11, 10), (13, 10), (15, 10), (17, 10), (19, 10)]
     % rider_dests = [(1, 15), (3, 15), (5, 15), (7, 15), (9, 15), (11, 15), (13, 15), (15, 15), (17, 15), (19, 15)]
-    % driver_locs = [(0, 0), (4, 4), (8, 8), (12, 12), (16, 16)]
+    % driver_locs = [(2, 2), (6, 6), (10, 10), (14, 14), (18, 18)]
     % return (n, m, l, rider_vals, rider_locs, rider_dests, driver_locs)
 
     Depicted by the following grid representation is the third example, using similar conventions as the first example:
@@ -922,16 +841,16 @@ This value function ensures economic rationality by capping the cost of a match 
                 \node[left] at (16.7,10) {\Huge R9};
                 \draw[fill=red] (19,10) circle (0.3cm);
                 \node[left] at (18.7,10) {\Huge R10};
-                \draw[fill=blue] (0,0) circle (0.3cm);
-                \node[right] at (0.3,0) {\Huge D1};
-                \draw[fill=blue] (4,4) circle (0.3cm);
-                \node[right] at (4.3,4) {\Huge D2};
-                \draw[fill=blue] (8,8) circle (0.3cm);
-                \node[right] at (8.3,8) {\Huge D3};
-                \draw[fill=blue] (12,12) circle (0.3cm);
-                \node[right] at (12.3,12) {\Huge D4};
-                \draw[fill=blue] (16,16) circle (0.3cm);
-                \node[right] at (16.3,16) {\Huge D5};
+                \draw[fill=blue] (2,2) circle (0.3cm);
+                \node[right] at (2.3,2) {\Huge D1};
+                \draw[fill=blue] (6,6) circle (0.3cm);
+                \node[right] at (6.3,6) {\Huge D2};
+                \draw[fill=blue] (10,10) circle (0.3cm);
+                \node[right] at (10.3,10) {\Huge D3};
+                \draw[fill=blue] (14,14) circle (0.3cm);
+                \node[right] at (14.3,14) {\Huge D4};
+                \draw[fill=blue] (18,18) circle (0.3cm);
+                \node[right] at (18.3,18) {\Huge D5};
 
                 % draw red lines from rider loc to dest (width 0.1)
                 \draw[red, ultra thick] (1,10) -- (1,15);
@@ -974,38 +893,117 @@ This value function ensures economic rationality by capping the cost of a match 
 
     \begin{figure}[H]
         \centering
-        \input{figures/q10a_n=10_m=5_example_tag='3'.pgf}
+        \input{figures/q10a_n=10_m=5_example_tag='2'.pgf}
     \end{figure}
 
     And the driver profits and rider prices for this stable outcome are as follows:
 
-    % Example 3:
-    % Total value allocated to riders and drivers: 156.0
-    % Matching: M=[0, 1, 2, None, None, None, None, None, 4, 3]
-    % Driver Allocations: [19, 25, 27, 25, 25]
-    % Rider Allocations: [15.0, 8.0, 3.0, 0, 0, 0, 0, 0, 3.0, 6.0]
-    % Driver Profits: [19, 25, 27, 25, 25]
-    % Rider Prices: [35.0, 37.0, 37.0, 35.0, 30.0, 25.0, 30.0, 35.0, 37.0, 39.0]
+    % Example 2:
+    % Total value allocated to riders and drivers: 158.0
+    % Matching: M=[0, 1, 2, None, None, None, None, None, 3, 4]
+    % Driver Allocations: [25, 27, 27, 25, 23]
+    % Rider Allocations: [11.0, 6.0, 3.0, 0, 0, 0, 0, 0, 3.0, 8.0]
+    % Driver Profits: [25, 27, 27, 25, 23]
+    % Rider Prices: [39.0, 39.0, 37.0, 35.0, 30.0, 25.0, 30.0, 35.0, 37.0, 37.0]
 
     \begin{itemize}
-        \item Driver Profits: $[19, 25, 27, 25, 25]$
-        \item Rider Prices: $[35, 37, 37, 35, 30, 25, 30, 35, 37, 39]$
+        \item Driver Profits: $[25, 27, 27, 25, 23]$
+        \item Rider Prices: $[39, 39, 37, 35, 30, 25, 30, 35, 37, 37]$
     \end{itemize}
 
-    The profits are sensible, as the stable outcome is calculated by the the market equilibrium algorithm which prioritizes lower prices for the buyers---which we modeled to be the riders when encoding the exchange network as a matching market context.
+    We observe that driver profits increase---which is expected given that the demand outgrew the supply, which thus heightened the competitive overbidding nature among the riders, amplified by the stability property of the outcome. Rider prices also increase, which is expected as the riders are competing with each other to provide the highest price to the drivers, and thus higher prices have increasing frequency.
 
-    FIXME: FILL IN MORE
+    Yet again, we see that riders positioned closer to the center of the grid can extract more value from the drivers, as their average distance from all drivers is lower (where their distance from their destination remains the same), which heightens competition between drivers for the rider, and thus the rider can extract lower prices. Similarly, drivers positioned closer to the center of the grid can extract more value from the riders, as their average distance from all riders is lower, which heightens competition between riders for the driver, and thus the driver can extract higher profits.
 
-    \item We implement a procedure that on a $100 \times 100$ grid, generates an exchange network context of $n$ riders and $m$ drivers with random locations and destinations, where each rider has value 100, and computes the stable outcome for this context. The following is the analysis of the results when running over different configurations of $(n, m)$ for many times.
+    \item We implement a procedure that on a $100 \times 100$ grid, generates an exchange network context of $n$ riders and $m$ drivers with random locations and destinations, where each rider has value 100, and computes the stable outcome for this context. The following is the analysis of the results when running over different configurations of $(n, m)$ for many times. We consider the prices and profits for different configurations of $(n, m)$---each exhibiting a different relationship between $n$ and $m$. We show the distribution of the prices and profits for the riders and drivers in each configuration, utilizing a histogram to depict the \textit{probability density function} of the prices/profits, with additional statistics such as the min, max, mean, median, standard deviation, and the amount of times the rider/driver was matched.
     
     \paragraph{Configuration 1: $n = m = 10$}
+    This configuration exhibits a scenario where there are equal number of drivers and riders. The following is the analysis of the distribution of the prices/profits for each individual rider/driver in this configuration, after using our procedure to generate random instances of this configuration:
+
+    \begin{itemize}
+        \item \textbf{Driver Profits:} We identify one prominent distributions of the driver profits in this configuration, depicted in \Cref{fig:q10b_n=10_m=10_dp}. The distribution is a right-skewed distribution, which accommodates most of the profits at the lower end (0-7) of the spectrum (80\%), with the rest being spread across the higher end of the spectrum (7-30), with gradually decreasing frequency as the profits increase.
+        
+        \begin{figure}[H]
+            \centering
+            \resizebox{0.5\textwidth}{!}{\input{figures/q10b/q10b_n=10_m=10_driver_2_profits.pgf}}
+            \caption{Driver Profits Distribution for $n = m = 10$}
+            \label{fig:q10b_n=10_m=10_dp}
+        \end{figure}
+        
+        The former is expected due to our algorithm from Question 9, which encodes the exchange network as a matching market context where the riders being the buyers and the drivers being the sellers. As the stable outcome is calculated by the market equilibrium algorithm which prioritizes lower prices for the buyers, the profits are thus lower. 
+        
+        The latter is also expected as the higher profits are, the more likely they are undercut by the other drivers---i.e., the drivers are competing with each other to provide the lowest price to the riders, and thus higher profits have decreasing frequency.
+
+        \item \textbf{Rider Prices:} We identify one prominent distributions of the rider prices in this configuration, depicted in \Cref{fig:q10b_n=10_m=10_rp}. The distribution is a left-skewed distribution, which favors higher prices, with most of the prices being at the higher end of the spectrum (85-100), with gradually decreasing frequency as the prices decrease.
+        
+        \begin{figure}[H]
+            \centering
+            \resizebox{0.5\textwidth}{!}{\input{figures/q10b/q10b_n=10_m=10_rider_1_prices.pgf}}
+            \caption{Rider Prices Distribution for $n = m = 10$}
+            \label{fig:q10b_n=10_m=10_rp}
+        \end{figure}
+
+        It is noticeable that the density of the prices is more spread out then the rider's profits. As already mentioned above, this is expected as our algorithm's nature is to prioritize lower prices for the buyers.
+
+        As for the decreasing frequency as the prices decrease, this is also expected, as the lower the price, the more likely it is overbid by other riders---i.e., the stability requirement of the outcome induces that the riders compete with each other to provide the highest price to the drivers, and thus lower prices have decreasing frequency.
+
+    \end{itemize}
 
 
-    \paragraph{Configuration 2: $5 = n < m = 20$}
+    \paragraph{Configuration 2: $5 = n << m = 20$}
+    This configuration exhibits a scenario where there are more drivers than riders---an example of higher supply than demand. The following is the analysis of the distribution of the prices/profits for each individual rider/driver in this configuration, after using our procedure to generate random instances of this configuration:
 
+    \begin{itemize}
+        \item \textbf{Driver Profits:} We identify one prominent distributions of the driver profits in this configuration, depicted in \Cref{fig:q10b_n=5_m=20_dp}. The distribution is that of having virtually all profits at 0, with very few times where the profits are non-zero. Naturally we also see that match count for drivers drop significantly from 100 (in the $n = m = 10$ configuration) to $\approx 40$.
+        
+        \begin{figure}[H]
+            \centering
+            \resizebox{0.5\textwidth}{!}{\input{figures/q10b/q10b_n=5_m=20_driver_2_profits.pgf}}
+            \caption{Driver Profits Distribution for $5 = n << m = 20$}
+            \label{fig:q10b_n=5_m=20_dp}
+        \end{figure}
 
-    \paragraph{Configuration 3: $20 = n > m = 5$}
+        The distribution is expected, as the more drivers than riders, the more supply than demand, and thus the more likely it is that some drivers will not be matched with any riders, and thus have a profit of 0. This also heightens the competitiveness between drivers described in the previous configuration. This explains why we see such a drop in the average profit per driver (from $\approx 3$ in the $n = m = 10$ configuration to $\approx 0$ in this configuration).
 
+        \item \textbf{Rider Prices:} We identify one prominent distributions of the rider prices in this configuration, depicted in \Cref{fig:q10b_n=5_m=20_rp}. The distribution is a more spread-out version of the rider prices in the $n = m = 10$ configuration, with the prices being more spread out across the spectrum, with much higher frequency at the lower ends of the spectrum and a significant drop in average rider price (from $\approx 83$ in the $n = m = 10$ configuration to $\approx 70$ in this configuration).
+        
+        \begin{figure}[H]
+            \centering
+            \resizebox{0.5\textwidth}{!}{\input{figures/q10b/q10b_n=5_m=20_rider_3_prices.pgf}}
+            \caption{Rider Prices Distribution for $5 = n << m = 20$}
+            \label{fig:q10b_n=5_m=20_rp}
+        \end{figure}
+
+        This is expected, as the higher supply than demand means that the riders have more options to choose from, and thus the prices are more spread out (due to heightened competition between drivers).
+    \end{itemize}
+
+    \paragraph{Configuration 3: $20 = n >> m = 5$}
+    This configuration exhibits a scenario where there are more riders than drivers---an example of higher demand than supply. The following is the analysis of the distribution of the prices/profits for each individual rider/driver in this configuration, after using our procedure to generate random instances of this configuration:
+
+    \begin{itemize}
+        \item \textbf{Driver Profits:} We identify one prominent distributions of the driver profits in this configuration, depicted in \Cref{fig:q10b_n=20_m=5_dp}. The distribution is structured similarly to the previous configurations, only that there is much more density at the higher ends of the spectrum, with the average profit rising significantly to $\approx 20$, and the match amount rises back to $\approx 100$.
+        
+        \begin{figure}[H]
+            \centering
+            \resizebox{0.5\textwidth}{!}{\input{figures/q10b/q10b_n=20_m=5_driver_1_profits.pgf}}
+            \caption{Driver Profits Distribution for $20 = n >> m = 5$}
+            \label{fig:q10b_n=20_m=5_dp}
+        \end{figure}
+
+        The distribution is expected, as the more riders than drivers, the more demand than supply, and thus the more likely it is that drivers will be matched with riders, and the more the overbid competition between riders is heightened.
+
+        \item \textbf{Rider Prices:} We identify one prominent distributions of the rider prices in this configuration, depicted in \Cref{fig:q10b_n=20_m=5_rp}. The distribution is a less-spread out version of the rider prices in the $n = m = 10$ configuration, with the prices being more concentrated at the higher ends of the spectrum, with much higher frequency at the higher ends of the spectrum and a significant rise in average rider price (from $\approx 83$ in the $n = m = 10$ configuration to $\approx 96$ in this configuration). Additionally, naturally, we observe that the match amount drops significantly from $\approx 100$ (in the previous configurations) to $\approx 25$ in this configuration.
+        
+        \begin{figure}[H]
+            \centering
+            \resizebox{0.5\textwidth}{!}{\input{figures/q10b/q10b_n=20_m=5_rider_3_prices.pgf}}
+            \caption{Rider Prices Distribution for $20 = n >> m = 5$}
+            \label{fig:q10b_n=20_m=5_rp}
+        \end{figure}
+
+        This is expected, as the higher demand than supply heightens the already-competitive over-bidding nature of the riders under a stable outcome, and thus the prices are more concentrated at the higher ends of the spectrum.
+
+    \end{itemize}
     
 \end{enumerate}
 

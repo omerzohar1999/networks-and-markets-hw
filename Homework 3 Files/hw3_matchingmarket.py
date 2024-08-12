@@ -766,7 +766,7 @@ def brd_on_gsp(n, m, V) -> '(V_, iteration_count, social_value_pne, max_social_v
     agents = np.arange(n)
     V_ = np.random.randint(0, V + 1) # any valuation out of this range is dominated by a valuation in this range
 
-    # visited states array
+    # visited states array 
     visited_states = set(V_.tobytes())
 
     # run BRD

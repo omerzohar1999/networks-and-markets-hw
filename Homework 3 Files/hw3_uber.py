@@ -82,25 +82,14 @@ def rider_driver_example_1():
     driver_locs = [(2, 2), (6, 6), (10, 10), (14, 14), (18, 18)]
     return (n, m, l, rider_vals, rider_locs, rider_dests, driver_locs)
 
-
 def rider_driver_example_2():
-    n = 5
-    m = 10
-    l = 20
-    rider_vals = [30] * 5
-    rider_locs = [(2, 10), (6, 10), (10, 10), (14, 10), (18, 10)]
-    rider_dests = [(2, 15), (6, 15), (10, 15), (14, 15), (18, 15)]
-    driver_locs = [(0, 0), (2, 2), (4, 4), (6, 6), (8, 8), (10, 10), (12, 12), (14, 14), (16, 16), (18, 18)]
-    return (n, m, l, rider_vals, rider_locs, rider_dests, driver_locs)
-
-def rider_driver_example_3():
     n = 10
     m = 5
     l = 20
     rider_vals = [50, 45, 40, 35, 30, 25, 30, 35, 40, 45]
     rider_locs = [(1, 10), (3, 10), (5, 10), (7, 10), (9, 10), (11, 10), (13, 10), (15, 10), (17, 10), (19, 10)]
     rider_dests = [(1, 15), (3, 15), (5, 15), (7, 15), (9, 15), (11, 15), (13, 15), (15, 15), (17, 15), (19, 15)]
-    driver_locs = [(0, 0), (4, 4), (8, 8), (12, 12), (16, 16)]
+    driver_locs = [(2, 2), (6, 6), (10, 10), (14, 14), (18, 18)]
     return (n, m, l, rider_vals, rider_locs, rider_dests, driver_locs)
 
 def q10a_analysis():
@@ -142,7 +131,6 @@ def q10a_analysis():
 
     analyze_stable_outcome(rider_driver_example_1(), "1")
     analyze_stable_outcome(rider_driver_example_2(), "2")
-    analyze_stable_outcome(rider_driver_example_3(), "3")
 
 # === Problem 10(b) ===
 def random_riders_drivers_stable_outcomes(n, m):
@@ -163,29 +151,98 @@ def random_riders_drivers_stable_outcomes(n, m):
     # get stable outcome
     return stable_outcome(n, m, V)
 
+def random_riders_drivers_stable_outcomes_for_analysis(n, m):
+    """Generates n riders, m drivers, each located randomly on the grid,
+    with random destinations, each rider with a ride value of 100,
+    and returns the stable outcome."""
+    value = 100
+
+    # generate random riders, drivers, and destinations
+    rider_vals = [value] * n
+    rider_locs = np.random.randint(0, 100, (n, 2))
+    rider_dests = np.random.randint(0, 100, (n, 2))
+    driver_locs = np.random.randint(0, 100, (m, 2))
+
+    # generate exchange network
+    n, m, V = exchange_network_from_uber(n, m, 100, rider_vals, rider_locs, rider_dests, driver_locs)
+
+    # get stable outcome
+    return stable_outcome(n, m, V), rider_vals
+
 def q10b_analysis():
 
     # given an amount of riders and drivers, generate 100 random stable outcomes and analyze them
     def analyze_outcomes(n, m):
         # get 100 random stable outcomes
-        results = [random_riders_drivers_stable_outcomes(n, m) for _ in range(100)]
+        results = [random_riders_drivers_stable_outcomes_for_analysis(n, m) for _ in range(100)]
         
         # get the list of profits for the drivers
-        driver_profits = [results[i][2] for i in range(100)]
+        driver_profits = [results[i][0][2] for i in range(100)]
+
+        # driver match amount
+        driver_match_amount = [sum([1 if j in results[i][0][0] else 0 for i in range(100)]) for j in range(m)]
 
         # get the list of estimated prices for the riders
-        rider_prices = [list(np.array([100] * n) - np.array(results[i][1])) for i in range(100)]
+        rider_prices = [list(np.array(results[i][1]) - np.array(results[i][0][1])) for i in range(100)]
 
-        # plot
-        plt.hist(driver_profits, bins=5)
-        plt.title(f"Driver Profits for {n=}, {m=}")
-        plt.savefig(f"q10b_{n=}_{m=}_driver_profits.png")
-        plt.show()
+        # rider match amount
+        rider_match_amount = [sum([1 if results[i][0][0][j] is not None else 0 for i in range(100)]) for j in range(n)]
 
-        plt.hist(rider_prices, bins=5)
-        plt.title(f"Rider Prices for {n=}, {m=}")
-        plt.savefig(f"q10b_{n=}_{m=}_rider_prices.png")
-        plt.show()
+        # plot profits histogram for each driver
+        for i in range(m):
+
+            # profits list
+            driver_profits_list = [driver_profits[j][i] for j in range(100)]
+
+            # print avg, min, max, median, and std
+            avg = np.mean(driver_profits_list)
+            min = np.min(driver_profits_list)
+            max = np.max(driver_profits_list)
+            median = np.median(driver_profits_list)
+            std = np.std(driver_profits_list)
+            print(f"Driver {i} Profits for {n=}, {m=}: {avg=}, {min=}, {max=}, {median=}, {std=}, {driver_match_amount[i]=}")
+
+            # plot histogram and the min, max, median (std in legend)
+            plt.figure() # create a new figure
+            plt.hist(driver_profits_list, bins=5)
+            plt.axvline(avg, color='k', linestyle='--', linewidth=1, label=f"Average={avg:.2f}")
+            plt.axvline(min, color='r', linestyle='--', linewidth=1, label=f"Min={min:.2f}")
+            plt.axvline(max, color='y', linestyle='--', linewidth=1, label=f"Max={max:.2f}")
+            plt.axvline(median, color='g', linestyle='--', linewidth=1, label=f"Median={median:.2f}")
+            plt.legend(title=f'Standard Deviation: {std:.2f}\nMatch Amount: {driver_match_amount[i]}')
+            plt.title(f"Driver Profits for {n=}, {m=}")
+            plt.xlabel("Profits")
+            plt.ylabel("Frequency")
+            plt.savefig(f"q10b_{n=}_{m=}_driver_{i}_profits.png")
+            plt.savefig(f"q10b_{n=}_{m=}_driver_{i}_profits.pgf")
+            
+        # plot prices histogram for each rider
+        for i in range(n):
+            
+            # prices list
+            rider_prices_list = [rider_prices[j][i] for j in range(100)]
+            
+            # print avg, min, max, median, and std
+            avg = np.mean(rider_prices_list)
+            min = np.min(rider_prices_list)
+            max = np.max(rider_prices_list)
+            median = np.median(rider_prices_list)
+            std = np.std(rider_prices_list)
+            print(f"Rider {i} Prices for {n=}, {m=}: {avg=}, {min=}, {max=}, {median=}, {std=}, {rider_match_amount[i]=}")
+
+            # plot
+            plt.figure() # create a new figure
+            plt.hist(rider_prices_list, bins=5)
+            plt.axvline(avg, color='k', linestyle='--', linewidth=1, label=f"Average={avg:.2f}")
+            plt.axvline(min, color='r', linestyle='--', linewidth=1, label=f"Min={min:.2f}")
+            plt.axvline(max, color='y', linestyle='--', linewidth=1, label=f"Max={max:.2f}")
+            plt.axvline(median, color='g', linestyle='--', linewidth=1, label=f"Median={median:.2f}")
+            plt.legend(title=f'Standard Deviation: {std:.2f}\nMatch Amount: {rider_match_amount[i]}')
+            plt.title(f"Rider Prices for {n=}, {m=}")
+            plt.xlabel("Prices")
+            plt.ylabel("Frequency")
+            plt.savefig(f"q10b_{n=}_{m=}_rider_{i}_prices.png")
+            plt.savefig(f"q10b_{n=}_{m=}_rider_{i}_prices.pgf")
 
     # n = m = 10
     analyze_outcomes(10, 10)
