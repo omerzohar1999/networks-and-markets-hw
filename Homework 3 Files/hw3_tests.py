@@ -451,7 +451,7 @@ class TestVCG(unittest.TestCase):
             )
 
             # print success
-            print(f"[sanity_checks_q7c][rand][T{test_i}]: Test passed {market_eq_val} == {scipy_max_sv}")
+            print(f"[TestVCG][rand][T{test_i}]: Test passed {market_eq_val} == {scipy_max_sv}")
 
 class TestGSP(unittest.TestCase):
 
