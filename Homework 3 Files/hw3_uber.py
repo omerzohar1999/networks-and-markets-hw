@@ -298,9 +298,9 @@ def public_transport_stable_outcome(
     return (M, A_riders, A_drivers)
 
 
-def b3a_analysis():
-    # for a lot of random riders and drivers, run the public_transport_stable_outcome function
-    for i in range(100):
+def b3a_test():
+    # for some random riders and drivers, run the public_transport_stable_outcome function
+    for i in range(10):
         n = np.random.randint(5, 20)
         m = np.random.randint(5, 20)
         l = 100
@@ -311,13 +311,13 @@ def b3a_analysis():
         a = np.random.randint(5, 20)
         b = np.random.randint(1, 5)
         result = public_transport_stable_outcome(n, m, l, rider_vals, rider_locs, rider_dests, driver_locs, a, b)
-        print(f"Test {i}: {result=}")
+        print(f"Bonus 3a Random Test {i}: {result=}")
 
 def main():
     # TODO: Put your analysis and plotting code here, if any
     q10a_analysis()
     q10b_analysis()
-    b3a_analysis()
+    # b3a_test()
 
 
 if __name__ == "__main__":

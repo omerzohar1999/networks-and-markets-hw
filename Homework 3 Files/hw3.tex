@@ -826,7 +826,7 @@
 
 \section*{Part 5: Exchange Networks for Uber}
 \setcounter{section}{0}
-We will construct a simplified market scenario for a ridesharing app like Uber. Our world will consist of an $\ell \times \ell$ grid, and there will be two types of participants, riders and drivers.
+We will construct a simplified market scenario for a ride-sharing app like Uber. Our world will consist of an $\ell \times \ell$ grid, and there will be two types of participants, riders and drivers.
 
 \begin{itemize}
     \item A rider $R$ is specified by a current location $(x_0, y_0) \in [\ell] \times [\ell]$, a desired destination $(x_1, y_1) \in [\ell] \times [\ell]$, and a value for reaching that destination.
@@ -866,7 +866,7 @@ Where $v(R_i, D_j)$ denotes the value of the edge between $R_i$ and $D_j$ in the
 
 \begin{enumerate}[label=(\alph*)]
 
-    \item We consider the following examples of exchange networks for Uber-like ridesharing apps, show their computed stable outcome, and argue the legitimacy of the computed driver profits and rider prices.
+    \item We consider the following examples of exchange networks for Uber-like ride-sharing apps, show their computed stable outcome, and argue the legitimacy of the computed driver profits and rider prices.
 
     \paragraph{Example 1}
 
@@ -880,7 +880,7 @@ Where $v(R_i, D_j)$ denotes the value of the edge between $R_i$ and $D_j$ in the
     % driver_locs = [(2, 2), (6, 6), (10, 10), (14, 14), (18, 18)]
     % return (n, m, l, rider_vals, rider_locs, rider_dests, driver_locs)
 
-    Depicted by the following grid representation, where red circles represent riders and blue circles represent drivers (note that the center of the grid has a rider and a driver yet only the driver is shown), and where red lines from the rider location (red circle) to the destination (green circle) represent the path the rider would like to take:
+    Depicted by the following grid representation, where red circles represent riders and blue circles represent drivers (note that the center of the grid has a rider and a driver, yet only the driver is shown), and where red lines from the rider location (red circle) to the destination (green circle) represent the path the rider would like to take:
 
     \begin{figure}[H]
         \centering
@@ -1071,17 +1071,17 @@ Where $v(R_i, D_j)$ denotes the value of the edge between $R_i$ and $D_j$ in the
 
     Yet again, we see that riders positioned closer to the center of the grid can extract more value from the drivers, as their average distance from all drivers is lower (where their distance from their destination remains the same), which heightens competition between drivers for the rider, and thus the rider can extract lower prices. Similarly, drivers positioned closer to the center of the grid can extract more value from the riders, as their average distance from all riders is lower, which heightens competition between riders for the driver, and thus the driver can extract higher profits.
 
-    \item We implement a procedure that on a $100 \times 100$ grid, generates an exchange network context of $n$ riders and $m$ drivers with random locations and destinations, where each rider has value 100, and computes the stable outcome for this context. The following is the analysis of the results when running over different configurations of $(n, m)$ for many times. We consider the prices and profits for different configurations of $(n, m)$---each exhibiting a different relationship between $n$ and $m$. We show the distribution of the prices and profits for the riders and drivers in each configuration, utilizing a histogram to depict the \textit{probability density function} of the prices/profits, with additional statistics such as the min, max, mean, median, standard deviation, and the amount of times the rider/driver was matched.
+    \item We implemented a procedure that on a $100 \times 100$ grid, generates an exchange network context of $n$ riders and $m$ drivers with random locations and destinations, where each rider has value 100, and computes the stable outcome for this context. The following is the analysis of the results when running over different configurations of $(n, m)$ for many times. We consider the prices and profits for different configurations of $(n, m)$---each exhibiting a different relationship between $n$ and $m$. We show the distribution of the prices and profits for the riders and drivers in each configuration, utilizing a histogram to depict the \textit{probability density function} of the prices/profits, with additional statistics such as the min, max, mean, median, standard deviation, and the amount of times the rider/driver was matched.
     
     \paragraph{Configuration 1: $n = m = 10$}
-    This configuration exhibits a scenario where there are equal number of drivers and riders. The following is the analysis of the distribution of the prices/profits for each individual rider/driver in this configuration, after using our procedure to generate random instances of this configuration:
+    This configuration exhibits a scenario where there is an equal number of drivers and riders. The following is the analysis of the distribution of the prices/profits for each individual rider/driver in this configuration, after using our procedure to generate random instances of this configuration:
 
     \begin{itemize}
         \item \textbf{Driver Profits:} We identify one prominent distributions of the driver profits in this configuration, depicted in \Cref{fig:q10b_n=10_m=10_dp}. The distribution is a right-skewed distribution, which accommodates most of the profits at the lower end (0-7) of the spectrum (80\%), with the rest being spread across the higher end of the spectrum (7-30), with gradually decreasing frequency as the profits increase.
         
         \begin{figure}[H]
             \centering
-            \resizebox{0.5\textwidth}{!}{\input{figures/q10b/q10b_n=10_m=10_driver_2_profits.pgf}}
+            \resizebox{0.5\textwidth}{!}{\input{figures/q10b/q10b_n=10_m=10_driver_1_profits.pgf}}
             \caption{Driver Profits Distribution for $n = m = 10$}
             \label{fig:q10b_n=10_m=10_dp}
         \end{figure}
@@ -1099,7 +1099,7 @@ Where $v(R_i, D_j)$ denotes the value of the edge between $R_i$ and $D_j$ in the
             \label{fig:q10b_n=10_m=10_rp}
         \end{figure}
 
-        It is noticeable that the density of the prices is more spread out then the rider's profits. As already mentioned above, this is expected as our algorithm's nature is to prioritize lower prices for the buyers.
+        It is noticeable that the density of the prices is more spread out than the driver's profits. As already mentioned above, this is expected as our algorithm's nature is to prioritize lower prices for the buyers.
 
         As for the decreasing frequency as the prices decrease, this is also expected, as the lower the price, the more likely it is overbid by other riders---i.e., the stability requirement of the outcome induces that the riders compete with each other to provide the highest price to the drivers, and thus lower prices have decreasing frequency.
 
@@ -1130,7 +1130,7 @@ Where $v(R_i, D_j)$ denotes the value of the edge between $R_i$ and $D_j$ in the
             \label{fig:q10b_n=5_m=20_rp}
         \end{figure}
 
-        This is expected, as the higher supply than demand means that the riders have more options to choose from, and thus the prices are more spread out (due to heightened competition between drivers).
+        This is expected, as the higher supply than demand means that the riders have more options to choose from, and thus the prices have more density on the lower end in this configuration (due to heightened competition between drivers), compared to the previous configuration.
     \end{itemize}
 
     \paragraph{Configuration 3: $20 = n \gg m = 5$}
@@ -1141,14 +1141,14 @@ Where $v(R_i, D_j)$ denotes the value of the edge between $R_i$ and $D_j$ in the
         
         \begin{figure}[H]
             \centering
-            \resizebox{0.5\textwidth}{!}{\input{figures/q10b/q10b_n=20_m=5_driver_1_profits.pgf}}
+            \resizebox{0.5\textwidth}{!}{\input{figures/q10b/q10b_n=20_m=5_driver_4_profits.pgf}}
             \caption{Driver Profits Distribution for $20 = n >> m = 5$}
             \label{fig:q10b_n=20_m=5_dp}
         \end{figure}
 
         The distribution is expected, as the more riders than drivers, the more demand than supply, and thus the more likely it is that drivers will be matched with riders, and the more the overbid competition between riders is heightened.
 
-        \item \textbf{Rider Prices:} We identify one prominent distributions of the rider prices in this configuration, depicted in \Cref{fig:q10b_n=20_m=5_rp}. The distribution is a less-spread out version of the rider prices in the $n = m = 10$ configuration, with the prices being more concentrated at the higher ends of the spectrum, with much higher frequency at the higher ends of the spectrum and a significant rise in average rider price (from $\approx 83$ in the $n = m = 10$ configuration to $\approx 96$ in this configuration). Additionally, naturally, we observe that the match amount drops significantly from $\approx 100$ (in the previous configurations) to $\approx 25$ in this configuration.
+        \item \textbf{Rider Prices:} We identify one prominent distributions of the rider prices in this configuration, depicted in \Cref{fig:q10b_n=20_m=5_rp}. The distribution is a less-spread out version of the rider prices than in the $n = m = 10$ configuration, with the prices being more concentrated at the higher ends of the spectrum, with much higher frequency at the higher ends of the spectrum and a significant rise in average rider price (from $\approx 83$ in the $n = m = 10$ configuration to $\approx 96$ in this configuration). Additionally, naturally, we observe that the match amount drops significantly from $\approx 100$ (in the previous configurations) to $\approx 25$ in this configuration.
         
         \begin{figure}[H]
             \centering
@@ -1165,39 +1165,59 @@ Where $v(R_i, D_j)$ denotes the value of the edge between $R_i$ and $D_j$ in the
 
 
 \section{Question 11}
-We can increase an edge's value if the destination is close to a high-value location.
+Denote the original value function of the edge between the rider $R$ and the driver $D$ as $v(\overrightarrow{RD})$---as defined in Question 9. To account for driver's drive location preferences in our exchange network, we can modify the value function of the edge between a rider $R$ and a driver $D$ to incorporate the driver's preference for their drive location.
+
+This can be done in many ways, for example by lowering the edge value with the Manhattan distance between the rider's location and the closest high-value location to the driver's location. That is
+
+\begin{align*}
+    & \hat{v}(\overrightarrow{RD}) = v(\overrightarrow{RD}) - \min_{\text{HVL} \in \text{High-Value Locations}}{\left( \|R\text{'s location} - \text{HVL}\|_1 \right)} \\
+    & v'(\overrightarrow{RD}) = \begin{cases}
+        \hat{v}(\overrightarrow{RD}) & \text{if } \hat{v}(\overrightarrow{RD}) \geq 0 \\
+        0 & \text{otherwise}
+    \end{cases}
+\end{align*}
 
 \noindent
-This can be done in many ways, for example by lowering the value with the distance from the closest high-value location.
+Where $v'(\overrightarrow{RD})$ is the new value function of the edge between the rider $R$ and the driver $D$.
+
+Using the approach above, we can even incorporate the level of preference the driver has for their drive location by dividing the aforementioned Manhattan distance by the preference level of the high-value location. That is
+
+% \begin{equation*}
+%     \text{value decrease component by preference} = \min_{\text{HVL} \in \text{High-Value Locations}}{\left( \frac{\|\text{rider location} - \text{HVL}\|_1}{\text{preference value of } \text{HVL}} \right)}
+% \end{equation*}
+
+\begin{align*}
+    & \hat{v}(\overrightarrow{RD}) = v(\overrightarrow{RD}) - \min_{\text{HVL} \in \text{High-Value Locations}}{\left( \frac{\|R\text{'s location} - \text{HVL}\|_1}{D \text{'s preference value of HVL}} \right)} \\
+    & v'(\overrightarrow{RD}) = \begin{cases}
+        \hat{v}(\overrightarrow{RD}) & \text{if } \hat{v}(\overrightarrow{RD}) \geq 0 \\
+        0 & \text{otherwise}
+    \end{cases}
+\end{align*}
 
 \noindent
-Such calculation can also incorporate the value of the high-value location: 
-
-\begin{equation*}
-    \text{value decrease component by preference} = \min_{HVL \in \text{High-Value Locations}}{\left( \frac{\|\text{rider location} - HVL\|_1}{\text{preference value of } HVL} \right)}
-\end{equation*}
+Where $v'(\overrightarrow{RD})$ is the new value function of the edge between the rider $R$ and the driver $D$, and where we assume that the driver has some preference value for each high-value location it acknowledges.
 
 \section{Bonus Question 3}
+
+We assume that the city implements a public transportation system, where the cost to take the public transporation system is $a + b \cdot \textit{dist}(\text{initial location}, \text{destination})$, where $a$ is a fixed base fare and $b$ is some constant factor multiplier. Furthermore, anyone can take this public transportation system from any location.
 
 \begin{enumerate}[label=(\alph*)]
 
     \item 
-    We simulated this as $n$ additional drivers emulating public transportation, where the cost of driving is as described.
+    To implement a procedure that includes the public transportation option in when computing the stable outcome of transportation network defined in previous questions, we simulated this as $n$ additional drivers emulating public transportation, where the cost of driving is as described, given that there are $n$ riders. We then computed the stable outcome for this new network.
 
-    \noindent
     This ensures that all players have the ability to choose public transportation instead of Uber.
 
-    \noindent
-    Since we still have a bipartite graph, we know that a stable matching must exist.
+    Since we still have a bipartite graph, we know that a stable matching must exist, per Theorem 9.4 in the notes.
     
     \item 
-    Higher values of $a$ mean that public transportation becomes less attractive for everyone.
+    We are tasked with choosing different values for $a$ and $b$ and discuss how it affects the prices charged to riders/profits of drivers. For that we note the following:
 
-    \noindent
-    Higher values of $b$ mean that public transportation is more reliable for shorter distances.
-
-    \noindent
-    If $b>1$, the cost of driving with public transportation is higher than with Uber (so with a short distance between an Uber and a rider, it might be preferable to take an Uber, depending on the base fare $a$).
+    \begin{itemize}
+        \item Higher values of $a$ mean that public transportation becomes less attractive for everyone.
+        \item Higher values of $b$ mean that public transportation is more reliable for shorter distances.
+        \item If $b>1$, the cost of merely \textit{driving the rider from its location to its destination} with public transportation is higher than with Uber (so with a short distance between an Uber and a rider, it might be preferable to take an Uber, depending on the base fare $a$).
+    \end{itemize}
 
 \end{enumerate}
 
