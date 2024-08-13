@@ -435,7 +435,7 @@
 
 \begin{enumerate}[label=(\alph*)]
 
-    \item In this part we analyze how the prices output by the VCG mechanism compare with the ones output by the algorithm of Theorem 8.8 (finding a market equilibrium $(p, M)$). The following are the examples we analyze and their corresponding results for each mechanism:
+    \item[(b)] In this part we analyze how the prices output by the VCG mechanism compare with the ones output by the algorithm of Theorem 8.8 (finding a market equilibrium $(p, M)$). The following are the examples we analyze and their corresponding results for each mechanism:
     
     \begin{enumerate}[label=\arabic*.]
         \item Example 1:
@@ -614,7 +614,7 @@
     
     As we've seen in class, the socially optimal assignment in a \textit{markets-for-bundles} of identical goods, is that the larger bundles are assigned to the higher valuation of a singular good. Thus, as the valuation of the singular good increases, the bidder $b_i$ (w.l.o.g. the bidders are sorted by decreasing valuation of the singular goods) is assigned a larger bundle $B_i$ (w.l.o.g. the bundles are sorted by decreasing sizes $c_i$). Without said bidder $b_i$, the bundles assignment shifts for the lower-bidding bidders. That is, $\forall j > i \, . \, b_j \text{ is changed to be assigned } B_{j-1}$. This sets the externality to be $\sum_{j=i+1}^{n} (c_{j-1} - c_j) \cdot t_j$ for bidder $b_i$. This is the price, and in our case, it's $p^{VCG}_i = \sum_{j=i+1}^{n} t_j$. 
     
-    We are thus able to conclude that as the valuation of the singular good increases (i.e., as $i$ grows), the externality of the bidder (of $b_i$) should increase. Moreover, due to the uniformity of the randomization of the values $t_i \sim U([a, a+1, ..., b])$ in our context (where $a = 1, b = 50$), and as $c_j - c_{j+1} = 1$ in our context, we should see the externalities remaining under the $y = \left(\frac{a+b}{2}\right) \cdot (n - x - 1)$ line, and approaching it as the valuation of the bidders for the singular good increases. This is in fact what we see in \Cref{fig:b2a}.
+    We are thus able to conclude that as the valuation of the singular good decrease (i.e., as $i$ grows), the externality of the bidder (of $b_i$) should decrease. Moreover, due to the uniformity of the randomization of the values $t_i \sim U([a, a+1, ..., b])$ in our context (where $a = 1, b = 50$), and as $c_j - c_{j+1} = 1$ in our context, we should see the externalities remaining under the $y = \left(\frac{a+b}{2}\right) \cdot (n - x - 1)$ line, and approaching it as the valuation of the bidders for the singular good increases. This is in fact what we see in \Cref{fig:b2a}.
 
     \item We implemented a GSP pricing mechanism in a \textit{matching-market} context. The following are comparisons of the prices output by the GSP mechanism and the VCG mechanism over different contexts.
     
@@ -654,7 +654,7 @@
         \label{fig:b2b}
     \end{figure*}
 
-    Unsurprisingly, the GSP prices are also decreasing as the valuation of the bidders for the singular good (up to tie-breaks) decreases. This is expected, as for every bidder $b_i$, the price/item is set to be the valuation of the next bidder $t_{i+1}$ (where $t_{n + 1} = t_n$), and the larger bundles are assigned to the higher-valuing bidders (as in the VCG mechanism). Thus, the GSP price for the bidder, denoted by $p^{GSP}_i = t_{i+1} \cdot c_i$, is increasing with the valuation of the bidders for the singular good (i.e., with $i$). This is in fact what we see in \Cref{fig:b2b}.
+    Unsurprisingly, the GSP prices are also decreasing as the valuation of the bidders for the singular good (up to tie-breaks) decreases. This is expected, as for every bidder $b_i$, the price/item is set to be the valuation of the next bidder $t_{i+1}$ (where $t_{n + 1} = t_n$), and the larger bundles are assigned to the higher-valuing bidders (as in the VCG mechanism). Thus, the GSP price for the bidder, denoted by $p^{GSP}_i = t_{i+1} \cdot c_i$, is decreasing as the valuation of the bidders for the singular good decreases (i.e., as $i$ grows). This is in fact what we see in \Cref{fig:b2b}.
 
     In our case, this price is $p^{GSP}_i = t_{i+1} \cdot (n - i + 1) \geq \sum_{j=i+1}^{n} t_j = p^{VCG}_i$. Thus, we expect that the GSP prices will be greater than the VCG prices, and this is indeed what we see in \Cref{fig:b2b}.
 
@@ -718,7 +718,7 @@
     An additional context in which the VCG and GSP prices are wildly different is when the bundle sizes are relatively small and similar, and where the valuations of the bidders for the singular good are such that $t_i \gg t_{i+1} \cdot (n - i)$. For instance, take $n = m = 10$, $t_i = 2^{i + 3}$, and $c_i = n - i + 1$. In this case,
 
     \begin{center}
-        $p^{VCG}_i = \sum_{j=i+1}^{n} \left( c_{j-1} - c_j \right) \cdot t_j = \sum_{j=i+1}^{n} t_j \approx t_{i+1} \cdot (n - i) \ll t_{i+1} \cdot c_i = p^{GSP}_i$
+        $p^{VCG}_i = \sum_{j=i+1}^{n} \left( c_{j-1} - c_j \right) \cdot t_j = \sum_{j=i+1}^{n} t_j \ll t_{i+1} \cdot (n - i) \approx t_{i+1} \cdot c_i = p^{GSP}_i$
     \end{center}
 
     This is indeed what we see in \Cref{fig:b2b_different_2}.
@@ -736,7 +736,7 @@
 
     \item We turn to analyze the BRD procedure on a GSP matching market auction, here a player's strategy is their valuation report. We have in place mechanisms inside the procedure that identify cycles in order to break them and report a divergence of the procedure.
     
-    After implementing the \textit{BRD on GSP matching market auctions} procedure, we gather statistics about the convergence of the BRD procedure on a GSP matching market auction. We run the BRD procedure on many randomized examples such as in part (a), for different configurations of $n, m$ and the maximum valuation $t$ (which was 50 in part (a)). We $\approx 20$ randomized examples from each of the following configurations, all of which had $t = 15$:
+    After implementing the \textit{BRD on GSP matching market auctions} procedure, we gather statistics about the convergence of the BRD procedure on a GSP matching market auction. We run the BRD procedure on many randomized examples such as in part (a), for different configurations of $n, m$ and the maximum valuation $t$ (which was 50 in part (a)). We run $\approx 20$ randomized examples from each of the following configurations, all of which had $t = 15$:
 
     \begin{itemize}
         \item $n = 5 = m$

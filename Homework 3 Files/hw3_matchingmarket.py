@@ -436,7 +436,7 @@ def vcg(n: 'players', m: 'items', V: 'valuations'):
 
     # payments
     maximum_social_value = calc_max_social_value(n, m, rect_V)
-    P = np.array([maximum_social_value - V[i][M[i]] if M[i] is not None else 0 for i in range(n)])
+    P = np.array([maximum_social_value - (V[i][M[i]] if M[i] is not None else 0) for i in range(n)])
 
     # pivot (maximum social value at externality)
     H = np.zeros((n,))

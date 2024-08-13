@@ -182,6 +182,77 @@ class TestMaximumMatching(unittest.TestCase):
             self.assertEqual(nx_max_matching, len(list(filter(lambda x: x != None, WDG_matching))))
             print(f"[MaxMatchingTest][{i}] Passed: {nx_max_matching} == {len(list(filter(lambda x: x != None, WDG_matching)))}")
 
+class TestConstrictedSet(unittest.TestCase):
+
+    def setUp(self):
+        self.test_amount = 200
+        self.left_side_node_amount = 30
+        self.right_side_node_amount = 30
+        self.total_node_amount = self.left_side_node_amount + self.right_side_node_amount
+        self.thresh = 0.97
+
+        # for probably constricted set
+        self.random_graphs = [create_random_bipartite_graph(self.left_side_node_amount, self.right_side_node_amount, self.thresh) for _ in range(self.test_amount)]
+
+        # for probably perfect matching
+        self.random_graphs += [create_random_bipartite_graph(self.left_side_node_amount, self.right_side_node_amount, 0.5) for _ in range(self.test_amount)]
+
+    def test_matching_or_cset(self):
+        
+        # calculate max flow value for each graph
+        for i, (G, C) in enumerate(self.random_graphs):
+
+            # calculate matching_or_cset
+            isPerfect, matching_or_cset_obj = matching_or_cset(self.left_side_node_amount, C)
+
+            # if the matching is perfect, assert that it is indeed a matching and is perfect
+            if isPerfect:
+
+                # calculate maximum matching for G using networkx
+                nx_matching = nx.bipartite.maximum_matching(G, top_nodes=list(range(self.left_side_node_amount)))
+                nx_max_matching = len(nx_matching) // 2 # each edge is counted twice
+
+                # denote the maximum matching we computed
+                WDG_matching = matching_or_cset_obj
+
+                # validate matching is indeed contained in the graph
+                self.assertTrue(
+                    all(C[i][WDG_matching[i]] == 1 for i in range(self.left_side_node_amount) if WDG_matching[i] is not None),
+                    msg="matching is not contained in the graph"
+                )
+
+                # Validate matching is indeed a matching
+                assert len(set(filter(lambda x: x != None, WDG_matching))) == len(list(filter(lambda x: x != None, WDG_matching))), f"[max_matching]: matching is not a matching as two riders are matched with the same driver, {WDG_matching=}, {n=}, {C=}"
+
+                # check if they are equal and perfect
+                self.assertEqual(nx_max_matching, len(list(filter(lambda x: x != None, WDG_matching))))
+                self.assertEqual(nx_max_matching, self.left_side_node_amount)
+                print(f"[MatchingOrCsetTest][MaxMatchingTest][{i}] Passed: {nx_max_matching} == {len(list(filter(lambda x: x != None, WDG_matching)))} == {self.left_side_node_amount}")
+
+            # if the matching is not perfect, assert that the returned set of vertices is constricted
+            else:
+
+                # calculate maximum matching for G using networkx
+                nx_matching = nx.bipartite.maximum_matching(G, top_nodes=list(range(self.left_side_node_amount)))
+                nx_max_matching = len(nx_matching) // 2 # each edge is counted twice
+
+                # assert that the matching is not perfect
+                self.assertTrue(nx_max_matching < self.left_side_node_amount)
+
+                # denote the constricted set we computed
+                constricted_set = matching_or_cset_obj
+
+                # validate it is a set
+                self.assertTrue(len(constricted_set) == len(set(constricted_set)))
+
+                # validate it is a constricted set
+                neighbors = list(set([j for k in constricted_set for j in range(self.right_side_node_amount) if C[k][j] == 1]))
+                self.assertTrue(
+                    len(neighbors) < len(constricted_set),
+                    msg="constricted set is not constricted"
+                )
+                print(f"[MatchingOrCsetTest][ConstrictedSetTest][{i}] Passed: {len(neighbors)} < {len(constricted_set)}")
+
 class TestMarketEquilibrium(unittest.TestCase):
 
     def setUp(self):
