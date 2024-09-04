@@ -18,29 +18,32 @@ import matplotlib.pyplot as plt
 class DirectedGraph:
     def __init__(self, number_of_nodes):
         """Assume that nodes are represented by indices/integers between 0 and number_of_nodes - 1."""
-        pass
+        self.n = number_of_nodes
+        self.edges = dict()
 
     def add_edge(self, origin_node, destination_node):
         """Adds an edge from origin_node to destination_node."""
-        pass
+        if origin_node not in self.edges:
+            self.edges[origin_node] = set()
+        self.edges[origin_node].add(destination_node)
 
     def edges_from(self, origin_node):
         """This method shold return a list of all the nodes destination_node such that there is
         a directed edge (origin_node, destination_node) in the graph."""
-        pass
+        return list(self.edges.get(origin_node, set()))
 
     def get_edge(self, origin_node, destination_node):
         """This method should return true is there is an edge from origin_node to destination_node
         and false otherwise"""
-        pass
+        return destination_node in self.edges.get(origin_node, set())
 
     def number_of_nodes(self):
         """This method should return the number of nodes in the graph"""
-        pass
+        return self.n
 
 
 # === Problem 7. ===
-def scaled_page_rank(G, num_iter, eps=1 / 7.0):
+def scaled_page_rank(G: DirectedGraph, num_iter: int, eps: int = 1 / 7.0):
     """This method, given a DirectedGraph G, runs the epsilon-scaled
     page-rank algorithm for num-iter iterations, for parameter eps,
     and returns a Dictionary where the keys are the set of
@@ -49,25 +52,59 @@ def scaled_page_rank(G, num_iter, eps=1 / 7.0):
 
     In the case of num_iter=0, all nodes should
     have weight 1/G.number_of_nodes()"""
-    pass
+    weights = [1 / G.number_of_nodes()] * G.number_of_nodes()
+    for _ in range(num_iter):
+        new_weights = [eps / G.number_of_nodes()] * G.number_of_nodes()
+        for i in range(G.number_of_nodes()):
+            for j in G.edges_from(i):
+                new_weights[j] += (1 - eps) * weights[i] / len(G.edges_from(i))
+        weights = new_weights
+    return {i: weights[i] for i in range(G.number_of_nodes())}
 
 
 def graph_15_1_left():
     """This method, should construct and return a DirectedGraph encoding the left example in fig 15.1
     Use the following indexes: A:0, B:1, C:2, Z:3"""
-    pass
+    G = DirectedGraph(4)
+    G.add_edge(0, 1)
+    G.add_edge(1, 2)
+    G.add_edge(2, 0)
+    G.add_edge(0, 3)
+    G.add_edge(3, 3)
+
+    return G
 
 
 def graph_15_1_right():
     """This method, should construct and return a DirectedGraph encoding the right example in fig 15.1
     Use the following indexes: A:0, B:1, C:2, Z1:3, Z2:4"""
-    pass
+    G = DirectedGraph(5)
+
+    G.add_edge(0, 1)
+    G.add_edge(1, 2)
+    G.add_edge(2, 0)
+    G.add_edge(0, 3)
+    G.add_edge(3, 4)
+    G.add_edge(0, 4)
+    G.add_edge(4, 3)
+
+    return G
 
 
 def graph_15_2():
     """This method, should construct and return a DirectedGraph encoding example 15.2
     Use the following indexes: A:0, B:1, C:2, A':3, B':4, C':5"""
-    pass
+    G = DirectedGraph(6)
+
+    G.add_edge(0, 1)
+    G.add_edge(1, 2)
+    G.add_edge(2, 0)
+
+    G.add_edge(3, 4)
+    G.add_edge(4, 5)
+    G.add_edge(5, 3)
+
+    return G
 
 
 def extra_graph_1():
@@ -85,12 +122,19 @@ def facebook_graph(filename="facebook_combined.txt"):
     """This method should return a DIRECTED version of the facebook graph as an instance of the DirectedGraph class.
     In particular, if u and v are friends, there should be an edge between u and v and an edge between v and u.
     """
-    pass
+    num_nodes = 4039
+    graph = DirectedGraph(num_nodes)
+    for line in open(filename):
+        i, j = list(map(int, line.strip().split(" ")))
+        graph.add_edge(i, j)
+        graph.add_edge(j, i)
+    return graph
 
 
 def main():
-    # TODO: Put your analysis and plotting code here for 8(b)
-    print("hello world")
+    fb_graph = facebook_graph()
+    ranks = scaled_page_rank(fb_graph, 25)
+    # TODO: 8 (c), (d)
 
 
 if __name__ == "__main__":
