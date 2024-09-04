@@ -134,7 +134,16 @@ def facebook_graph(filename="facebook_combined.txt"):
 def main():
     fb_graph = facebook_graph()
     ranks = scaled_page_rank(fb_graph, 25)
-    # TODO: 8 (c), (d)
+    # 8 (c): show nodes with highest and lowest ranks
+    sorted_ranks = sorted(
+        list(range(fb_graph.number_of_nodes())), key=lambda x: ranks[x]
+    )
+    print("Top 10 nodes:")
+    for i in sorted_ranks[-10:]:
+        print(i, ranks[i], len(fb_graph.edges_from(i)))
+    print("Bottom 10 nodes:")
+    for i in sorted_ranks[:10]:
+        print(i, ranks[i], len(fb_graph.edges_from(i)))
 
 
 if __name__ == "__main__":
