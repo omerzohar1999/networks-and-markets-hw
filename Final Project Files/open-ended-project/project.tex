@@ -1,0 +1,51 @@
+\title{
+    Open Ended Project\\
+    Networks and Markets
+}
+\author{
+    Omer Zohar
+    \and
+    Gil Aharoni
+    \and
+    Adam Tuby
+}
+
+\bibliographystyle{plain}
+
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+For this project, the topical issue we picked was the current war, and the topic learned in class we picked was traffic network games.\\
+We suggest an extension to the topic of traffic network games by analyzing sensitive roads.
+
+\section{Concept: Road Sensitivity}
+Given a traffic network game, we define Road Sensitivity for an edge $e$ by $MSW^G-MSW^{G\setminus\{e\}}$; namely, the difference in $MSW$ when removing $e$.\\
+This can be used to analyze possible damage a road can take during war, and its effect on supply chains.
+
+\section{Algorithm: Find Sensitive Roads}
+Given some algorithm $A$ to find MSW in some setting our game $G$ and all of its variations that remove exactly one edge, we present an algorithm that finds and sorts roads according to their sensitivity.\\
+But first, a note about the existence of $A$: There are games which can be modeled, for example, as a Linear Program, and thus LP algorithms satisfy $A$'s definition. There are more cases, but for our algorithm we will use $A$ more generally.\\
+Here is the algorithm:\\
+$FIND-ROAD-SENSITIVITY(G):$
+\begin{enumerate}
+    \item $MSW^G=A(G)$
+    \item $FOREACH$ $e\in E:$
+    \begin{enumerate}
+        \item $CALCULATE$ $G'=G\setminus\{e\}$
+        \item $MSW^{G\setminus\{e\}}=A(G')$
+    \end{enumerate}
+\item $RETURN$ $SORT(E,KEY=\lambda e \in E:MSW^G-MSW^{G\setminus\{e\}})$
+\end{enumerate}
+
+Correctness of the algorithm is trivial: for each edge, its road sensitivity is calculated by definition.
+
+\section{Usage}
+In cases where logistics corps plan a supply chain, and the enemy can damage roads, it might prove useful to check whether some roads are more sensitive, and perhaps build some extra roads to reduce reliance on said sensitive roads.\\
+
+On the other side, getting information about the enemy's supply chain and running this algorithm might find weak points that may inflict higher damage to the enemy's logistics.
+
+\end{document}
