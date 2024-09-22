@@ -139,9 +139,52 @@ class reference:
         g.add_edge(1, 9)
         return g
 
+    @staticmethod
+    def facebook_graph(filename = "facebook_combined.txt"):
+        ''' This method should return a DIRECTED version of the facebook graph as an instance of the DirectedGraph class.
+        In particular, if u and v are friends, there should be an edge between u and v and an edge between v and u.'''
+        with open(filename, mode="r") as f:
+            content = f.readlines()
+        content = [x.strip().split(' ') for x in content]
+
+        g = reference.DirectedGraph(4039)
+        for edge in content:
+            g.add_edge(origin_node=int(edge[0]), destination_node=int(edge[1]))
+            g.add_edge(origin_node=int(edge[1]), destination_node=int(edge[0]))
+
+        return g
+
+    @staticmethod
+    def question8b():
+        # Load Facebook graph
+        filepath = "facebook_combined.txt"
+        FB_g = reference.facebook_graph(filename = filepath)
+
+        # Run PR for 20 iterations
+        pr = reference.scaled_page_rank(graph = FB_g, num_iter=20)
+
+        return pr
+
 ####################################################################################################
 ########### UNIT TESTS #############################################################################
 ####################################################################################################
+def compare_ref_DG_to_DG(ref_G : reference.DirectedGraph, G : DirectedGraph):
+    for i in range(G.number_of_nodes()):
+        for j in range(G.number_of_nodes()):
+            if ref_G.check_edge(i, j) != G.get_edge(i, j):
+                return False
+    return True
+
+class TestPageRankGraphs(unittest.TestCase):
+
+    def setUp(self):
+        self.graph_pairs = [(graph_15_1_left(), reference.graph_15_1_left(), "graph_15_1_left"), (graph_15_1_right(), reference.graph_15_1_right(), "graph_15_1_right"), (graph_15_2(), reference.graph_15_2(), "graph_15_2")]
+
+    def test_graphs(self):
+        for G, ref_G, name in self.graph_pairs:
+            self.assertTrue(compare_ref_DG_to_DG(ref_G, G), f"[Compare Reference to Our Graphs][Test {name}] Failed")
+            print(f"[Compare Reference to Our Graphs][Test {name}] Passed")
+
 def create_random_directed_graph(n : int, threshold : float = 0.5):
     G = DirectedGraph(n)
     for i in range(n):
@@ -149,17 +192,6 @@ def create_random_directed_graph(n : int, threshold : float = 0.5):
             if i != j and random.random() > threshold:
                 G.add_edge(i, j)
     return G
-
-class TestPageRankGraphs(unittest.TestCase):
-
-    def setUp(self):
-        self.graph_pairs = [(graph_15_1_left(), reference.graph_15_1_left()), (graph_15_1_right(), reference.graph_15_1_right()), (graph_15_2(), reference.graph_15_2())]
-
-    def test_graphs(self):
-        for G, ref_G in self.graph_pairs:
-            for i in range(G.number_of_nodes()):
-                for j in range(G.number_of_nodes()):
-                    self.assertEqual(G.get_edge(i, j), ref_G.check_edge(i, j))
 
 def reference_DG_to_DG(ref_G : reference.DirectedGraph) -> DirectedGraph:
     G = DirectedGraph(ref_G.number_of_nodes())
@@ -195,8 +227,16 @@ class TestPageRank(unittest.TestCase):
                 i, eps = config
                 our_scores = scaled_page_rank(G, i, eps)
                 ref_scores = reference.scaled_page_rank(DG_to_reference_DG(G), i, eps)
-                self.assertTrue(compare_scores(our_scores, ref_scores))
-                print(f"[Our Graphs][Test {test_i}] {i=} {eps=} {our_scores=} {ref_scores=}")
+
+                # Verify that the scores are the same
+                self.assertTrue(compare_scores(our_scores, ref_scores), f"[Our Graphs][Test {test_i}] Failed: {i=} {eps=} {our_scores=} {ref_scores=}")
+
+                # Verify that the ranks are indeed valid ranks
+                # self.assertAlmostEqual(sum(our_scores.values()), 1.0, places=5) # TODO: Wait for response from TA
+                self.assertTrue(all(0 <= score <= 1 for score in our_scores.values()))
+                
+                # Print that the test passed
+                print(f"[Our Graphs][Test {test_i}] Passed: {i=} {eps=} {our_scores=} {ref_scores=}")
 
     def test_ref_graphs(self):
         for test_i, G in enumerate(self.ref_graphs):
@@ -204,8 +244,16 @@ class TestPageRank(unittest.TestCase):
                 i, eps = config
                 our_scores = scaled_page_rank(reference_DG_to_DG(G), i, eps)
                 ref_scores = reference.scaled_page_rank(G, i, eps)
-                self.assertTrue(compare_scores(our_scores, ref_scores))
-                print(f"[Ref Graphs][Test {test_i}] {i=} {eps=} {our_scores=} {ref_scores=}")
+
+                # Verify that the scores are the same
+                self.assertTrue(compare_scores(our_scores, ref_scores), f"[Ref Graphs][Test {test_i}] Failed: {i=} {eps=} {our_scores=} {ref_scores=}")
+
+                # Verify that the ranks are indeed valid ranks
+                # self.assertAlmostEqual(sum(our_scores.values()), 1.0, places=5, msg=f"Test {test_i}") # TODO: Wait for response from TA
+                self.assertTrue(all(0 <= score <= 1 for score in our_scores.values()))
+
+                # Print that the test passed
+                print(f"[Ref Graphs][Test {test_i}] Passed: {i=} {eps=} {our_scores=} {ref_scores=}")
 
     def test_random_graphs(self):
         for test_i, G in enumerate(self.random_graphs):
@@ -213,8 +261,42 @@ class TestPageRank(unittest.TestCase):
                 i, eps = config
                 our_scores = scaled_page_rank(G, i, eps)
                 ref_scores = reference.scaled_page_rank(DG_to_reference_DG(G), i, eps)
-                self.assertTrue(compare_scores(our_scores, ref_scores))
-                print(f"[Random Graphs][Test {test_i}] {i=} {eps=}")
+
+                # Verify that the scores are the same
+                self.assertTrue(compare_scores(our_scores, ref_scores), f"[Random Graphs][Test {test_i}] Failed: {i=} {eps=}")
+
+                # Verify that the ranks are indeed valid ranks
+                # self.assertAlmostEqual(sum(our_scores.values()), 1.0, places=5) # TODO: Wait for response from TA
+                self.assertTrue(all(0 <= score <= 1 for score in our_scores.values()))
+
+                # Print that the test passed
+                print(f"[Random Graphs][Test {test_i}] Passed: {i=} {eps=}")
+
+class TestProblem8(unittest.TestCase):
+
+    def test_same_graph(self):
+        reference_facebook_graph = reference.facebook_graph()
+        our_facebook_graph = facebook_graph()
+        self.assertTrue(compare_ref_DG_to_DG(reference_facebook_graph, our_facebook_graph), f"[Facebook Graph Comparison to Reference] Failed")
+        print(f"[Facebook Graph Comparison to Reference] Passed")
+
+    def test_page_rank(self):
+        # Calculate reference ranks
+        reference_ranks = reference.question8b()
+
+        # Calculate our ranks
+        fb_graph = facebook_graph()
+        ranks = scaled_page_rank(fb_graph, 25)
+
+        # Compare the ranks
+        self.assertTrue(compare_scores(ranks, reference_ranks), f"[Facebook PageRank Comparison to Reference] Failed")
+
+        # Verify that the ranks are indeed valid ranks
+        # self.assertAlmostEqual(sum(ranks.values()), 1.0, places=5) # TODO: Wait for response from TA
+        self.assertTrue(all(0 <= score <= 1 for score in ranks.values()))
+
+        # Print that the test passed
+        print(f"[Facebook PageRank Comparison to Reference] Passed")
 
 if __name__ == '__main__':
     unittest.main()

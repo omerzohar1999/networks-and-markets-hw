@@ -59,7 +59,13 @@ def scaled_page_rank(G: DirectedGraph, num_iter: int, eps: int = 1 / 7.0):
         for i in range(G.number_of_nodes()):
             for j in G.edges_from(i):
                 new_weights[j] += (1 - eps) * weights[i] / len(G.edges_from(i))
+
+        # TODO: Wait for response from TA
+        # if abs(sum(new_weights) - 1) > 1e-6:
+        #     raise ValueError(f"Sum of weights is not 1: {sum(new_weights)=}, {sum(weights)=}, iter={_}")
+
         weights = new_weights
+
     return {i: weights[i] for i in range(G.number_of_nodes())}
 
 
@@ -281,6 +287,7 @@ def main():
     ## Problem 8
     fb_graph = facebook_graph()
     ranks = scaled_page_rank(fb_graph, 25)
+
     # 8 (c): show nodes with highest and lowest ranks
     sorted_ranks = sorted(
         list(range(fb_graph.number_of_nodes())), key=lambda x: ranks[x]
