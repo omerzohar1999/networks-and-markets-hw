@@ -59,16 +59,48 @@
 \maketitle
 
 \section*{Part 4: Page Rank and Social Networks}
-\subsection*{8.3}
-Running PageRank on the given graph, we get that nodes with high ranks typically have higher degrees, and nodes with low ranks typically have lower degrees.\\
-The top 5 nodes with the highest page rank had the following degrees: 547, 1045, 792, 347, 755 (where top rank had 547 neighbors, and 5th had 755).\\
-The bottom 5 nodes with the lowest page rank had the following degrees: 1, 1, 1, 1, 1.\\
+\setcounter{section}{0}
 
-\subsection*{8.4}
-intuitively, the page rank of a node is the probability that a random walker will be at that node at a given time.\\
-If a node has a high rank, then starting a random walk from many nodes it is likely to arrive at that node.\\
-Since the graph is equivalent to an undirected one, it means that a high rank means that random walks from it might reach many nodes.\\
-If we want to quantify influence over people using it, it seems that the scaled page rank is a good measure.\\
+\section{Question 7}
+The two other simple test cases we used are:
 
+\begin{description}
+    \item[Extra Graph 1] The first graph is two cycles connected by a single edge (i.e., an infinite loop).
+    
+    \begin{figure}[H]
+        % the tex file at extra_graph_1.tex has \begin{tikzpicture}...\end{tikzpicture}
+        \centering
+        \resizebox{0.5\textwidth}{!}{%
+            \input{figures/extra_graph_1.tex}
+        }
+        \caption{Extra Graph 1}
+    \end{figure}
+
+    \item[Extra Graph 2] The second graph is a bipartite graph with 5 nodes on each side, where each node on one side is connected to all nodes on the other side.
+    
+    \begin{figure}[H]
+        % the tex file at extra_graph_2.tex has \begin{tikzpicture}...\end{tikzpicture}
+        \centering
+        \resizebox{0.4\textwidth}{!}{%
+            \input{figures/extra_graph_2.tex}
+        }
+        \caption{Extra Graph 2}
+    \end{figure}
+\end{description}
+
+\section{Question 8}
+
+\begin{enumerate}
+
+    \item[(c)] Running PageRank on the given graph, we get that nodes with high ranks typically have higher degrees, and nodes with low ranks typically have lower degrees.\\
+    The top 5 nodes with the highest page rank had the following degrees: 547, 1045, 792, 347, 755 (where top rank had 547 neighbors, and 5th had 755).\\
+    The bottom 5 nodes with the lowest page rank had the following degrees: 1, 1, 1, 1, 1.\\
+
+    \item[(d)] Intuitively, the page rank of a node is the probability that a random walker will be at that node at a given time.\\
+    If a node has a high rank, then starting a random walk from many nodes it is likely to arrive at that node.\\
+    Since the graph is equivalent to an undirected one, it means that a high rank means that random walks from it might reach many nodes.\\
+    If we want to quantify influence over people using it, it seems that the scaled page rank is a good measure.\\
+
+\end{enumerate}
 
 \end{document}

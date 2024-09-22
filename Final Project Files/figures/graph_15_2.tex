@@ -1,0 +1,14 @@
+\begin{tikzpicture}[>=stealth, node distance=2cm, every loop/.style={min distance=10mm}]
+\node[circle, draw=black, fill=red!50, inner sep=0pt, minimum size=6mm] (node0) at (0.01, 2.23) {\small 0};
+\node[circle, draw=black, fill=red!50, inner sep=0pt, minimum size=6mm] (node1) at (0.00, 0.00) {\small 1};
+\node[circle, draw=black, fill=red!50, inner sep=0pt, minimum size=6mm] (node2) at (1.99, 1.33) {\small 2};
+\node[circle, draw=black, fill=red!50, inner sep=0pt, minimum size=6mm] (node3) at (9.08, 8.65) {\small 3};
+\node[circle, draw=black, fill=red!50, inner sep=0pt, minimum size=6mm] (node4) at (10.00, 7.50) {\small 4};
+\node[circle, draw=black, fill=red!50, inner sep=0pt, minimum size=6mm] (node5) at (8.05, 9.70) {\small 5};
+\draw[->] (node0) -- (node1);
+\draw[->] (node1) -- (node2);
+\draw[->] (node2) -- (node0);
+\draw[->] (node3) -- (node4);
+\draw[->] (node4) -- (node5);
+\draw[->] (node5) -- (node3);
+\end{tikzpicture}
