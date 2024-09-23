@@ -25,6 +25,7 @@
 \usepackage{pgfplots}
 \usepackage{placeins} % To use \FloatBarrier
 \usetikzlibrary{arrows.meta, positioning}
+\usepackage{subcaption}
 
 \newtheorem{theorem}{Theorem}[section]  % Theorems numbered within sections
 \newtheorem{lemma}[theorem]{Lemma}      % Lemma numbering follows theorem
@@ -62,6 +63,47 @@
 \setcounter{section}{0}
 
 \section{Question 7}
+The following are the results of running the PageRank algorithm on the given graph. The graphs are displayed such that higher-ranked nodes have more saturated colors.
+
+\noindent
+The following are the example graphs we have seen in class:
+
+\begin{description}
+    \item[graph\_15\_1\_left] This graph constitutes a 3-node cycle that continues to a self-loop node.
+    
+    \begin{figure}[H]
+        % the tex file at graph_15_1_left.tex has \begin{tikzpicture}...\end{tikzpicture}
+        \centering
+        \resizebox{0.5\textwidth}{!}{%
+            \input{figures/graph_15_1_left.tex}
+        }
+        \caption{Graph 15.1 Left}
+    \end{figure}
+
+    \item[graph\_15\_1\_right] This graph constitutes a 3-node cycle that continues to a self-loop node.
+    
+    \begin{figure}[H]
+        % the tex file at graph_15_1_right.tex has \begin{tikzpicture}...\end{tikzpicture}
+        \centering
+        \resizebox{0.5\textwidth}{!}{%
+            \input{figures/graph_15_1_right.tex}
+        }
+        \caption{Graph 15.1 Right}
+    \end{figure}
+
+    \item[graph\_15\_2] This graph constitutes two 3-node isolated cycles.
+    
+    \begin{figure}[H]
+        % the tex file at graph_15_2.tex has \begin{tikzpicture}...\end{tikzpicture}
+        \centering
+        \resizebox{0.5\textwidth}{!}{%
+            \input{figures/graph_15_2.tex}
+        }
+        \caption{Graph 15.2}
+    \end{figure}
+\end{description}
+
+\noindent
 The two other simple test cases we used are:
 
 \begin{description}
@@ -92,14 +134,90 @@ The two other simple test cases we used are:
 
 \begin{enumerate}
 
-    \item[(c)] Running PageRank on the given graph, we get that nodes with high ranks typically have higher degrees, and nodes with low ranks typically have lower degrees.\\
-    The top 5 nodes with the highest page rank had the following degrees: 547, 1045, 792, 347, 755 (where top rank had 547 neighbors, and 5th had 755).\\
-    The bottom 5 nodes with the lowest page rank had the following degrees: 1, 1, 1, 1, 1.\\
+    \item[(b)] Similar to Question 7, we ran the PageRank algorithm on the given facebook graph. The results are displayed in \Cref{fig:facebook}. The graphs are displayed such that higher-ranked nodes have more saturated colors.
+    
+    \begin{figure}[H]
+        \centering
+        \resizebox{\textwidth}{!}{%
+            \includegraphics{figures/facebook.png}
+        }
+        \caption{Facebook Graph - High-Ranked Nodes Are Colored in Red, Low-Ranked Nodes Are Colored in Green, and Nodes with Intermediate Ranks Are Colored in Gray}
+        \label{fig:facebook}
+    \end{figure}
 
-    \item[(d)] Intuitively, the page rank of a node is the probability that a random walker will be at that node at a given time.\\
-    If a node has a high rank, then starting a random walk from many nodes it is likely to arrive at that node.\\
-    Since the graph is equivalent to an undirected one, it means that a high rank means that random walks from it might reach many nodes.\\
-    If we want to quantify influence over people using it, it seems that the scaled page rank is a good measure.\\
+    \item[(c)] As shown in \Cref{fig:facebook}, we can see most of the score tended to end-up in centers of clumps in the graph. This might be explained by the nature of PageRank, which performs a random walk on the graph, and will thus tend to end up in the center of clumps, that are highly connected. Conversely, we can see that nodes with low scores are usually on the outskirts of the graph, where they are less connected to the rest of the graph, further affirming the explanation.
+    
+    Furthermore, we performed an in-link analysis on the graphs. \Cref{fig:inlink_analysis} shows the relationship between the PageRank of a node and its in-degree. The figures are scatter plots of the index of the rank of each node (i.e. its index in the ordered set of ranks) and the in-link degrees of the corresponding node in the graph, for each of the graphs detailed in Question 7 and the Facebook graph.
+    
+    It is clear from the in-link analysis that there's a pseudo-linear relationship between the rank of a node and its in-degree. The higher the rank of a node, the more common it is for the node to have a higher in-degree (we say `more common' as there are multiple trends in the Facebook graph's analysis---possibly due to the multi-cluster nature of the graph). The opposite is true for nodes with lower ranks. This is consistent with the intuition that nodes with higher ranks are more likely to be visited by a random walker, and thus are more likely to have more in-links.
+    
+    Indeed, looking more closely, the top 5 nodes with the highest page rank had the following in-degrees: 231, 159, 59, 170, 229 (where top rank had 231 neighbors, and 5th had 229), where the bottom 5 nodes with the lowest page rank had the following degrees: 1, 1, 1, 1, 1.
+
+    \begin{figure}
+        \centering
+        % First row
+        \begin{subfigure}[t]{0.45\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{%
+                \input{figures/graph_15_1_left_inlink_analysis.pgf}
+            }
+            \caption{Graph 15.1 Left}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[t]{0.45\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{%
+                \input{figures/graph_15_1_right_inlink_analysis.pgf}
+            }
+            \caption{Graph 15.1 Right}
+        \end{subfigure}
+        \par\bigskip % Add space between rows
+    
+        % Second row
+        \begin{subfigure}[t]{0.45\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{%
+                \input{figures/graph_15_2_inlink_analysis.pgf}
+            }
+            \caption{Graph 15.2}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[t]{0.45\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{%
+                \input{figures/extra_graph_1_inlink_analysis.pgf}
+            }
+            \caption{Extra Graph 1}
+        \end{subfigure}
+        \par\bigskip % Add space between rows
+    
+        % Third row
+        \begin{subfigure}[t]{0.45\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{%
+                \input{figures/extra_graph_2_inlink_analysis.pgf}
+            }
+            \caption{Extra Graph 2}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[t]{0.45\textwidth}
+            \centering
+            \resizebox{\textwidth}{!}{%
+                \input{figures/facebook_inlink_analysis.pgf}
+            }
+            \caption{Facebook Graph}
+        \end{subfigure}
+        \caption{The Relationship Between the PageRank of a Node and Its In-Degree. The figures display as the x-axis the rank of the rank of the node (that is, the index in the ordered set of ranks) and as the y-axis the \textit{in-degree of the corresponding node}.}
+        \label{fig:inlink_analysis}
+    \end{figure}
+
+    \pagebreak
+
+    \item[(d)] 
+    
+    Intuitively, the page rank of a node at step $k$ may be a good measure of the probability that a random walker will be at that node after $k$ steps. That is, the PageRank algorithm can be interpreted as a random walker that moves from node to node, with the probability of moving to a node at a certain time-step being correlated with the number of in-links to that node. If a node has a high rank, then starting a random walk from many nodes it is likely to arrive at that node. This can be interpreted as a person who is influenced by others in the network, where the more people that are connected to a person, the more likely they are to be influenced by that person. Moreover, since the graph is equivalent to an undirected one, it means that this goes both ways: a high rank means that random walks from it might reach many nodes, and that many nodes might reach it.
+    
+    This is a reasonable measure of influence in a social network, as it captures the idea that influential people are those who are connected to many others in the network. If we want to quantify influence over people, it seems that the scaled page rank is a good measure. Anecdotally as we've seen in \Cref{fig:facebook}, the nodes with the highest page rank are nodes that are in the center of the graph, which is where we would expect influential people to be in a social network.
 
 \end{enumerate}
 

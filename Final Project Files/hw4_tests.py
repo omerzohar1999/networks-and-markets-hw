@@ -300,3 +300,45 @@ class TestProblem8(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+#### RECYCLE BIN OF WORK #######
+# def plot_facebook_ranks(fb_graph: DirectedGraph, ranks: dict):
+#     """This method should plot the facebook graph using the plot_graph method."""
+#     from matplotlib import cm
+#     import networkx as nx
+#     import matplotlib.pyplot as plt
+#     import numpy as np
+
+#     # Create a colormap
+#     viridis = cm.get_cmap('RdYlBu')
+
+#     # Create a directed NetworkX graph
+#     network = nx.DiGraph()
+#     network.add_nodes_from(np.arange(fb_graph.number_of_nodes()))
+
+#     for node in range(fb_graph.number_of_nodes()):
+#         for to in fb_graph.edges_from(node):
+#             network.add_edge(node, to)
+
+#     # Set node colors to red at the highest rank (200), white at the lowest rank (200), and orange in between (rest)
+#     colors = np.full((fb_graph.number_of_nodes()), ('#808080'))
+#     sorted_rank = np.argsort(list(ranks.values()))
+#     for rank in sorted_rank[-200:]:
+#         colors[rank] = '#FF0000' # red
+
+#     # Adjust the figure size
+#     plt.figure(figsize=(12, 10))  # Increase the figure size
+
+#     # Draw the graph
+#     nx.draw(network, node_size=10, width=0.05, with_labels=False,
+#             node_color=colors, cmap=viridis)
+
+#     plt.savefig("figures/facebook.png", format="png")
+
+# # 8 (a): extract facebook graph
+# fb_graph = facebook_graph()
+
+# # 8 (b): run scaled page rank on facebook graph
+# ranks = scaled_page_rank(fb_graph, 20)
+# plot_facebook_ranks(fb_graph, ranks)

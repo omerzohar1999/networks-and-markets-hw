@@ -1,11 +1,11 @@
-\begin{tikzpicture}[>=stealth, node distance=2cm, every loop/.style={min distance=10mm}]
-\node[circle, draw=black, fill=red!50, inner sep=0pt, minimum size=6mm] (node0) at (4.65, 1.45) {\small 0};
-\node[circle, draw=black, fill=red!50, inner sep=0pt, minimum size=6mm] (node1) at (0.53, 4.05) {\small 1};
-\node[circle, draw=black, fill=red!50, inner sep=0pt, minimum size=6mm] (node2) at (0.00, 0.00) {\small 2};
-\node[circle, draw=black, fill=red!50, inner sep=0pt, minimum size=6mm] (node3) at (10.00, 0.75) {\small 3};
-\draw[->] (node0) -- (node1);
-\draw[->] (node0) -- (node3);
-\draw[->] (node1) -- (node2);
-\draw[->] (node2) -- (node0);
-\path[->] (node3) edge [in=120,out=60,loop] (node3);
+\begin{tikzpicture}[node distance=2cm, every loop/.style={min distance=10mm}]
+\node[circle, draw=black, fill=red!46, inner sep=0pt, minimum size=6mm] (node0) at (8.38, 4.84) {\small 0};
+\node[circle, draw=black, fill=red!20, inner sep=0pt, minimum size=6mm] (node1) at (0.00, 9.67) {\small 1};
+\node[circle, draw=black, fill=red!40, inner sep=0pt, minimum size=6mm] (node2) at (0.00, 0.00) {\small 2};
+\node[circle, draw=black, fill=red!80, inner sep=0pt, minimum size=6mm] (node3) at (10.00, 7.41) {\small 3};
+\draw[-{Stealth[length=3mm, width=2mm]}] (node0) -- (node1);
+\draw[-{Stealth[length=3mm, width=2mm]}] (node0) -- (node3);
+\draw[-{Stealth[length=3mm, width=2mm]}] (node1) -- (node2);
+\draw[-{Stealth[length=3mm, width=2mm]}] (node2) -- (node0);
+\path[-{Stealth[length=3mm, width=2mm]}] (node3) edge [in=120,out=60,loop] (node3);
 \end{tikzpicture}
