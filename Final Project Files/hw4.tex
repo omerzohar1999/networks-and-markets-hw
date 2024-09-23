@@ -78,6 +78,7 @@ The following are the example graphs we have seen in class:
             \input{figures/graph_15_1_left.tex}
         }
         \caption{Graph 15.1 Left}
+        \label{fig:graph_15_1_left}
     \end{figure}
 
     \item[graph\_15\_1\_right] This graph constitutes a 3-node cycle that continues to a self-loop node.
@@ -89,6 +90,7 @@ The following are the example graphs we have seen in class:
             \input{figures/graph_15_1_right.tex}
         }
         \caption{Graph 15.1 Right}
+        \label{fig:graph_15_1_right}
     \end{figure}
 
     \item[graph\_15\_2] This graph constitutes two 3-node isolated cycles.
@@ -100,6 +102,7 @@ The following are the example graphs we have seen in class:
             \input{figures/graph_15_2.tex}
         }
         \caption{Graph 15.2}
+        \label{fig:graph_15_2}
     \end{figure}
 \end{description}
 
@@ -116,6 +119,7 @@ The two other simple test cases we used are:
             \input{figures/extra_graph_1.tex}
         }
         \caption{Extra Graph 1}
+        \label{fig:extra_graph_1}
     \end{figure}
 
     \item[Extra Graph 2] The second graph is a bipartite graph with 5 nodes on each side, where each node on one side is connected to all nodes on the other side.
@@ -127,6 +131,7 @@ The two other simple test cases we used are:
             \input{figures/extra_graph_2.tex}
         }
         \caption{Extra Graph 2}
+        \label{fig:extra_graph_2}
     \end{figure}
 \end{description}
 
@@ -145,7 +150,7 @@ The two other simple test cases we used are:
         \label{fig:facebook}
     \end{figure}
 
-    \item[(c)] As shown in \Cref{fig:facebook}, we can see most of the score tended to end-up in centers of clumps in the graph. This might be explained by the nature of PageRank, which performs a random walk on the graph, and will thus tend to end up in the center of clumps, that are highly connected. Conversely, we can see that nodes with low scores are usually on the outskirts of the graph, where they are less connected to the rest of the graph, further affirming the explanation.
+    \item[(c)] As shown in \Cref{fig:facebook}, we can see most of the score tended to end-up in centers of clumps in the graph. This might be explained by the nature of PageRank, which performs a random walk on the graph, and will thus tend to end up in the center of clumps, that are highly connected. Conversely, we can see that nodes with low scores are usually on the outskirts of the graph, where they are less connected to the rest of the graph, further affirming the explanation. Additionally, in the example graphs \Cref{fig:graph_15_1_left,fig:graph_15_1_right,fig:graph_15_2,fig:extra_graph_1,fig:extra_graph_2}, we can see that the nodes with the highest PageRank are `sink'-like nodes, where many nodes point to them, and they point to few nodes. This is consistent with the intuition that nodes with higher ranks are more likely to be visited by a random walker.
     
     Furthermore, we performed an in-link analysis on the graphs. \Cref{fig:inlink_analysis} shows the relationship between the PageRank of a node and its in-degree. The figures are scatter plots of the index of the rank of each node (i.e. its index in the ordered set of ranks) and the in-link degrees of the corresponding node in the graph, for each of the graphs detailed in Question 7 and the Facebook graph.
     
@@ -215,9 +220,9 @@ The two other simple test cases we used are:
 
     \item[(d)] 
     
-    Intuitively, the page rank of a node at step $k$ may be a good measure of the probability that a random walker will be at that node after $k$ steps. That is, the PageRank algorithm can be interpreted as a random walker that moves from node to node, with the probability of moving to a node at a certain time-step being correlated with the number of in-links to that node. If a node has a high rank, then starting a random walk from many nodes it is likely to arrive at that node. This can be interpreted as a person who is influenced by others in the network, where the more people that are connected to a person, the more likely they are to be influenced by that person. Moreover, since the graph is equivalent to an undirected one, it means that this goes both ways: a high rank means that random walks from it might reach many nodes, and that many nodes might reach it.
+    Intuitively, the page rank of a node at step $k$ may be a good measure of the probability that a random walker will be at that node after $k$ steps. That is, the PageRank algorithm can be interpreted as a random walker that moves from node to node, with the probability of moving to a node at a certain time-step being correlated with the number of in-links to that node. If a node has a high rank, then starting a random walk from many nodes it is likely to arrive at that node. This can be interpreted as a person who is influenced by others in the network, where the more people that are connected to a person, the more likely they are to be influenced by that person. Moreover, since the graph/social-network is derived from an undirected graph, it means that this goes both ways: a high rank means that random walks from it might reach many nodes, and that many nodes might reach it.
     
-    This is a reasonable measure of influence in a social network, as it captures the idea that influential people are those who are connected to many others in the network. If we want to quantify influence over people, it seems that the scaled page rank is a good measure. Anecdotally as we've seen in \Cref{fig:facebook}, the nodes with the highest page rank are nodes that are in the center of the graph, which is where we would expect influential people to be in a social network.
+    This is a reasonable measure of influence in a social network, as it captures the idea that influential people are those who are connected to many others in the network, whom we may expect to come across more often (at extracurricular activities, on our timeline, etc.), consistent with our intuition of relevance within PageRank. Thus, if we want to quantify influence over people, it seems that the scaled page rank is a good measure. Further affirming our hypothesis anecdotally, as we've seen in \Cref{fig:facebook}, the nodes with the highest page rank are nodes that are in the center of the graph, which is where we would expect influential people to be in a social network.
 
 \end{enumerate}
 
