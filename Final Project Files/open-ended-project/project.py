@@ -22,45 +22,72 @@ class DirectedGraph:
     def __init__(self, number_of_nodes):
         """Assume that nodes are represented by indices/integers between 0 and number_of_nodes - 1."""
         self.n = number_of_nodes
-        self.edges = dict()
-        self.reverse_edges = dict()
+        self.edges = dict()          # Outgoing edges: node -> set of destination nodes
+        self.reverse_edges = dict()  # Incoming edges: node -> set of origin nodes
+        self.degrees = [0] * self.n  # Degree of each node (for undirected graph, degree = in-degree + out-degree)
 
     def add_edge(self, origin_node, destination_node):
         """Adds an edge from origin_node to destination_node."""
+        # Add edge to outgoing edges
         if origin_node not in self.edges:
             self.edges[origin_node] = set()
         self.edges[origin_node].add(destination_node)
 
+        # Add edge to incoming edges
         if destination_node not in self.reverse_edges:
             self.reverse_edges[destination_node] = set()
         self.reverse_edges[destination_node].add(origin_node)
 
+        # Update degrees (since the graph is undirected in your use case)
+        self.degrees[origin_node] += 1
+        self.degrees[destination_node] += 1
+
     def edges_from(self, origin_node):
-        """This method shold return a list of all the nodes destination_node such that there is
-        a directed edge (origin_node, destination_node) in the graph."""
+        """Returns a list of all destination nodes such that there is an edge (origin_node, destination_node)."""
         return list(self.edges.get(origin_node, set()))
 
     def edges_to(self, destination_node):
-        """This method should return a list of all the nodes origin_node such that there is
-        a directed edge (origin_node, destination_node) in the graph."""
+        """Returns a list of all origin nodes such that there is an edge (origin_node, destination_node)."""
         return list(self.reverse_edges.get(destination_node, set()))
 
     def get_edge(self, origin_node, destination_node):
-        """This method should return true is there is an edge from origin_node to destination_node
-        and false otherwise"""
+        """Returns True if there is an edge from origin_node to destination_node, False otherwise."""
         return destination_node in self.edges.get(origin_node, set())
 
     def number_of_nodes(self):
-        """This method should return the number of nodes in the graph"""
+        """Returns the number of nodes in the graph."""
         return self.n
 
-    def floyd_warshall(self):
-        """Computes the reachability matrix using Floyd-Warshall algorithm from scipy."""
-        # Convert graph to adjacency matrix
+    def get_degrees(self):
+        """Returns a list of degrees for all nodes."""
+        return self.degrees
+
+    def to_adjacency_matrix(self):
+        """Converts the graph to an adjacency matrix."""
         adj_matrix = np.zeros((self.n, self.n))
-        for i in range(self.n):
-            for j in self.edges_from(i):
+        for i in self.edges:
+            for j in self.edges[i]:
                 adj_matrix[i, j] = 1
+        return adj_matrix
+
+    def to_adjacency_matrix_subgraph(self, nodes):
+        """Creates an adjacency matrix for a subgraph induced by the given nodes."""
+        idx_map = {node: idx for idx, node in enumerate(nodes)}
+        size = len(nodes)
+        adj_matrix = np.zeros((size, size))
+        for i in nodes:
+            idx_i = idx_map[i]
+            neighbors = self.edges_from(i)
+            for j in neighbors:
+                if j in idx_map:
+                    idx_j = idx_map[j]
+                    adj_matrix[idx_i, idx_j] = 1
+        return adj_matrix, idx_map
+
+    def floyd_warshall(self):
+        """Computes the reachability matrix using the Floyd-Warshall algorithm from scipy."""
+        # Convert graph to adjacency matrix
+        adj_matrix = self.to_adjacency_matrix()
 
         # Convert adjacency matrix to compressed sparse row (CSR) format
         graph = csr_matrix(adj_matrix)
@@ -68,17 +95,16 @@ class DirectedGraph:
         # Run Floyd-Warshall algorithm
         dist_matrix = floyd_warshall(csgraph=graph, directed=True, unweighted=True)
 
-        # Convert the distance matrix to reachability (True if reachable, False if not)
+        # Return the distance matrix
         return dist_matrix
 
     def reverse_reachability_weighted(self):
-        """This method should return a dictionary where the keys are nodes and the values are the weighted reverse reachability.
-        That is, the value is the sum of the weights of the shortest paths from all nodes to the key node."""
+        """Returns a dictionary where keys are nodes and values are the weighted reverse reachability."""
         dist = self.floyd_warshall()
         rr = np.zeros(self.n)
         for i in range(self.n):
             rr[i] = sum(dist[j, i] for j in range(self.n) if dist[j, i] != np.inf)
-        return rr
+        return {i: rr[i] for i in range(self.n)}
 
 def scaled_page_rank(G: DirectedGraph, num_iter: int, eps: int = 1 / 7.0):
     """This method, given a DirectedGraph G, runs the epsilon-scaled
@@ -208,12 +234,68 @@ def netshield(G: DirectedGraph, k: int, healthy_nodes: set):
     Returns:
         set: Set of selected nodes.
     """
-    # For simplicity, we will use degree centrality as a proxy
-    # In practice, NETSHIELD minimizes the spectral radius
-    degrees = G.get_degrees()
-    degree_list = [(i, degrees[i]) for i in healthy_nodes]
-    degree_list.sort(key=lambda x: x[1], reverse=True)
-    selected = {node for node, degree in degree_list[:k]}
+    import numpy as np
+
+    # Map healthy nodes to indices from 0 to h-1
+    healthy_nodes_list = list(healthy_nodes)
+    node_to_index = {node: idx for idx, node in enumerate(healthy_nodes_list)}
+    index_to_node = {idx: node for idx, node in enumerate(healthy_nodes_list)}
+    h = len(healthy_nodes_list)
+
+    # Create adjacency matrix A_sub of size h x h
+    # A_sub corresponds to the adjacency matrix A in the algorithm
+    A_sub = np.zeros((h, h))
+    for i in healthy_nodes_list:
+        idx_i = node_to_index[i]
+        neighbors_i = set(G.edges_from(i)) | set(G.edges_to(i))
+        for j in neighbors_i:
+            if j in healthy_nodes:
+                idx_j = node_to_index[j]
+                A_sub[idx_i, idx_j] = 1
+
+    # Make adjacency matrix symmetric to treat the graph as undirected
+    A_sub = np.maximum(A_sub, A_sub.T)
+
+    # Step 1: Compute the leading eigenvalue and eigenvector
+    eigenvalues, eigenvectors = np.linalg.eigh(A_sub)
+    lambda1 = eigenvalues[-1]
+    u = eigenvectors[:, -1]
+
+    # Step 2: Initialize the selected set S
+    S = []
+    S_indices = []
+
+    # Precompute v(j) = 2 * lambda1 * u(j)^2 (since A(j,j) = 0)
+    v = 2 * lambda1 * u**2
+
+    # Initialize b as zeros (will be updated iteratively)
+    b = np.zeros(h)
+
+    # Step 4: Iteratively select nodes
+    for _ in range(k):
+        max_score = -np.inf
+        max_node = None
+        for i in range(h):
+            if i in S_indices:
+                continue
+            # b(i) = sum over s in S of A(i,s) * u(s)
+            # Since b is A(:, S) * u(S), we can compute b(i) incrementally
+            # In the first iteration, b is zero since S is empty
+            # We use b[i] directly since it accumulates over iterations
+            score = v[i] - 2 * u[i] * b[i]
+            if score > max_score:
+                max_score = score
+                max_node = i
+        if max_node is not None:
+            S.append(index_to_node[max_node])
+            S_indices.append(max_node)
+            # Update b for all nodes
+            # b = A(:, S) * u(S)
+            b += A_sub[:, max_node] * u[max_node]
+        else:
+            break  # No more nodes to select
+
+    selected = set(S)
     return selected
 
 def run_experiment():
@@ -221,9 +303,9 @@ def run_experiment():
     # Graph loaders
     graph_loaders = {
         'Facebook': facebook_graph,
-        'Brightkite': brightkite_graph,
-        'Oregon': oregon_graph,
-        'Gnutella': gnutella_graph
+        # 'Brightkite': brightkite_graph,
+        # 'Oregon': oregon_graph,
+        # 'Gnutella': gnutella_graph
     }
 
     # Parameters
@@ -276,6 +358,9 @@ def run_experiment():
             plt.title(f'Effectiveness of Vaccination Strategies (Graph: {graph_name}, p={p})')
             plt.legend()
             plt.show()
+            plt.savefig(f'figures/vaccination_{graph_name}_p{p}.png', format='png')
+            plt.savefig(f'figures/vaccination_{graph_name}_p{p}.pgf', format='pgf')
+
 
 def facebook_graph(filename="datasets/facebook_combined.txt"):
     """This method should return a DIRECTED version of the facebook graph as an instance of the DirectedGraph class.
