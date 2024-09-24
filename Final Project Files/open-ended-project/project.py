@@ -142,21 +142,56 @@ def simulate_IC(G: DirectedGraph, p: float, initial_infected: set, vaccinated: s
         set: The set of nodes infected at the end of the simulation.
     """
     infected = set(initial_infected)
-    newly_infected = set(initial_infected)
+    active = set(initial_infected)
     healthy = set(range(G.number_of_nodes())) - infected - vaccinated
 
-    while newly_infected:
-        next_newly_infected = set()
-        for u in newly_infected:
+    while active:
+        new_active = set()
+        for u in active:
             for v in G.edges_from(u):
                 if v in healthy and random.random() <= p:
                     healthy.remove(v)
                     infected.add(v)
-                    next_newly_infected.add(v)
-        newly_infected = next_newly_infected
+                    new_active.add(v)
+        active = new_active
     return infected
 
-def average_infected(G: DirectedGraph, p: float, initial_infected: set, vaccinated: set, num_simulations: int = 100):
+def simulate_SIR(G: DirectedGraph, p: float, delta: float, initial_infected: set, vaccinated: set):
+    """Simulate the SIR model once.
+
+    Args:
+        G (DirectedGraph): The graph.
+        p (float): The infection probability.
+        delta (float): The recovery probability.
+        initial_infected (set): The set of initially infected nodes.
+        vaccinated (set): The set of vaccinated nodes.
+
+    Returns:
+        tuple: The set of infected and recovered nodes at the end of the simulation.
+    """
+    susceptible = set(range(G.number_of_nodes())) - initial_infected - vaccinated
+    infected = set(initial_infected)
+    recovered = set()
+    
+    while infected:
+        new_infected = set()
+        still_infected = set()
+        for u in infected:
+            # Infection step
+            for v in G.edges_from(u):
+                if v in susceptible and random.random() <= p:
+                    susceptible.remove(v)
+                    new_infected.add(v)
+            # Recovery step
+            if random.random() <= delta:
+                recovered.add(u)
+            else:
+                still_infected.add(u)
+        # Update infected set
+        infected = still_infected.union(new_infected)
+    return recovered
+
+def average_infected(G: DirectedGraph, p: float, initial_infected: set, vaccinated: set, num_simulations: int = 100, model='IC', delta: float = 0.1):
     """Compute the average number of infected nodes over multiple simulations.
 
     Args:
@@ -165,14 +200,22 @@ def average_infected(G: DirectedGraph, p: float, initial_infected: set, vaccinat
         initial_infected (set): The set of initially infected nodes.
         vaccinated (set): The set of vaccinated nodes.
         num_simulations (int): Number of simulations to run.
+        model (str): 'IC' or 'SIR'
+        delta (float): Recovery probability for SIR model.
 
     Returns:
         float: The average number of infected nodes.
     """
     total_infected = 0
     for _ in range(num_simulations):
-        infected = simulate_IC(G, p, initial_infected, vaccinated)
-        total_infected += len(infected)
+        if model == 'IC':
+            infected = simulate_IC(G, p, initial_infected, vaccinated)
+            total_infected += len(infected)
+        elif model == 'SIR':
+            recovered = simulate_SIR(G, p, delta, initial_infected, vaccinated)
+            total_infected += len(recovered)
+        else:
+            raise ValueError(f"Unknown model: {model}")
     return total_infected / num_simulations
 
 def degree_strategy(G: DirectedGraph, k: int, healthy_nodes: set):
@@ -192,7 +235,7 @@ def degree_strategy(G: DirectedGraph, k: int, healthy_nodes: set):
     selected = {node for node, degree in degree_list[:k]}
     return selected
 
-def pagerank_strategy(G: DirectedGraph, k: int, healthy_nodes: set, num_iter: int = 10):
+def pagerank_strategy(G: DirectedGraph, k: int, healthy_nodes: set, num_iter: int = 10, ranks = None):
     """Select k healthy nodes with the highest PageRank scores.
 
     Args:
@@ -204,7 +247,7 @@ def pagerank_strategy(G: DirectedGraph, k: int, healthy_nodes: set, num_iter: in
     Returns:
         set: Set of selected nodes.
     """
-    pr = scaled_page_rank(G, num_iter)
+    pr = scaled_page_rank(G, num_iter) if ranks is None else ranks
     pr_list = [(i, pr[i]) for i in healthy_nodes]
     pr_list.sort(key=lambda x: x[1], reverse=True)
     selected = {node for node, score in pr_list[:k]}
@@ -300,51 +343,97 @@ def netshield(G: DirectedGraph, k: int, healthy_nodes: set):
 
 def run_experiment():
     """Run the experiments on multiple graphs and plot the results."""
-    # Graph loaders
+
+    # Graph loaders and parameters
     graph_loaders = {
-        'Facebook': facebook_graph,
-        # 'Brightkite': brightkite_graph,
-        # 'Oregon': oregon_graph,
-        # 'Gnutella': gnutella_graph
+        'Facebook': 
+            {
+                'create': facebook_graph,
+                'k_values': [5, 10, 20, 30, 40, 50],
+                'num_simulations': 50,
+                'num_initial_infected': 100
+            },
+        # 'Brightkite':
+        #     {
+        #         'create': brightkite_graph,
+        #         'k': [10, 30, 50, 70, 90, 110, 130, 150],
+        #         'num_simulations': 40,
+        #         'initial_infected': 400
+        #     },
+        # 'Oregon':
+        #     {
+        #         'create': oregon_graph,
+        #         'k': [5, 10, 20, 30, 40, 50],
+        #         'num_simulations': 50,
+        #         'initial_infected': 100
+        #     },
+        # 'Gnutella':
+        #     {
+        #         'create': gnutella_graph,
+        #         'k': [10, 30, 50, 70, 90, 110, 130, 150],
+        #         'num_simulations': 50,
+        #         'initial_infected': 100
+        #     }
     }
 
-    # Parameters
-    p_values = [0.6, 1.0]  # Propagation probabilities
-    k_values = [5, 10, 20, 30, 40, 50]  # Budget for vaccination
-    num_simulations = 100  # Number of simulations to average
+    # Vaccination strategies
+    strategies = {
+        'Random': random_strategy,
+        'Degree': degree_strategy,
+        'PageRank': pagerank_strategy,
+        'NetShield': netshield
+    }
 
-    # Iterate over each graph
-    for graph_name, graph_loader in graph_loaders.items():
-        print(f"Running experiments for graph: {graph_name}")
-        G = graph_loader()
+    # Propagation configurations
+    propagation_configs = [
+        {'p': 0.1, 'model': 'IC', 'delta': None},
+        # {'p': 0.5, 'model': 'SIR', 'delta': 0.1}
+    ]
 
-        # Randomly choose initial infected nodes
-        num_initial_infected = 100
-        initial_infected = set(random.sample(range(G.number_of_nodes()), num_initial_infected))
+    # Run experiments
+    for graph_name, graph_params in graph_loaders.items():
 
-        # Healthy nodes are all nodes not initially infected
-        healthy_nodes = set(range(G.number_of_nodes())) - initial_infected
+        # Load the graph
+        G = graph_params['create']()
 
-        strategies = {
-            'Random': random_strategy,
-            'Degree': degree_strategy,
-            'PageRank': pagerank_strategy,
-            'NetShield': netshield
-        }
+        # Run experiments for each propagation configuration
+        for config in propagation_configs:
 
-        for p in p_values:
+            # Load propagation parameters
+            p = config['p']
+            model = config['model']
+            delta = config['delta']
+            print(f"\nRunning experiments on {graph_name} graph with p={p}, model={model}")
+
+            # Run experiments for each strategy
             results = {strategy: [] for strategy in strategies}
-            for k in k_values:
-                print(f"Running experiments for p={p}, k={k}")
-                for name, strategy in strategies.items():
+
+            for name, strategy in strategies.items():
+                
+                # If this is the scaled PageRank strategy, precompute the ranks
+                ranks : dict = None
+                if name == 'PageRank':
+                    ranks = scaled_page_rank(G, 10)
+
+                # For each vaccination budget for the graph
+                for k in graph_params['k_values']:
+                    
+                    print(f"\nVaccination budget (k): {k}")
+
+                    # Randomly choose initial infected nodes
+                    initial_infected = set(random.sample(range(G.number_of_nodes()), graph_params['num_initial_infected']))
+                    healthy_nodes = set(range(G.number_of_nodes())) - initial_infected
+
+                    # Select vaccinated nodes
                     if name == 'Random':
                         vaccinated = strategy(k, healthy_nodes)
                     elif name == 'PageRank':
-                        vaccinated = strategy(G, k, healthy_nodes)
+                        vaccinated = strategy(G, k, healthy_nodes, ranks=ranks)
                     else:
                         vaccinated = strategy(G, k, healthy_nodes)
-                    
-                    avg_infected = average_infected(G, p, initial_infected, vaccinated, num_simulations)
+
+                    # Simulate the spread
+                    avg_infected = average_infected(G, p, initial_infected, vaccinated, num_simulations=graph_params['num_simulations'], model=model, delta=delta)
                     avg_healthy = G.number_of_nodes() - avg_infected
                     results[name].append(avg_healthy)
                     print(f"Strategy: {name}, Avg Healthy Nodes: {avg_healthy}")
@@ -352,15 +441,13 @@ def run_experiment():
             # Plotting the results
             plt.figure()
             for name in strategies:
-                plt.plot(k_values, results[name], label=name)
+                plt.plot(graph_params['k_values'], results[name], label=name)
             plt.xlabel('Number of Vaccines (k)')
             plt.ylabel('Average Number of Healthy Nodes')
-            plt.title(f'Effectiveness of Vaccination Strategies (Graph: {graph_name}, p={p})')
+            plt.title(f'Effectiveness of Vaccination Strategies ({graph_name} Graph, p={p}, model={model})')
             plt.legend()
+            plt.savefig(f'figures/vaccination_{graph_name}_p{p}_model{model}.png', format='png')
             plt.show()
-            plt.savefig(f'figures/vaccination_{graph_name}_p{p}.png', format='png')
-            plt.savefig(f'figures/vaccination_{graph_name}_p{p}.pgf', format='pgf')
-
 
 def facebook_graph(filename="datasets/facebook_combined.txt"):
     """This method should return a DIRECTED version of the facebook graph as an instance of the DirectedGraph class.
