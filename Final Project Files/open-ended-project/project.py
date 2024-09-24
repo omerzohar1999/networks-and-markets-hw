@@ -354,20 +354,20 @@ def run_experiment():
 
     # Graph loaders and parameters
     graph_loaders = {
-        # 'Facebook': 
-        #     {
-        #         'create': facebook_graph,
-        #         'k_values': [5, 10, 20, 30, 40, 50],
-        #         'num_simulations': 200,
-        #         'num_initial_infected': 100
-        #     },
-        # 'Brightkite':
-        #     {
-        #         'create': brightkite_graph,
-        #         'k_values': [10, 30, 50, 70, 90, 110, 130, 150],
-        #         'num_simulations': 40,
-        #         'num_initial_infected': 400
-        #     },
+        'Facebook': 
+            {
+                'create': facebook_graph,
+                'k_values': [5, 10, 20, 30, 40, 50],
+                'num_simulations': 200,
+                'num_initial_infected': 100
+            },
+        'Brightkite':
+            {
+                'create': brightkite_graph,
+                'k_values': [10, 30, 50, 70, 90, 110, 130, 150],
+                'num_simulations': 40,
+                'num_initial_infected': 400
+            },
         'LastFM':
             {
                 'create': lastfm_graph,
@@ -375,13 +375,13 @@ def run_experiment():
                 'num_simulations': 50,
                 'num_initial_infected': 100
             },
-        # 'Gnutella':
-        #     {
-        #         'create': gnutella_graph,
-        #         'k_values': [10, 30, 50, 70, 90, 110, 130, 150],
-        #         'num_simulations': 200,
-        #         'num_initial_infected': 100
-        #     }
+        'Gnutella':
+            {
+                'create': gnutella_graph,
+                'k_values': [10, 30, 50, 70, 90, 110, 130, 150],
+                'num_simulations': 200,
+                'num_initial_infected': 100
+            }
     }
 
     # Vaccination strategies
