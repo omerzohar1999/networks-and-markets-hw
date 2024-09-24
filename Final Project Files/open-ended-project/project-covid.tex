@@ -1,0 +1,99 @@
+\documentclass{article}
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{pgf} % Required for drawing plots
+\usepackage{caption} % Required for the caption of the figure
+\usepackage{amsfonts}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    citecolor=blue
+}
+\usepackage{cleveref}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{diagbox}
+\usepackage{caption}
+\usepackage{tikz}
+\usepackage{pgf}
+\usepackage{pgfplots}
+\usepackage{placeins} % To use \FloatBarrier
+\usetikzlibrary{arrows.meta, positioning}
+
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\newtheorem{theorem}{Theorem}[section]  % Theorems numbered within sections
+\newtheorem{lemma}[theorem]{Lemma}      % Lemma numbering follows theorem
+
+% Define argmax
+\DeclareMathOperator*{\argmax}{arg\,max}  % The asterisk is used to allow limits to go underneath in displaystyle
+
+% Apply color to cref and Cref
+\crefformat{figure}{#2figure\color{blue}~#1#3}
+\Crefformat{figure}{#2Figure\color{blue}~#1#3}
+\crefformat{section}{#2section\color{blue}~#1#3}
+\Crefformat{section}{#2Section\color{blue}~#1#3}
+\crefformat{table}{#2table\color{blue}~#1#3}
+\Crefformat{table}{#2Table\color{blue}~#1#3}
+
+\title{
+    Open Ended Project\\
+    Networks and Markets
+}
+\author{
+    Omer Zohar
+    \and
+    Gil Aharoni
+    \and
+    Adam Tuby
+}
+
+\bibliographystyle{plain}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+For this project, the topical issue we picked was the current war, and the topic learned in class we picked was traffic network games. We suggest an extension to the topic of traffic network games by analyzing sensitive roads.
+
+\section{Concept: Road Sensitivity}
+
+Given a traffic network game, we define \emph{Road Sensitivity} for an edge $e$ by $MSW^G - MSW^{G \setminus \{e\}}$; namely, the difference in $MSW$ when removing $e$. This can be used to analyze possible damage a road can take during war, and its effect on supply chains.
+
+\section{Algorithm: Find Sensitive Roads}
+
+Given some algorithm $A$ to find $MSW$ in some setting, our game $G$, and all of its variations that remove exactly one edge, we present an algorithm that finds and sorts roads according to their sensitivity.
+
+But first, a note about the existence of $A$: There are games which can be modeled, for example, as a Linear Program, and thus LP algorithms satisfy $A$'s definition. There are more cases, but for our algorithm we will use $A$ more generally.
+
+Here is the algorithm:
+
+\begin{algorithm}[H]
+\caption{FIND-ROAD-SENSITIVITY($G$)}
+\begin{algorithmic}[1]
+    \STATE $MSW^G \leftarrow A(G)$
+    \FOR{each $e \in E$}
+        \STATE Calculate $G' = G \setminus \{e\}$
+        \STATE $MSW^{G \setminus \{e\}} \leftarrow A(G')$
+    \ENDFOR
+    \RETURN $SORT(E, \text{key} = \lambda e \in E: MSW^G - MSW^{G \setminus \{e\}})$
+\end{algorithmic}
+\end{algorithm}
+
+The correctness of the algorithm is trivial: for each edge, its road sensitivity is calculated by definition.
+
+\section{Usage}
+
+In cases where logistics corps plan a supply chain, and the enemy can damage roads, it might prove useful to check whether some roads are more sensitive, and perhaps build some extra roads to reduce reliance on said sensitive roads.
+
+On the other side, getting information about the enemy's supply chain and running this algorithm might find weak points that may inflict higher damage to the enemy's logistics.
+
+\end{document}
