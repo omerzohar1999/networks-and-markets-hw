@@ -466,7 +466,7 @@ def run_experiment():
             plt.title(f'Effectiveness of Vaccination Strategies ({graph_name} Graph, p={p}, model={model})')
             plt.legend()
             plt.savefig(f'figures/vaccination_{graph_name}_p{p}_model{model}.png', format='png')
-            plt.show()
+            plt.savefig(f'figures/vaccination_{graph_name}_p{p}_model{model}.pgf', format='pgf')
 
 def facebook_graph(filename="datasets/facebook_combined.txt"):
     """This method should return a DIRECTED version of the facebook graph as an instance of the DirectedGraph class.
