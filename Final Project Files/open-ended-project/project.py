@@ -267,7 +267,7 @@ def random_strategy(k: int, healthy_nodes: set):
     return selected
 
 def netshield(G: DirectedGraph, k: int, healthy_nodes: set):
-    """Implement the NETSHIELD algorithm.
+    """Implement the NETSHIELD algorithm optimized for large graphs.
 
     Args:
         G (DirectedGraph): The graph.
@@ -278,65 +278,73 @@ def netshield(G: DirectedGraph, k: int, healthy_nodes: set):
         set: Set of selected nodes.
     """
     import numpy as np
+    from scipy.sparse import csr_matrix, coo_matrix
+    from scipy.sparse.linalg import eigsh
 
     # Map healthy nodes to indices from 0 to h-1
     healthy_nodes_list = list(healthy_nodes)
     node_to_index = {node: idx for idx, node in enumerate(healthy_nodes_list)}
-    index_to_node = {idx: node for idx, node in enumerate(healthy_nodes_list)}
+    index_to_node = {idx: node for node, idx in node_to_index.items()}
     h = len(healthy_nodes_list)
 
-    # Create adjacency matrix A_sub of size h x h
-    # A_sub corresponds to the adjacency matrix A in the algorithm
-    A_sub = np.zeros((h, h))
+    # Build sparse adjacency matrix A_sub in COO format
+    row = []
+    col = []
+
     for i in healthy_nodes_list:
         idx_i = node_to_index[i]
         neighbors_i = set(G.edges_from(i)) | set(G.edges_to(i))
         for j in neighbors_i:
             if j in healthy_nodes:
                 idx_j = node_to_index[j]
-                A_sub[idx_i, idx_j] = 1
+                row.append(idx_i)
+                col.append(idx_j)
+
+    data = np.ones(len(row))
+    A_sub = coo_matrix((data, (row, col)), shape=(h, h)).tocsr()
 
     # Make adjacency matrix symmetric to treat the graph as undirected
-    A_sub = np.maximum(A_sub, A_sub.T)
+    A_sub = A_sub.maximum(A_sub.transpose())
 
-    # Step 1: Compute the leading eigenvalue and eigenvector
-    eigenvalues, eigenvectors = np.linalg.eigh(A_sub)
-    lambda1 = eigenvalues[-1]
-    u = eigenvectors[:, -1]
+    # Step 1: Compute the leading eigenvalue and eigenvector using sparse methods
+    lambda1, u = eigsh(A_sub, k=1, which='LA')  # LA: Largest Algebraic eigenvalue
+    lambda1 = lambda1[0]
+    u = u[:, 0]
 
     # Step 2: Initialize the selected set S
     S = []
-    S_indices = []
+    S_indices = set()
 
-    # Precompute v(j) = 2 * lambda1 * u(j)^2 (since A(j,j) = 0)
+    # Precompute v(j) = 2 * lambda1 * u(j)^2
     v = 2 * lambda1 * u**2
 
     # Initialize b as zeros (will be updated iteratively)
     b = np.zeros(h)
 
+    # For efficient access
+    u = u.reshape(-1, 1)
+
     # Step 4: Iteratively select nodes
     for _ in range(k):
-        max_score = -np.inf
-        max_node = None
-        for i in range(h):
-            if i in S_indices:
-                continue
-            # b(i) = sum over s in S of A(i,s) * u(s)
-            # Since b is A(:, S) * u(S), we can compute b(i) incrementally
-            # In the first iteration, b is zero since S is empty
-            # We use b[i] directly since it accumulates over iterations
-            score = v[i] - 2 * u[i] * b[i]
-            if score > max_score:
-                max_score = score
-                max_node = i
-        if max_node is not None:
-            S.append(index_to_node[max_node])
-            S_indices.append(max_node)
-            # Update b for all nodes
-            # b = A(:, S) * u(S)
-            b += A_sub[:, max_node] * u[max_node]
-        else:
-            break  # No more nodes to select
+        # Create a mask for unselected nodes
+        mask = np.ones(h, dtype=bool)
+        if S_indices:
+            mask[list(S_indices)] = False
+
+        # Compute score only for unselected nodes
+        score = np.full(h, -np.inf)
+        unselected_indices = np.where(mask)[0]
+        score_unselected = v[unselected_indices] - 2 * u[unselected_indices].flatten() * b[unselected_indices]
+        score[unselected_indices] = score_unselected
+
+        # Select node with maximum score
+        max_idx = np.argmax(score)
+        max_node = index_to_node[max_idx]
+        S.append(max_node)
+        S_indices.add(max_idx)
+
+        # Update b: b = b + A_sub[:, max_idx] * u[max_idx]
+        b += A_sub[:, max_idx].toarray().flatten() * u[max_idx, 0]
 
     selected = set(S)
     return selected
@@ -346,48 +354,58 @@ def run_experiment():
 
     # Graph loaders and parameters
     graph_loaders = {
-        'Facebook': 
+        # 'Facebook': 
+        #     {
+        #         'create': facebook_graph,
+        #         'k_values': [5, 10, 20, 30, 40, 50],
+        #         'num_simulations': 200,
+        #         'num_initial_infected': 100
+        #     },
+        # 'Brightkite':
+        #     {
+        #         'create': brightkite_graph,
+        #         'k_values': [10, 30, 50, 70, 90, 110, 130, 150],
+        #         'num_simulations': 40,
+        #         'num_initial_infected': 400
+        #     },
+        'LastFM':
             {
-                'create': facebook_graph,
+                'create': lastfm_graph,
                 'k_values': [5, 10, 20, 30, 40, 50],
                 'num_simulations': 50,
                 'num_initial_infected': 100
             },
-        # 'Brightkite':
-        #     {
-        #         'create': brightkite_graph,
-        #         'k': [10, 30, 50, 70, 90, 110, 130, 150],
-        #         'num_simulations': 40,
-        #         'initial_infected': 400
-        #     },
-        # 'Oregon':
-        #     {
-        #         'create': oregon_graph,
-        #         'k': [5, 10, 20, 30, 40, 50],
-        #         'num_simulations': 50,
-        #         'initial_infected': 100
-        #     },
         # 'Gnutella':
         #     {
         #         'create': gnutella_graph,
-        #         'k': [10, 30, 50, 70, 90, 110, 130, 150],
-        #         'num_simulations': 50,
-        #         'initial_infected': 100
+        #         'k_values': [10, 30, 50, 70, 90, 110, 130, 150],
+        #         'num_simulations': 200,
+        #         'num_initial_infected': 100
         #     }
     }
 
     # Vaccination strategies
     strategies = {
+        'NoVax': lambda x, y, z: set(),
         'Random': random_strategy,
         'Degree': degree_strategy,
         'PageRank': pagerank_strategy,
         'NetShield': netshield
     }
 
+    # Define line styles, markers, and colors for each strategy
+    line_styles = {
+        'NoVax': ('-', 'blue', 'o'),      # Solid line, blue, circle marker
+        'Random': ('--', 'green', 's'),   # Dashed line, green, square marker
+        'Degree': (':', 'red', '^'),      # Dotted line, red, triangle-up marker
+        'PageRank': ('-.', 'purple', 'D'), # Dash-dot line, purple, diamond marker
+        'NetShield': ('-', 'orange', 'x') # Solid line, orange, cross marker
+    }
+
     # Propagation configurations
     propagation_configs = [
-        {'p': 0.1, 'model': 'IC', 'delta': None},
-        # {'p': 0.5, 'model': 'SIR', 'delta': 0.1}
+        {'p': 0.4, 'model': 'IC', 'delta': None},
+        {'p': 0.8, 'model': 'SIR', 'delta': 0.1}
     ]
 
     # Run experiments
@@ -439,9 +457,10 @@ def run_experiment():
                     print(f"Strategy: {name}, Avg Healthy Nodes: {avg_healthy}")
 
             # Plotting the results
-            plt.figure()
+            plt.figure(figsize=(8, 6))
             for name in strategies:
-                plt.plot(graph_params['k_values'], results[name], label=name)
+                line_style, color, marker = line_styles[name]  # Get the line style, color, and marker
+                plt.plot(graph_params['k_values'], results[name], label=name, linestyle=line_style, color=color, marker=marker, markersize=8)
             plt.xlabel('Number of Vaccines (k)')
             plt.ylabel('Average Number of Healthy Nodes')
             plt.title(f'Effectiveness of Vaccination Strategies ({graph_name} Graph, p={p}, model={model})')
@@ -475,23 +494,23 @@ def brightkite_graph(filename="datasets/brightkite.txt"):
             graph.add_edge(j, i)
     return graph
 
-def oregon_graph(filename="datasets/oregon1_010526.txt"):
-    """This method should return a DIRECTED version of the oregon graph as an instance of the DirectedGraph class.
+def lastfm_graph(filename="datasets/lastfm_asia_edges.csv"):
+    """This method should return a DIRECTED version of the lastfm graph as an instance of the DirectedGraph class.
     In particular, if u and v are friends, there should be an edge between u and v but not between v and u.
     """
-    num_nodes = 11174
+    num_nodes = 7624
     graph = DirectedGraph(num_nodes)
     with open(filename) as f:
-        for _ in range(4): # Skip the first 4 lines
+        for _ in range(1): # Skip the first 4 lines
             next(f)
 
         for line in f:
-            i, j = list(map(int, line.strip().split("\t")))
+            i, j = list(map(int, line.strip().split(",")))
             graph.add_edge(i, j)
             graph.add_edge(j, i)
     return graph
 
-def gnutella_graph(filename="datasets/p2p-Gnutella09.txt"):
+def gnutella_graph(filename="datasets/p2p-Gnutella08.txt"):
     """This method should return a DIRECTED version of the gnutella graph as an instance of the DirectedGraph class.
     In particular, if u and v are friends, there should be an edge between u and v but not between v and u.
     """
@@ -501,7 +520,7 @@ def gnutella_graph(filename="datasets/p2p-Gnutella09.txt"):
         for _ in range(4): # Skip the first 4 lines
             next(f)
 
-        for i, line in f:
+        for line in f:
             i, j = list(map(int, line.strip().split("\t")))
             graph.add_edge(i, j)
             graph.add_edge(j, i)
