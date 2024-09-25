@@ -26,6 +26,7 @@
 \usepackage{algorithm}
 \usepackage{algorithmic}
 \usepackage{subcaption}
+\usepackage{tabularx}
 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
@@ -51,6 +52,8 @@
 \Crefformat{section}{#2Section\color{blue}~#1#3}
 \crefformat{table}{#2table\color{blue}~#1#3}
 \Crefformat{table}{#2Table\color{blue}~#1#3}
+\crefformat{appendix}{#2appendix\color{blue}~#1#3}
+\Crefformat{appendix}{#2Appendix\color{blue}~#1#3}
 
 % Define the title
 \title{
@@ -64,6 +67,7 @@
     \and
     Gil Aharoni
 }
+\date{}
 
 % Begin the document
 \bibliographystyle{plain}
@@ -71,18 +75,18 @@
 \begin{document}
 \maketitle
 
-\begin{abstract}
-    Controlling the spread of epidemics in networks is a critical challenge with significant societal impact. In this work, we explore the effectiveness of PageRank-based vaccination strategies to minimize the spread of contagions in networks. We hypothesized that PageRank centrality could effectively identify influential nodes for immunization. We implement and compare various vaccination strategies, including Random, Degree-based, PageRank-based, and NetShield algorithms, under the Independent Cascade (IC) and Susceptible-Infected-Recovered (SIR) models on real-world networks. Our extensive experiments demonstrate that the PageRank-based strategy significantly outperforms other heuristics, validating our hypothesis and highlighting the potential of using PageRank for data-aware vaccination in network epidemics.
-\end{abstract}
+% \begin{abstract}
+%     Controlling the spread of epidemics in networks is a critical challenge with significant societal impact. In this work, we explore the effectiveness of PageRank-based vaccination strategies to minimize the spread of contagions in networks. We hypothesized that PageRank centrality could effectively identify influential nodes for immunization. We implement and compare various vaccination strategies, including Random, Degree-based, PageRank-based, and NetShield algorithms, under the Independent Cascade (IC) and Susceptible-Infected-Recovered (SIR) models on real-world networks. Our extensive experiments demonstrate that the PageRank-based strategy significantly outperforms other heuristics, validating our hypothesis and highlighting the potential of using PageRank for data-aware vaccination in network epidemics.
+% \end{abstract}
 
 \section{Introduction}
 \label{sec:introduction}
 
-The rapid spread of epidemics in networks, such as infectious diseases in human populations or computer viruses in digital networks, poses significant threats \cite{Cite1,Cite2}. Controlling such epidemics requires effective immunization strategies that can minimize the spread by vaccinating a subset of nodes \cite{Cite3,Cite4}. Traditional immunization approaches often focus on preemptive vaccination without considering the current state of the epidemic, which may not be optimal once an outbreak has begun.
+The rapid spread of epidemics in networks, such as infectious diseases in human populations or computer viruses in digital networks, poses significant threats \cite{Cite1,Cite2}. Controlling such epidemics requires effective immunization strategies that can minimize the spread by vaccinating a subset of nodes \cite{Cite3,Cite4}, for instance in the case of short supply of vaccines or limited resources, such as at the beginning of a pandemic---as we have seen with COVID-19. Traditional immunization approaches often focus on preemptive vaccination without considering the current state of the epidemic, which may not be optimal once an outbreak has begun.
 
-In this work, we address the \textit{Data-Aware Vaccination (DAV)} problem, which involves selecting the best set of nodes to vaccinate, given prior information about the infection's spread \cite{Cite5,Cite6}. Without knowledge of existing DAV algorithms, we independently hypothesized that \textbf{PageRank centrality} could serve as an effective heuristic for identifying critical nodes for vaccination. PageRank is a measure of node importance based on the structure of the network and has been widely used in ranking web pages \cite{Cite7}.
+In this work, we address the \textit{Data-Aware Vaccination (DAV)} problem, which involves selecting the best set of nodes to vaccinate, given prior information about the infection's spread \cite{Cite5,Cite6}. Without knowledge of existing DAV algorithms, we independently hypothesized that \textbf{PageRank centrality} could serve as an effective heuristic for identifying critical nodes for vaccination. PageRank is a measure of node importance based on the structure of the network and has been widely used in ranking web pages \cite{page1999pagerank}.
 
-We compare the performance of various vaccination strategies, including Random, Degree-based, PageRank-based, and NetShield algorithms \cite{Cite8}, under the Independent Cascade (IC) and Susceptible-Infected-Recovered (SIR) models \cite{Cite9,Cite10}. Our experiments on real-world networks demonstrate that the PageRank-based strategy significantly outperforms other heuristics in minimizing the epidemic's spread.
+We compare the performance of various vaccination strategies, including Random, Degree-based, PageRank-based, and NetShield algorithms \cite{tong2010vulnerability}, under the Independent Cascade (IC) and Susceptible-Infected-Recovered (SIR) models \cite{kempe2003maximizing,kermack1927contribution}. Our experiments on real-world networks demonstrate that the PageRank-based strategy significantly outperforms other heuristics in minimizing the epidemic's spread.
 
 \textbf{Contributions}:
 \begin{itemize}
@@ -96,43 +100,46 @@ We compare the performance of various vaccination strategies, including Random, 
 
 Vaccination strategies in networks have been extensively studied \cite{Cite11,Cite12}. Preemptive immunization methods often rely on network centrality measures, such as degree or betweenness, to select nodes for vaccination \cite{Cite13}. Data-aware approaches consider the current state of the epidemic to make vaccination decisions \cite{Cite14,Cite15}.
 
-The NetShield algorithm \cite{Cite8} aims to select nodes that minimize the spectral radius of the adjacency matrix, thereby reducing the network's vulnerability to epidemic spread. Our work differs in that we explore the use of PageRank centrality as a heuristic for data-aware vaccination without prior knowledge of such algorithms.
+The NetShield algorithm \cite{tong2010vulnerability} aims to select nodes that minimize the spectral radius of the adjacency matrix, thereby reducing the network's vulnerability to epidemic spread. Our work differs in that we explore the use of PageRank centrality as a heuristic for data-aware vaccination without prior knowledge of such algorithms.
 
-\section{Preliminaries}
-\label{sec:preliminaries}
+\section{Background}
+\label{sec:background}
 
-Let $G = (V, E)$ be an undirected graph representing the network, where $V$ is the set of nodes and $E$ is the set of edges. Let $I_0 \subset V$ be the set of initially infected nodes. The goal is to select a set $S \subset V \setminus I_0$ of $k$ healthy nodes to vaccinate to minimize the spread of the epidemic.
+Let $G = (V, E)$ be an undirected graph representing the network, where $V$ is the set of vertices and $E$ is the set of edges. Let $S \subseteq V$ represent the set of initially infected nodes. The objective is to select a subset $T \subseteq V \setminus S$ of $k$ healthy nodes to vaccinate, minimizing the spread of the epidemic.
 
-\subsection{Epidemic Models}
+This allows us to reason both about the spread of diseases in human populations, where nodes represent individuals, and about the spread of computer viruses in digital networks, where nodes represent computers or servers.
 
-We consider two widely used epidemic models, tailored to represent different disease dynamics:
+\subsection{Epidemic Models}\label{sec:epidemic-models}
 
-\paragraph{Independent Cascade (IC) Model \cite{Cite9}}
+We consider two epidemic models, each suited to different disease dynamics:
 
-We use this model to simulate diseases like COVID-19, where infected individuals are quickly quarantined and recover relatively fast. At each discrete time step, an infected node has a single chance to infect each of its susceptible neighbors independently with probability $p = 0.4$. The infection probability $p = 0.4$ was derived from online studies as the highest estimated transmission rate for COVID-19. Once the attempt is made, the node becomes inactive and cannot infect others in future steps.
+\paragraph{Susceptible-Infected-Recovered (SIR) Model \cite{kermack1927contribution}}
 
-\paragraph{Susceptible-Infected-Recovered (SIR) Model \cite{Cite10}}
+The SIR model is commonly used to study disease spread in networks \cite{anderson1991infectious, hethcote2000mathematics, shah2011rumors}. It models infectious diseases with varying recovery rates, and we thus use it to model the low-recovery rate disease like Ebola, known for its high mortality. Specifically, infected nodes can transmit the disease to susceptible neighbors with a high probability $p = 0.8$, and recover with a low probability $\delta = 0.1$, becoming immune and ceasing transmission.
 
-We use this model represents diseases that are highly infectious and have a low recovery rate, such as Ebola, which is infamous for its high mortality rate and severe impact on affected populations. In the SIR model, infected nodes can infect their susceptible neighbors with a high probability $p = 0.8$ at each time step. Additionally, infected nodes recover with a low probability $\delta = 0.1$ and become immune, ceasing to participate in the spread.
+\paragraph{Independent Cascade (IC) Model \cite{kempe2003maximizing}}
+
+A variant of the SIR model, the IC model is used to simulate information diffusion in networks \cite{kempe2003maximizing}---by allowing nodes to infect neighbors only once. We use it to models diseases like COVID-19, where quick quarantine and recovery are common. Specifically, infected nodes infect susceptible neighbors with probability $p = 0.4$, but can only attempt infection once before becoming inactive.
 
 \subsection{PageRank Centrality}
 
-PageRank is a measure of node importance based on the idea that connections from important nodes contribute more to the importance of a node \cite{Cite7}. The PageRank score $PR(i)$ of node $i$ is defined recursively as:
+PageRank is a measure of node importance based on the idea that connections from important nodes contribute more to the importance of a node \cite{page1999pagerank}. The PageRank score $PR(i)$ of node $i$ is defined recursively as:
 
-\begin{equation}
-PR(i) = \frac{1 - \alpha}{N} + \alpha \sum_{j \in \text{In}(i)} \frac{PR(j)}{d_j},
-\end{equation}
+\begin{equation*}
+PR(v) = \frac{\epsilon}{N} + (1 - \epsilon) \sum_{(v', v) \in E} \frac{PR(v')}{\text{out-degree}(v')}
+\end{equation*}
 
-where $\alpha$ is the damping factor (typically set to $0.85$), $N$ is the total number of nodes, $\text{In}(i)$ is the set of nodes linking to node $i$, and $d_j$ is the out-degree of node $j$.
+\noindent
+where $\epsilon$ is the damping factor (typically set to $1/7$), and $N$ is the total number of nodes.
 
 \section{Problem Formulation}
 \label{sec:problem_formulation}
 
-The \textbf{Data-Aware Vaccination (DAV)} problem involves selecting a set $S^* \subset V \setminus I_0$ of $k$ healthy nodes to vaccinate to minimize the expected number of infected nodes $\sigma_{G,I_0}(S)$ at the end of the epidemic:
+The \textbf{Data-Aware Vaccination (DAV)} problem involves selecting a set $S^* \subset V \setminus S$ of $k$ healthy nodes to vaccinate to minimize the expected number of infected nodes $\sigma_{G,S}(S)$ at the end of the epidemic:
 
-\begin{equation}
-S^* = \arg \min_{S \subset V \setminus I_0, |S| = k} \sigma_{G,I_0}(S).
-\end{equation}
+\begin{equation*}
+S^* = \arg \min_{S \subset V \setminus S, |S| = k} \sigma_{G,S}(S).
+\end{equation*}
 
 This problem is known to be NP-hard \cite{Cite16}, and exact solutions are computationally infeasible for large networks. Therefore, heuristic approaches are necessary.
 
@@ -143,75 +150,48 @@ This problem is known to be NP-hard \cite{Cite16}, and exact solutions are compu
 
 We implement and compare the following strategies:
 
-\begin{enumerate}[label=(\arabic*)]
-    \item \textbf{No Vaccination}: No nodes are vaccinated.
-    \item \textbf{Random}: Randomly select $k$ healthy nodes to vaccinate.
-    \item \textbf{NetShield}: Use the NetShield algorithm \cite{Cite8} to select nodes that minimize the spectral radius.
-    \item \textbf{Degree-based}: Select the $k$ healthy nodes with the highest degrees. This is a degenerate case of the PageRank-based strategy, as we've seen in class.
-    \item \textbf{PageRank-based}: Select the $k$ healthy nodes with the highest PageRank scores.
-\end{enumerate}
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|p{11cm}|}
+        \hline
+        \textbf{Strategy}     & \textbf{Description} \\ \hline
+        \textbf{No Vaccination} & No nodes are vaccinated. \\ \hline
+        \textbf{Random}        & Randomly select $k$ healthy nodes to vaccinate. \\ \hline
+        \textbf{NetShield}     & Use the NetShield algorithm \cite{tong2010vulnerability} to select nodes that minimize the spectral radius. \\ \hline
+        \textbf{Degree-based}  & Select the $k$ healthy nodes with the highest degrees. A degenerate case of PageRank, as discussed in class. \\ \hline
+        \textbf{PageRank-based} & Select the $k$ healthy nodes with the highest PageRank scores. \\ \hline
+    \end{tabular}
+\end{table}
 
-\subsection{Simulation Setup}
+\subsection{Experimental Setup}
 
 \paragraph{Social Networks}
 
-We conduct experiments on four real-world networks:
+We conduct experiments on four real-world social and peer-to-peer networks, detailed in \Cref{sec:datasets}.
 
-\begin{itemize}
-    \item \textbf{Facebook} \cite{Cite17}: Social network with 4,039 nodes and 88,234 edges.
-    \item \textbf{Brightkite} \cite{Cite18}: Location-based social network with 58,228 nodes and 214,078 edges.
-    \item \textbf{LastFM} \cite{Cite19}: Music social network with 7,624 nodes and 27,806 edges.
-    \item \textbf{Gnutella} \cite{Cite20}: Peer-to-peer network with 8,114 nodes and 26,013 edges.
-\end{itemize}
+\paragraph{Epidemic Propagation Models Configurations}
 
-\paragraph{Epidemic Propagation Models}
+We simulate both the IC and SIR models on each network, to model different disease dynamics, discussed in \Cref{sec:epidemic-models}. The configuration parameter ranges are varied based on the network size. We vary the vaccination budget size to evaluate the strategies' performance under different resource constraints.
 
-We simulate both the IC and SIR models with the following parameters:
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|c|c|}
+        \hline
+        \textbf{Network} & \textbf{Initial Infection Size ($|S|$)} & \textbf{Vaccination Budget ($k$)} & \textbf{Simulations Per Configuration} \\ \hline
+        \textbf{Facebook, LastFM, Gnutella} & 100 & $10, 30, 50, 70, 90, 110, 130, 150$ & 200 \\ \hline
+        \textbf{Brightkite} & 400 & $10, 50, 100, 150, 200, 250, 300, 350$ & 50 \\ \hline
+    \end{tabular}
+\end{table}
 
-\begin{itemize}
-    \item \textbf{IC Model}: Infection probability $p = 0.4$.
-    \item \textbf{SIR Model}: Infection probability $p = 0.8$, recovery probability $\delta = 0.1$.
-\end{itemize}
-
-\noindent
-For the IC model, $p = 0.4$ represents a disease like COVID-19, where the infection probability was derived from online studies as the highest estimated transmission rate. For the SIR model, $p = 0.8$ and $\delta = 0.1$ model diseases like Ebola, which are highly infectious and have low recovery rates.
-
-\paragraph{Epidemic Propagation Model Parameters}
-
-For each network, we randomly select a set $I_0$ of initially infected nodes:
-
-\begin{itemize}
-    \item \textbf{Facebook, LastFM}: $|I_0| = 100$.
-    \item \textbf{Brightkite, Gnutella}: $|I_0| = 400$.
-\end{itemize}
-
-\noindent
-The vaccination budget $k$ varies depending on the network size:
-
-\begin{itemize}
-    \item \textbf{Facebook, LastFM}: $k \in \{5, 10, 20, 30, 40, 50\}$.
-    \item \textbf{Brightkite, Gnutella}: $k \in \{10, 30, 50, 70, 90, 110, 130, 150\}$.
-\end{itemize}
-
-\paragraph{Simulation Runs}
-
-For each configuration, we run multiple simulations to compute the average number of infected nodes:
-
-\begin{itemize}
-    \item \textbf{Facebook, LastFM}: 50 simulations.
-    \item \textbf{Brightkite, Gnutella}: 200 simulations.
-\end{itemize}
-
-\subsection{Evaluation Metric}
-
-We evaluate each strategy based on the \textbf{average number of healthy nodes} remaining after the epidemic. A higher number of healthy nodes indicates a more effective vaccination strategy.
+\paragraph{Evaluation Metric}
+We evaluate each strategy based on the \textbf{average number of healthy nodes} remaining after the epidemic. A higher number of healthy nodes indicates a more effective vaccination strategy. This is averaged across the amount of simulations per configuration.
 
 \section{Experimental Results}
 \label{sec:experimental_results}
 
 Due to space limitations, we present a summary of our experimental results here. Detailed figures for each network under both epidemic models are provided in the \hyperref[sec:artifacts]{Artifacts Appendix} (see Figures~\ref{fig:ic_results} and \ref{fig:sir_results}).
 
-Our experiments consistently demonstrate that the PageRank-based vaccination strategy significantly reduces the spread of epidemics compared to other heuristics across different networks and epidemic models.
+Our experiments consistently demonstrate that the PageRank-based vaccination strategy significantly reduces the spread of epidemics compared to other heuristics across different networks and epidemic models. Moreover, we note a significant runtime improvement compared to the NetShield algorithm, which requires solving an optimization problem to minimize the spectral radius.
 
 \section{Discussion}
 \label{sec:discussion}
@@ -234,7 +214,7 @@ Future work includes exploring dynamic vaccination strategies that adapt to the 
 
 In this appendix, we present the experimental results in the form of two composite figures, each containing four subfigures corresponding to the different networks analyzed under each epidemic model.
 
-\subsection{Independent Cascade Model Results}
+\subsection{Independent Cascade Model Results (COVID-19-like)}
 
 \begin{figure}[H]
     \centering
@@ -267,7 +247,7 @@ In this appendix, we present the experimental results in the form of two composi
     \label{fig:ic_results}
 \end{figure}
 
-\subsection{SIR Model Results}
+\subsection{SIR Model Results (Ebola-like)}
 
 \begin{figure}[H]
     \centering
@@ -303,19 +283,20 @@ In this appendix, we present the experimental results in the form of two composi
 \section{Datasets}
 \label{sec:datasets}
 
-We used the following real-world network datasets in our experiments:
+We used the following real-world network datasets in our experiments, taken from the \cite[Stanford Network Analysis Project (SNAP)]{snapnets}:
 
-\begin{itemize}
-    \item \textbf{Facebook Social Network} \cite{Cite17}: A network representing friendships on Facebook, consisting of 4,039 nodes and 88,234 edges.
-
-    \item \textbf{Brightkite Location-Based Social Network} \cite{Cite18}: A network from the Brightkite location-based social networking platform, with 58,228 nodes and 214,078 edges.
-
-    \item \textbf{LastFM Music Social Network} \cite{Cite19}: A network representing friendships on LastFM, a music recommendation platform, containing 7,624 nodes and 27,806 edges.
-
-    \item \textbf{Gnutella Peer-to-Peer Network} \cite{Cite20}: A network of Gnutella peer-to-peer file sharing connections, with 8,114 nodes and 26,013 edges.
-\end{itemize}
-
-These datasets were obtained from public repositories and are commonly used in network analysis research.
+\begin{table}[H]
+    \centering
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|l|l|}
+        \hline
+        \textbf{Dataset} & \textbf{Description} & \textbf{Nodes} & \textbf{Edges} \\ \hline
+        \textbf{Facebook Social Network} \cite{facebookdata, leskovec2012learning} & A network representing friendships on Facebook. & 4,039 & 88,234 \\ \hline
+        \textbf{Brightkite Location-Based Social Network} \cite{brightkitedata, cho2011friendship} & A network from the Brightkite location-based social networking platform. We used the friendship network for our experiments. & 58,228 & 214,078 \\ \hline
+        \textbf{LastFM Music Social Network} \cite{lastfmdata, feather} & A network representing friendships on LastFM, a music recommendation platform. & 7,624 & 27,806 \\ \hline
+        \textbf{Gnutella Peer-to-Peer Network} \cite{gnutelladata, leskovec2007graph, ripeanu2002mapping} & A network of Gnutella peer-to-peer file sharing connections. It serves as a model for online virus spread, expanding the scope of our experiments. & 6,301 & 20,777 \\ \hline
+    \end{tabularx}
+\end{table}
 
 \bibliography{bibliography}
 
