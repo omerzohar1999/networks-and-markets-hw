@@ -47,7 +47,7 @@ class reference:
             return list(np.where(self.adjacency_matrix[:, destination_node] == 1)[0])
     
     @staticmethod
-    def scaled_page_rank(graph, num_iter, eps=1/7.0):
+    def scaled_page_rank(graph, num_iter, eps=1/7.0, enforce_sink=False):
         '''This method, given a directed graph, should run the epsilon-scaled page-rank
         algorithm for num_iter iterations and return a mapping (dictionary) between a node and its weight. 
         In the case of 0 iterations, all nodes should have weight 1/number_of_nodes'''  
@@ -59,6 +59,7 @@ class reference:
                 rank = 0
                 for node in graph.edges_to(j):
                     rank += previous[node] / graph.out_degree(node)
+                rank += 0 if (graph.out_degree(j) > 0 or (not enforce_sink)) else previous[j] # If the node is a sink, add the previous rank
                 ranks[j] = (eps / graph.number_of_nodes()) + (1 - eps) * rank
             previous = np.copy(ranks)
 
@@ -140,7 +141,7 @@ class reference:
         return g
 
     @staticmethod
-    def facebook_graph(filename = "facebook_combined.txt"):
+    def facebook_graph(filename = "datasets/facebook_combined.txt"):
         ''' This method should return a DIRECTED version of the facebook graph as an instance of the DirectedGraph class.
         In particular, if u and v are friends, there should be an edge between u and v and an edge between v and u.'''
         with open(filename, mode="r") as f:
@@ -157,13 +158,86 @@ class reference:
     @staticmethod
     def question8b():
         # Load Facebook graph
-        filepath = "facebook_combined.txt"
+        filepath = "datasets/facebook_combined.txt"
         FB_g = reference.facebook_graph(filename = filepath)
 
         # Run PR for 20 iterations
-        pr = reference.scaled_page_rank(graph = FB_g, num_iter=20)
+        pr = reference.scaled_page_rank(graph = FB_g, num_iter=20, enforce_sink=True)
 
         return pr
+
+####################################################################################################
+########### HW4 SUPPLEMENTARY FUNCTIONS ###########################################################
+####################################################################################################
+def graph_15_1_left():
+    """This method, should construct and return a DirectedGraph encoding the left example in fig 15.1
+    Use the following indexes: A:0, B:1, C:2, Z:3"""
+    G = DirectedGraph(4)
+    G.add_edge(0, 1)
+    G.add_edge(1, 2)
+    G.add_edge(2, 0)
+    G.add_edge(0, 3)
+    G.add_edge(3, 3)
+
+    return G
+
+
+def graph_15_1_right():
+    """This method, should construct and return a DirectedGraph encoding the right example in fig 15.1
+    Use the following indexes: A:0, B:1, C:2, Z1:3, Z2:4"""
+    G = DirectedGraph(5)
+
+    G.add_edge(0, 1)
+    G.add_edge(1, 2)
+    G.add_edge(2, 0)
+    G.add_edge(0, 3)
+    G.add_edge(0, 4)
+    G.add_edge(3, 4)
+    G.add_edge(4, 3)
+
+    return G
+
+
+def graph_15_2():
+    """This method, should construct and return a DirectedGraph encoding example 15.2
+    Use the following indexes: A:0, B:1, C:2, A':3, B':4, C':5"""
+    G = DirectedGraph(6)
+
+    G.add_edge(0, 1)
+    G.add_edge(1, 2)
+    G.add_edge(2, 0)
+
+    G.add_edge(3, 4)
+    G.add_edge(4, 5)
+    G.add_edge(5, 3)
+
+    return G
+
+
+def extra_graph_1():
+    """This method, should construct and return a DirectedGraph of your choice with at least 10 nodes"""
+    G = DirectedGraph(10)
+    # Shoule form an infinity sign
+    # First cycle from nodes 0 to 4
+    for i in range(5):
+        G.add_edge(i, (i + 1) % 5)
+    # Second cycle from nodes 5 to 9
+    for i in range(5, 10):
+        G.add_edge(i, 5 + (i + 1 - 5) % 5)
+    # Connect the two cycles with an edge
+    G.add_edge(4, 5)
+    return G
+
+
+def extra_graph_2():
+    """This method, should construct and return a DirectedGraph of your choice with at least 10 nodes"""
+    G = DirectedGraph(10)
+    # Nodes 0-4 are in set A, nodes 5-9 are in set B
+    # Create edges from every node in set A to every node in set B
+    for i in range(5):
+        for j in range(5, 10):
+            G.add_edge(i, j)
+    return G
 
 ####################################################################################################
 ########### UNIT TESTS #############################################################################
@@ -216,9 +290,32 @@ def compare_scores(our_scores, ref_scores):
 class TestPageRank(unittest.TestCase):
 
     def setUp(self):
+        # Our graphs
         self.our_graphs = [graph_15_1_left(), graph_15_1_right(), graph_15_2(), extra_graph_1(), extra_graph_2()]
         self.ref_graphs = [reference.graph_15_1_left(), reference.graph_15_1_right(), reference.graph_15_2(), reference.extra_graph_1(), reference.extra_graph_2()]
+
+        # Random graphs with no sinks
+        self.random_graphs_no_sinks = [create_random_directed_graph(20, 0.5) for _ in range(20)] + [create_random_directed_graph(30, 0.8) for _ in range(20)]
+        for graph in self.random_graphs_no_sinks:
+            for i in range(graph.number_of_nodes()):
+                if len(graph.edges_from(i)) == 0:
+                    graph.add_edge(i, i)
+
+        # Random graphs that may have sinks
         self.random_graphs = [create_random_directed_graph(20, 0.5) for _ in range(20)] + [create_random_directed_graph(30, 0.8) for _ in range(20)]
+
+        # Random graphs with sinks
+        for graph_ind in range(30):
+            G = DirectedGraph(20)
+            rank_sink = random.randint(0, G.number_of_nodes() - 1)
+            for i in range(G.number_of_nodes()):
+                if i != rank_sink:
+                    for j in range(G.number_of_nodes()):
+                        if i != j and random.random() > 0.5:
+                            G.add_edge(i, j)
+            self.random_graphs.append(G)
+
+        # Configurations
         self.configs = list(product(list(range(10,11)), [0.1, 1 / 7, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]))
 
     def test_our_graphs(self):
@@ -226,13 +323,13 @@ class TestPageRank(unittest.TestCase):
             for config in self.configs:
                 i, eps = config
                 our_scores = scaled_page_rank(G, i, eps)
-                ref_scores = reference.scaled_page_rank(DG_to_reference_DG(G), i, eps)
+                ref_scores = reference.scaled_page_rank(DG_to_reference_DG(G), i, eps, enforce_sink=True)
 
                 # Verify that the scores are the same
                 self.assertTrue(compare_scores(our_scores, ref_scores), f"[Our Graphs][Test {test_i}] Failed: {i=} {eps=} {our_scores=} {ref_scores=}")
 
                 # Verify that the ranks are indeed valid ranks
-                # self.assertAlmostEqual(sum(our_scores.values()), 1.0, places=5) # TODO: Wait for response from TA
+                self.assertAlmostEqual(sum(our_scores.values()), 1.0, places=5, msg=f"[Our Graphs][Test {test_i}] L1 Norm of Scores is not 1")
                 self.assertTrue(all(0 <= score <= 1 for score in our_scores.values()))
                 
                 # Print that the test passed
@@ -243,34 +340,51 @@ class TestPageRank(unittest.TestCase):
             for config in self.configs:
                 i, eps = config
                 our_scores = scaled_page_rank(reference_DG_to_DG(G), i, eps)
-                ref_scores = reference.scaled_page_rank(G, i, eps)
+                ref_scores = reference.scaled_page_rank(G, i, eps, enforce_sink=True)
 
                 # Verify that the scores are the same
                 self.assertTrue(compare_scores(our_scores, ref_scores), f"[Ref Graphs][Test {test_i}] Failed: {i=} {eps=} {our_scores=} {ref_scores=}")
 
                 # Verify that the ranks are indeed valid ranks
-                # self.assertAlmostEqual(sum(our_scores.values()), 1.0, places=5, msg=f"Test {test_i}") # TODO: Wait for response from TA
+                self.assertAlmostEqual(sum(our_scores.values()), 1.0, places=5, msg=f"[Ref Graphs][Test {test_i}] L1 Norm of Scores is not 1")
                 self.assertTrue(all(0 <= score <= 1 for score in our_scores.values()))
 
                 # Print that the test passed
                 print(f"[Ref Graphs][Test {test_i}] Passed: {i=} {eps=} {our_scores=} {ref_scores=}")
 
-    def test_random_graphs(self):
-        for test_i, G in enumerate(self.random_graphs):
+    def test_random_graphs_no_sinks(self):
+        for test_i, G in enumerate(self.random_graphs_no_sinks):
             for config in self.configs:
                 i, eps = config
                 our_scores = scaled_page_rank(G, i, eps)
                 ref_scores = reference.scaled_page_rank(DG_to_reference_DG(G), i, eps)
 
                 # Verify that the scores are the same
-                self.assertTrue(compare_scores(our_scores, ref_scores), f"[Random Graphs][Test {test_i}] Failed: {i=} {eps=}")
+                self.assertTrue(compare_scores(our_scores, ref_scores), f"[Random Graphs No Sinks][Test {test_i}] Failed: {i=} {eps=}")
 
                 # Verify that the ranks are indeed valid ranks
-                # self.assertAlmostEqual(sum(our_scores.values()), 1.0, places=5) # TODO: Wait for response from TA
+                self.assertAlmostEqual(sum(our_scores.values()), 1.0, places=5, msg=f"[Random Graphs No Sinks][Test {test_i}] L1 Norm of Scores is not 1")
                 self.assertTrue(all(0 <= score <= 1 for score in our_scores.values()))
 
                 # Print that the test passed
-                print(f"[Random Graphs][Test {test_i}] Passed: {i=} {eps=}")
+                print(f"[Random Graphs No Sinks][Test {test_i}] Passed: {i=} {eps=}")
+
+    def test_random_graphs_may_have_sinks(self):
+        for test_i, G in enumerate(self.random_graphs):
+            for config in self.configs:
+                i, eps = config
+                our_scores = scaled_page_rank(G, i, eps)
+                ref_scores = reference.scaled_page_rank(DG_to_reference_DG(G), i, eps, enforce_sink=True)
+
+                # Verify that the scores are the same
+                self.assertTrue(compare_scores(our_scores, ref_scores), f"[Random Graphs May Have Sinks][Test {test_i}] Failed: {i=} {eps=}")
+
+                # Verify that the ranks are indeed valid ranks
+                self.assertAlmostEqual(sum(our_scores.values()), 1.0, places=5, msg=f"[Random Graphs May Have Sinks][Test {test_i}] L1 Norm of Scores is not 1")
+                self.assertTrue(all(0 <= score <= 1 for score in our_scores.values()))
+
+                # Print that the test passed
+                print(f"[Random Graphs May Have Sinks][Test {test_i}] Passed: {i=} {eps=}, Sink Present={any(len(G.edges_from(i)) == 0 for i in range(G.number_of_nodes()))}")
 
 class TestProblem8(unittest.TestCase):
 
@@ -279,6 +393,14 @@ class TestProblem8(unittest.TestCase):
         our_facebook_graph = facebook_graph()
         self.assertTrue(compare_ref_DG_to_DG(reference_facebook_graph, our_facebook_graph), f"[Facebook Graph Comparison to Reference] Failed")
         print(f"[Facebook Graph Comparison to Reference] Passed")
+
+    def test_facebook_graph(self):
+        # Load Facebook graph
+        our_facebook_graph = facebook_graph()
+
+        # Verify the edges from and edges to are equal (as the graph is undirected)
+        for i in range(our_facebook_graph.number_of_nodes()):
+            self.assertTrue(set(our_facebook_graph.edges_from(i)) == set(our_facebook_graph.edges_to(i)), f"[Facebook Graph Edges From and To] Failed")
 
     def test_page_rank(self):
         # Calculate reference ranks
@@ -292,7 +414,7 @@ class TestProblem8(unittest.TestCase):
         self.assertTrue(compare_scores(ranks, reference_ranks), f"[Facebook PageRank Comparison to Reference] Failed")
 
         # Verify that the ranks are indeed valid ranks
-        # self.assertAlmostEqual(sum(ranks.values()), 1.0, places=5) # TODO: Wait for response from TA
+        self.assertAlmostEqual(sum(ranks.values()), 1.0, places=5, msg=f"[Facebook PageRank Comparison to Reference] L1 Norm of Scores is not 1")
         self.assertTrue(all(0 <= score <= 1 for score in ranks.values()))
 
         # Print that the test passed

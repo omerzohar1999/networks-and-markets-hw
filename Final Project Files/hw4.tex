@@ -63,10 +63,12 @@
 \setcounter{section}{0}
 
 \section{Question 7}
+\textbf{Important Implementation Note:} We implemented the $\epsilon$-scaled PageRank algorithm as we have seen in class, with the slight modification that it is enforced that there are no sink-nodes. That is, for each sink-node in the graph (in the input graph to the \texttt{scaled\_page\_rank} function), we make sure that during the calculation of the ranks, it is as if the sink-node points to itself. Note, that we do not add any edges to the input graph, but rather modify the calculation of the ranks as if the sink-node points to itself. Seek the implementation in the \texttt{scaled\_page\_rank} function in the \texttt{hw4.py} file for more details. This is done in order to preserve the $L1$ norm of the ranks (to be 1 through-out every iteration of the calculation), as we have seen in class, and was an approved modification by the course staff (see the Moodle forum's post's last-comment \href{https://moodle.tau.ac.il/mod/forum/discuss.php?d=104715\#p161936}{here}).
+
 The following are the results of running the PageRank algorithm on the given graph. The graphs are displayed such that higher-ranked nodes have more saturated colors.
 
 \noindent
-The following are the example graphs we have seen in class:
+First, the following are the example graphs we have seen in class:
 
 \begin{description}
     \item[graph\_15\_1\_left] This graph constitutes a 3-node cycle that continues to a self-loop node.

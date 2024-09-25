@@ -1,11 +1,3 @@
-# Skeleton file for HW4 question 4
-# =====================================
-# IMPORTANT: You are NOT allowed to modify the method signatures
-# (i.e. the arguments and return types each function takes).
-# We will pass your grade through an autograder which expects a specific format.
-# =====================================
-
-
 # Do not include any other files or an external package, unless it is one of
 # [numpy, pandas, scipy, matplotlib, random]
 # please contact us before sumission if you want another package approved.
@@ -120,11 +112,7 @@ def scaled_page_rank(G: DirectedGraph, num_iter: int, eps: int = 1 / 7.0):
         new_weights = [eps / G.number_of_nodes()] * G.number_of_nodes()
         for i in range(G.number_of_nodes()):
             new_weights[i] += (1 - eps) * sum(weights[j] / len(G.edges_from(j)) for j in G.edges_to(i))
-
-        # TODO: Wait for response from TA
-        # if abs(sum(new_weights) - 1) > 1e-6:
-        #     raise ValueError(f"Sum of weights is not 1: {sum(new_weights)=}, {sum(weights)=}, iter={_}")
-
+            new_weights[i] += 0 if len(G.edges_from(i)) > 0 else (1 - eps) * weights[i] # sink-nodes are treated as self-loops
         weights = new_weights
 
     return {i: weights[i] for i in range(G.number_of_nodes())}
