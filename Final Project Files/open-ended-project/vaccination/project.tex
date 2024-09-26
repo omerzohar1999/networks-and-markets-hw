@@ -57,10 +57,10 @@
 \Crefformat{appendix}{#2Appendix\color{blue}~#1#3}
 
 % Define the title
-\setlength{\droptitle}{-4.9em}  % Adjust this value to pull the title up
+\setlength{\droptitle}{-5.2em}  % Adjust this value to pull the title up
 
 \title{
-    PageRank-Based Vaccination Strategies
+    Optimizing Adaptive Vaccination in Networks Using PageRank Centrality
 }
 \author{
     Adam Tuby
@@ -82,9 +82,10 @@
 %     Controlling the spread of epidemics in networks is a critical challenge with significant societal impact. In this work, we explore the effectiveness of PageRank-based vaccination strategies to minimize the spread of contagions in networks. We hypothesized that PageRank centrality could effectively identify influential nodes for immunization. We implement and compare various vaccination strategies, including Random, Degree-based, PageRank-based, and NetShield algorithms, under the Independent Cascade (IC) and Susceptible-Infected-Recovered (SIR) models on real-world networks. Our extensive experiments demonstrate that the PageRank-based strategy significantly outperforms other heuristics, validating our hypothesis and highlighting the potential of using PageRank for data-aware vaccination in network epidemics.
 % \end{abstract}
 
-\vspace{-1.4cm}
+\vspace{-0.8cm}
 \section{Introduction}
 \label{sec:introduction}
+\vspace{-0.1cm}
 
 The spread of epidemics in networks, such as diseases or computer viruses, presents critical challenges with significant societal impact \cite{newman2003structure,pastor2001epidemic}. Effective immunization strategies aim to vaccinate a select subset of nodes to minimize this spread \cite{pastor2002immunization,cohen2003efficient}, especially when resources are initially scarce, as seen during the early stages of pandemics like COVID-19.
 
@@ -94,8 +95,9 @@ We evaluate the performance of Random, Degree-based, PageRank-based, and NetShie
 
 \section{Problem Formulation}
 \label{sec:problem_formulation}
+\vspace{-0.1cm}
 
-The goal of this work is to design a vaccination strategy that adapts to both the network's structure and the current state of an ongoing epidemic. Given a network $G = (V, E)$, where $V$ represents the set of nodes and $E$ represents the set of edges, let $S \subseteq V$ denote the set of infected (`sick') nodes at a particular point in time. With a limited vaccination budget of $k$, our objective is to identify a set of uninfected (`healthy') nodes, denoted by $\mathcal{H}$, to vaccinate in order to minimize future infection spread.
+The goal of this work is to design a vaccination strategy that adapts to both the network's structure and the current state of an ongoing epidemic. Given a network $G = (V, E)$, where $V$ represents the set of nodes and $E$ represents the set of edges, let $\mathcal{S} \subseteq V$ denote the set of infected (`sick') nodes at a particular point in time. With a limited vaccination budget of $k$, our objective is to identify a set of uninfected (`healthy') nodes, denoted by $\mathcal{H}$, to vaccinate in order to minimize future infection spread.
 
 We define the adaptive vaccination problem as finding a set $\mathcal{H} \subseteq V \setminus \mathcal{S}$ of size $|\mathcal{H}| = k$ such that the expected number of infected nodes at the end of the epidemic, denoted as $\mathbb{E}_{G}^{S, \mathcal{H}}$, is minimized. This can be formalized as:
 
@@ -109,10 +111,13 @@ The challenge of this problem stems from its combinatorial nature, making it com
 
 \section{Background}
 \label{sec:background}
+\vspace{-0.1cm}
 
 Given that our problem formulation from \Cref{sec:problem_formulation} allows us to reason about the spread of diseases in human populations and computer viruses in digital networks, we provide a brief overview of the relevant concepts and models.
 
-\subsection{Epidemic Models}\label{sec:epidemic-models}
+\subsection{Epidemic Models}
+\label{sec:epidemic-models}
+\vspace{-0.1cm}
 
 We consider two epidemic models, each suited to different disease dynamics:
 
@@ -127,11 +132,14 @@ A variant of the SIR model, the IC model is used to simulate information diffusi
 % We use it to models diseases like COVID-19, where quick quarantine and recovery are common. Specifically, infected nodes infect susceptible neighbors with probability $p = 0.4$, but can only attempt infection once before becoming inactive.
 
 \subsection{Vaccination Strategies}
+\vspace{-0.1cm}
+
 Vaccination strategies in networks have been studied \cite{cohen2003efficient,holme2002attack}. Preemptive methods use centrality measures, like degree or betweenness, to select vaccination nodes \cite{kitsak2010identification}. In contrast, adaptive approaches consider the epidemic's current state for decision-making \cite{pastor2015epidemic}.
 
 The NetShield algorithm \cite{tong2010vulnerability} selects nodes to minimize the spectral radius of the adjacency matrix, reducing vulnerability to epidemic spread. Our work differs by exploring PageRank centrality as a heuristic for adaptive vaccination.
 
 \section{PageRank Centrality}
+\vspace{-0.1cm}
 
 PageRank is a measure of node importance based on the idea that connections from important nodes contribute more to the importance of a node \cite{page1999pagerank}. The PageRank score $PR(i)$ of node $i$ is defined recursively as:
 
@@ -146,8 +154,10 @@ where $\epsilon$ is the damping factor (typically $1/7$) and $N$ is the total nu
 
 \section{Methodology}
 \label{sec:methodology}
+\vspace{-0.1cm}
 
 \subsection{Epidemic Simulation}
+\vspace{-0.1cm}
 
 We use the SIR and IC models detailed in \Cref{sec:epidemic-models} to simulate the spread of epidemics on real-world networks under different disease dynamics. In particular, we use the following propagation models:
 
@@ -164,6 +174,7 @@ We use the SIR and IC models detailed in \Cref{sec:epidemic-models} to simulate 
 
 \vspace{-0.3cm}
 \subsection{Vaccination Strategies}
+\vspace{-0.1cm}
 
 We implement and compare the following strategies:
 
