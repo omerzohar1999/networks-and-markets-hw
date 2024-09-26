@@ -89,9 +89,9 @@
 
 The spread of epidemics in networks, such as diseases or computer viruses, presents critical challenges with significant societal impact \cite{newman2003structure,pastor2001epidemic}. Effective immunization strategies aim to vaccinate a select subset of nodes to minimize this spread \cite{pastor2002immunization,cohen2003efficient}, especially when resources are initially scarce, as seen during the early stages of pandemics like COVID-19.
 
-In this work, we tackle the problem of \textit{adaptive vaccination}, focusing on selecting the optimal nodes for immunization based on the current state of infection spread, for times of scarce amounts of vaccines. We hypothesized that \textbf{PageRank}'s centrality, a well-established measure for identifying influential nodes, could effectively guide vaccination efforts. PageRank has traditionally been applied to web ranking \cite{page1999pagerank}, but we extend its use to vaccination strategy optimization.
+In this work, we tackle the problem of \textit{adaptive vaccination}, focusing on selecting the optimal nodes for immunization based on the current state of infection spread, during times of scarce vaccine availability. We hypothesize that \textbf{PageRank}'s centrality, a well-established measure for identifying influential nodes, can effectively guide vaccination efforts. PageRank has traditionally been applied to web ranking \cite{page1999pagerank}, but we extend its use to vaccination strategy optimization.
 
-We evaluate the performance of Random, Degree-based, PageRank-based, and NetShield algorithms \cite{tong2010vulnerability} under both the Independent Cascade (IC) and Susceptible-Infected-Recovered (SIR) models \cite{kempe2003maximizing,kermack1927contribution}. Our results on real-world networks demonstrate that the PageRank-based strategy consistently outperforms other heuristics in minimizing epidemic spread.
+We evaluate the performance of Random, Degree-based, PageRank-based, and NetShield algorithms \cite{tong2010vulnerability} under both the Independent Cascade (IC) and Susceptible-Infected-Recovered (SIR) models \cite{kempe2003maximizing,kermack1927contribution}. Our results on real-world networks demonstrate that the PageRank-based strategy consistently outperforms other heuristics in minimizing the spread of epidemics.
 
 \section{Problem Formulation}
 \label{sec:problem_formulation}
@@ -127,7 +127,7 @@ The SIR model is commonly used to study disease spread in networks \cite{anderso
 
 \paragraph{Independent Cascade (IC) Model \cite{kempe2003maximizing}}
 
-A variant of the SIR model, the IC model is used to simulate information diffusion in networks \cite{kempe2003maximizing}---by allowing nodes to infect neighbors only once.
+A variant of the SIR model, the IC model is used to simulate information diffusion in networks \cite{kempe2003maximizing}—by allowing nodes to infect neighbors only once.
 
 % We use it to models diseases like COVID-19, where quick quarantine and recovery are common. Specifically, infected nodes infect susceptible neighbors with probability $p = 0.4$, but can only attempt infection once before becoming inactive.
 
@@ -241,7 +241,7 @@ The effectiveness of the PageRank-based strategy might stem from its ability to 
 Our results indicate that PageRank centrality provides a more practical and computationally efficient heuristic.
 
 \paragraph{Conclusions}
-We have shown that PageRank centrality is an effective heuristic for node vaccination in the adaptive vaccination problem. Our experiments on real-world networks validate our hypothesis, demonstrating the potential of using PageRank for adaptive vaccination in network epidemics.
+We show that PageRank centrality is an effective heuristic for node vaccination in the adaptive vaccination problem. Our experiments on real-world networks validate our hypothesis, demonstrating the potential of using PageRank for adaptive vaccination in network epidemics.
 
 Future work may explore more complex dynamic vaccination strategies and investigate combining PageRank with other centrality measures to enhance vaccination effectiveness.
 
