@@ -100,7 +100,7 @@ The goal of this work is to design a vaccination strategy that adapts to both th
 We define the adaptive vaccination problem as finding a set $\mathcal{H} \subseteq V \setminus S$ of size $|\mathcal{H}| = k$ such that the expected number of infected nodes at the end of the epidemic, denoted as $\mathbb{E}_{G}^{S, \mathcal{H}}$, is minimized. This can be formalized as:
 
 \begin{equation*}
-\mathcal{H}^* = \arg \min_{\mathcal{H} \subset V \setminus S, |\mathcal{H}| = k} \mathbb{E}_{G}^{S, \mathcal{H}}.
+\mathcal{H}^* = \arg \min_{\mathcal{H} \subseteq V \setminus S, |\mathcal{H}| = k} \mathbb{E}_{G}^{S, \mathcal{H}}.
 \end{equation*}
 
 The challenge of this problem stems from its combinatorial nature, making it computationally intractable for large networks. Hence, we explore heuristic strategies that leverage network centrality measures to guide the vaccination process.
