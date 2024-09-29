@@ -112,7 +112,7 @@ First, the following are the example graphs we have seen in class:
 The two other simple test cases we used are:
 
 \begin{description}
-    \item[Extra Graph 1] The first graph is two cycles connected by a single edge (i.e., an infinite loop).
+    \item[Extra Graph 1] The first graph is two cycles connected by a single edge.
     
     \begin{figure}[H]
         % the tex file at extra_graph_1.tex has \begin{tikzpicture}...\end{tikzpicture}
@@ -145,7 +145,7 @@ The two other simple test cases we used are:
     
     \begin{figure}[H]
         \centering
-        \resizebox{\textwidth}{!}{%
+        \resizebox{0.95\textwidth}{!}{%
             \includegraphics{figures/facebook.png}
         }
         \caption{Facebook Graph - High-Ranked Nodes Are Colored in Red, Low-Ranked Nodes Are Colored in Green, and Nodes with Intermediate Ranks Are Colored in Gray. The graph structure was determined by \texttt{nx.draw} function from the \texttt{networkx} library.}
@@ -156,9 +156,11 @@ The two other simple test cases we used are:
     
     Furthermore, we performed an in-link analysis on the graphs. \Cref{fig:inlink_analysis} shows the relationship between the PageRank of a node and its in-degree. The figures are scatter plots of the index of the rank of each node (i.e. its index in the ordered set of ranks) and the in-link degrees of the corresponding node in the graph, for each of the graphs detailed in Question 7 and the Facebook graph.
     
-    It is clear from the in-link analysis that there's a pseudo-linear relationship between the rank of a node and its in-degree. The higher the rank of a node, the more common it is for the node to have a higher in-degree (we say `more common' as there are multiple trends in the Facebook graph's analysis---possibly due to the multi-cluster nature of the graph). The opposite is true for nodes with lower ranks. This is consistent with the intuition that nodes with higher ranks are more likely to be visited by a random walker, and thus are more likely to have more in-links.
+    It is clear from the in-link analysis that there's a monotonic relationship between the rank of a node and its in-degree (that is, its Spearman correlation is substantial). The higher the rank of a node, the more common it is for the node to have a higher in-degree (we say `more common' as there are multiple trends in the Facebook graph's analysis---possibly due to the multi-cluster nature of the graph). The opposite is true for nodes with lower ranks. This is consistent with the intuition that nodes with higher ranks are more likely to be visited by a random walker, and thus are more likely to have more in-links.
+
+    Indeed, we record a $\approx 0.85$ Spearman correlation between the rank of a node and its in-degree in the Facebook graph (and similar correlations in the other graphs). This underscores the relationship between the rank of a node and its in-degree, which corresponds to how PageRank works.
     
-    Indeed, looking more closely, the top 5 nodes with the highest page rank had the following in-degrees: 231, 159, 59, 170, 229 (where top rank had 231 neighbors, and 5th had 229), where the bottom 5 nodes with the lowest page rank had the following degrees: 1, 1, 1, 1, 1.
+    Moreover, looking more closely, the top 5 nodes with the highest page rank had the following in-degrees: 231, 159, 59, 170, 229 (where top rank had 231 neighbors, and 5th had 229), where the bottom 5 nodes with the lowest page rank had the following degrees: 1, 1, 1, 1, 1.
 
     \begin{figure}
         \centering
@@ -222,9 +224,11 @@ The two other simple test cases we used are:
 
     \item[(d)] 
     
-    Intuitively, the page rank of a node at step $k$ may be a good measure of the probability that a random walker will be at that node after $k$ steps. That is, the PageRank algorithm can be interpreted as a random walker that moves from node to node, with the probability of moving to a node at a certain time-step being correlated with the number of in-links to that node. If a node has a high rank, then starting a random walk from many nodes it is likely to arrive at that node. This can be interpreted as a person who is influenced by others in the network, where the more people that are connected to a person, the more likely they are to be influenced by that person. Moreover, since the graph/social-network is derived from an undirected graph, it means that this goes both ways: a high rank means that random walks from it might reach many nodes, and that many nodes might reach it.
+    Intuitively, the results make sense, as the page rank of a node at step $k$ might model well the probability that a random walker will be at that node after $k$ steps (as we reasoned in class). That is, the PageRank algorithm can be interpreted as a random walker that moves from node to node, with the probability of moving to a node at a certain time-step being correlated with the number of in-links to that node. If a node has a high rank, then starting a random walk from many nodes it is likely to arrive at that node. This can be interpreted as a person who is influenced by others in the network, where the more people that are connected to a person, the more likely they are to be influenced by that person. Moreover, since the graph/social-network is derived from an undirected graph, it means that this goes both ways: a high rank means that random walks from it might reach many nodes, and that many nodes might reach it.
     
     This is a reasonable measure of influence in a social network, as it captures the idea that influential people are those who are connected to many others in the network, whom we may expect to come across more often (at extracurricular activities, on our timeline, etc.), consistent with our intuition of relevance within PageRank. Thus, if we want to quantify influence over people, it seems that the scaled page rank is a good measure. Further affirming our hypothesis anecdotally, as we've seen in \Cref{fig:facebook}, the nodes with the highest page rank are nodes that are in the center of the graph, which is where we would expect influential people to be in a social network.
+
+    To further refine this measure, we could incorporate the strength of links between nodes. For instance, not all connections in a social network are equal; some relationships are stronger and more influential than others. By weighting the edges of the graph according to the strength of the connections (e.g., frequency of interactions, duration of relationships), we can obtain a more accurate representation of influence. Additionally, other measures of popularity, such as the number of likes, shares, or comments a person receives, could be integrated into the PageRank algorithm to better capture the multifaceted nature of influence. This would allow us to distinguish between nodes that are not only well-connected but also highly engaged within the network.
 
 \end{enumerate}
 

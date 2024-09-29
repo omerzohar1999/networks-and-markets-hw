@@ -13,6 +13,7 @@ import random
 import numpy as np
 from scipy.sparse.csgraph import floyd_warshall
 from scipy.sparse import csr_matrix
+from scipy.stats import spearmanr
 import matplotlib.pyplot as plt
 
 
@@ -420,6 +421,10 @@ def analyze_graph_ranks(graph : DirectedGraph, name="graph"):
     plt.title(f"PageRank vs. Number of in-links for {latex_name} graph")
     plt.savefig(f"figures/{name}_inlink_analysis.pgf", format="pgf")
     plt.close()
+
+    # calculate spearman correlation
+    corr, _ = spearmanr(list(ranks.values()), in_links)
+    print(f"Spearman correlation for {name} graph: {corr}")
 
 def q8c_analysis():
     """This method should run the scaled_page_rank algorithm on the facebook graph for 20 iterations,
