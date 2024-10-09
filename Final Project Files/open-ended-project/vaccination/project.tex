@@ -226,7 +226,7 @@ We simulate both the IC and SIR models on each network to model different diseas
 
 We evaluate each strategy based on the \textbf{average number of healthy nodes} remaining after the epidemic. A higher count of healthy nodes indicates a more effective vaccination strategy, averaged across simulations per configuration.
 
-\paragraph{\texttt{run\_experiment}} The \texttt{run\_experiment} packs the entire experiment process, including the simulation of the epidemic, the vaccination process, and the evaluation of the results. It is used to run the experiments for each network and vaccination strategy.
+\paragraph{Code} The \texttt{run\_experiment} in \texttt{project.py} encompasses the entire experiment process, including epidemic simulation, vaccination, and result evaluation. It runs experiments for each network and vaccination strategy, with the \texttt{main} function already set to call it.
 
 \section{Experimental Results, Discussion, and Conclusions}
 \label{sec:experimental-results-discussion-conclusions}
@@ -236,14 +236,12 @@ Detailed figures for each network under both epidemic models are provided in the
 Our experiments demonstrate that the PageRank-based vaccination strategy significantly reduces epidemic spread compared to other heuristics across various networks and models. Additionally, we observe a notable runtime improvement over the NetShield algorithm, which requires solving an optimization problem to minimize the spectral radius.
 
 \paragraph{Discussion}
-The effectiveness of the PageRank-based strategy might stem from its ability to identify nodes that are both highly connected and central in the network. These nodes are more likely to influence a large portion of the network \cite{page1999pagerank}. Furthermore, PageRank's imitation of a random walk closely relates to disease spread in networks.
+The effectiveness of the PageRank-based strategy may stem from its ability to identify highly connected and central nodes, which are more likely to influence a large portion of the network \cite{page1999pagerank}. Furthermore, PageRank's imitation of a random walk closely relates to disease spread in networks. Our results indicate that PageRank centrality provides a practical and computationally efficient heuristic.
 
-Our results indicate that PageRank centrality provides a more practical and computationally efficient heuristic.
+These findings have significant implications for managing epidemics, particularly when vaccine resources are limited. By vaccinating central nodes, health authorities can effectively curb the spread of infectious diseases. Strategies like PageRank-based are crucial for prioritizing vaccination targets during early outbreak stages and applies to both human social networks and digital networks, enhancing public health interventions and informing policy decisions.
 
 \paragraph{Conclusions}
-We show that PageRank centrality is an effective heuristic for node vaccination in the adaptive vaccination problem. Our experiments on real-world networks validate our hypothesis, demonstrating the potential of using PageRank for adaptive vaccination in network epidemics.
-
-Future work may explore more complex dynamic vaccination strategies and investigate combining PageRank with other centrality measures to enhance vaccination effectiveness.
+We show that PageRank centrality is an effective heuristic for node vaccination in the adaptive vaccination problem. Our experiments on real-world networks validate our hypothesis, demonstrating the potential of using PageRank for adaptive vaccination in network epidemics. Future work may explore more complex dynamic vaccination strategies and investigate combining PageRank with other centrality measures to enhance vaccination effectiveness.
 
 \pagebreak
 
